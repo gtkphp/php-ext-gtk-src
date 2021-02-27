@@ -14,3 +14,5 @@ Or Import/Export *.gtkml<-->*.ui
 
 ## Antlr
 
+
+# Gnome parts

@@ -1,6 +1,6 @@
 # PHP bindings for GTK+
-The GTK+PHP project provides php bindings for GTK+4,3,2.
-It is intended for creating standalone GUI applications.
+The GTK+PHP project provides php5> bindings for GTK+4,3,2 in a one API.
+It is intended for creating Hybrid GUI applications.
 
 Partial binding support for the following libraries is currently implemented:
 
