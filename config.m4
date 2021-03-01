@@ -77,5 +77,55 @@ if test "$PHP_GTK" != "no"; then
   dnl
   dnl PHP_SUBST(GTK_SHARED_LIBADD)
 
-  PHP_NEW_EXTENSION(gtk, gtk.c, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+
+  if test -z "$PKG_CONFIG"; then
+    AC_PATH_PROG(PKG_CONFIG, pkg-config, no)
+  fi
+
+  if test -x "$PKG_CONFIG"; then
+    dnl using pkg-config output
+
+    AC_MSG_CHECKING(for gtk+-3.0.pc)
+    if test "$PHP_GTK" = "yes" -o "$PHP_GTK" = "/usr"; then
+      PKNAME=gtk+-3.0
+      AC_MSG_RESULT(using default path)
+    elif test -r $PHP_GTK/$PHP_LIBDIR/pkgconfig/gtk+-3.0.pc; then
+      PKNAME=$PHP_GTK/$PHP_LIBDIR/pkgconfig/gtk+-3.0.pc
+      AC_MSG_RESULT(using $PKNAME)
+    elif test -r $PHP_GTK/lib/pkgconfig/gtk+-3.0.pc; then
+      PKNAME=$PHP_GTK/lib/pkgconfig/gtk+-3.0.pc
+      AC_MSG_RESULT(using $PKNAME)
+    else
+      AC_MSG_RESULT(not found)
+      AC_MSG_WARN(Could not find gtk+-3.0.pc. Try without $PHP_GTK or set PKG_CONFIG_PATH)
+    fi
+  fi
+
+  if test -n "$PKNAME"; then
+    AC_MSG_CHECKING(for gtk+ 3.22.30 or greater)
+    if $PKG_CONFIG --atleast-version 3.22.30 $PKNAME; then
+      gtk_version_full=`$PKG_CONFIG --modversion $PKNAME`
+      AC_MSG_RESULT($gtk_version_full)
+    else
+      AC_MSG_ERROR(gtk+ version 3.22.30 or later is required to compile php with Gtk+ support)
+    fi
+
+    GTK_LIBS=`$PKG_CONFIG --libs   $PKNAME`
+    GTK_INCL=`$PKG_CONFIG --cflags $PKNAME`
+  fi
+
+  PHP_EVAL_LIBLINE($GTK_LIBS, GTK_SHARED_LIBADD)
+  PHP_EVAL_INCLINE($GTK_INCL, GTK_SHARED_LIBADD)
+
+  PHP_ADD_INCLUDE($PHP_GTK)
+
+  PHP_SUBST(GTK_SHARED_LIBADD)
+
+  glib_sources="php_glib/glib.c "
+
+  g_sources="php_g/g-hash-table.c "
+
+  sources="gtk.c"
+
+  PHP_NEW_EXTENSION(gtk, gtk.c php_glib/glib.c php_g/g-hash-table.c, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
 fi

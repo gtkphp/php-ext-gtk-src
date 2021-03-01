@@ -21,10 +21,10 @@
 #ifndef PHP_GTK_H
 #define PHP_GTK_H
 
-#include "php.h"
-#include "php_ini.h"
-#include "zend_interfaces.h"
-#include "ext/standard/info.h"
+#include <php.h>
+#include <php_ini.h>
+#include <zend_interfaces.h>
+#include <ext/standard/info.h>
 
 extern zend_module_entry gtk_module_entry;
 #define phpext_gtk_ptr &gtk_module_entry

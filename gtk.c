@@ -22,12 +22,15 @@
 #include "config.h"
 #endif
 
-#include "php.h"
-#include "php_ini.h"
-#include "zend_interfaces.h"
-#include "ext/standard/info.h"
+#include <php.h>
+#include <php_ini.h>
+#include <zend_interfaces.h>
+#include <ext/standard/info.h>
 
 #include "php_gtk.h"
+
+#include "php_glib/glib.h"
+#include "php_g/g-hash-table.h"
 
 HashTable classes;
 
@@ -91,7 +94,7 @@ static void php_gtk_init_globals(zend_gtk_globals *gtk_globals)
 /* }}} */
 
 
-
+extern zend_object_handlers php_glib_object_handlers;
 
 
 /* {{{ PHP_MINIT_FUNCTION
@@ -100,11 +103,17 @@ PHP_MINIT_FUNCTION(gtk)
 {
     //zm_startup_gtk(int type, int module_number)
 
-
 	/* If you have INI entries, uncomment these lines
 	REGISTER_INI_ENTRIES();
 	*/
+	zend_class_entry ce;
+	zend_class_entry *g_hash_table_ce;
+	
+	zend_object_handlers *handlers= php_glib_object_get_handlers();
 
+	zend_hash_init(&classes, 0, NULL, NULL, 1);
+
+	g_hash_table_ce = php_g_hash_table_class_init(&ce);
 
 	return SUCCESS;
 }
@@ -160,7 +169,123 @@ PHP_MINFO_FUNCTION(gtk)
 /* }}} */
 
 
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_str_hash                                         |
+ +----------------------------------------------------------------------*/
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_str_hash, 0, 0, 0)
+	ZEND_ARG_INFO(0, v)
+ZEND_END_ARG_INFO()
 
+PHP_FUNCTION(g_str_hash)
+{
+    zend_string *v;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(v);
+    ZEND_PARSE_PARAMETERS_END();
+
+    guint hash = g_str_hash(v->val);
+
+    RETURN_LONG(hash);
+}
+
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_str_equal                                           |
+ +----------------------------------------------------------------------*/
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_str_equal, 0, 0, 0)
+	ZEND_ARG_INFO(0, v1)
+	ZEND_ARG_INFO(0, v2)
+ZEND_END_ARG_INFO()
+//gboolean g_str_equal (gconstpointer v1, gconstpointer v2);
+PHP_FUNCTION(g_str_equal)
+{
+    zend_string *v1;
+    zend_string *v2;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_STR(v1);
+        Z_PARAM_STR(v2);
+    ZEND_PARSE_PARAMETERS_END();
+    gboolean equal = g_str_equal(v1->val, v2->val);
+
+    //RETURN_BOOL(equal);
+    RETURN_BOOL(equal);
+
+}
+
+
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_hash_table_new                                      |
+ +----------------------------------------------------------------------*/
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_hash_table_new, 0, 0, 0)
+	ZEND_ARG_INFO(0, hash_func)
+	ZEND_ARG_INFO(0, key_equal_func)
+ZEND_END_ARG_INFO()
+
+PHP_FUNCTION(g_hash_table_new)
+{
+	zval *hash_func = NULL;
+	zval *key_equal_func = NULL;
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "|zz", &hash_func, &key_equal_func) == FAILURE) {
+		return;
+	}
+	php_g_hash_table *intern = php_g_hash_table_new(hash_func, key_equal_func);
+	
+	RETURN_OBJ(&intern->parent_instance.std);
+}
+
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_hash_table_add                                      |
+ +----------------------------------------------------------------------*/
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_hash_table_add, 0, 0, 2)
+	ZEND_ARG_INFO(0, hash_table)
+	ZEND_ARG_INFO(0, key)
+ZEND_END_ARG_INFO()
+
+PHP_FUNCTION(g_hash_table_add)
+{
+	zval *hash_table;
+	zval *key;
+#if 1
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_ZVAL(hash_table);
+        Z_PARAM_ZVAL(key);
+    ZEND_PARSE_PARAMETERS_END();
+#else
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "oz", &hash_table, &key) == FAILURE) {
+		return;
+	}
+#endif
+	php_g_hash_table *obj = PHP_G_HASH_TABLE_FROM_STD(hash_table->value.obj);
+	zend_bool ret = php_g_hash_table_add(obj, key);
+	RETURN_BOOL(ret);
+}
+
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_hash_table_insert                                   |
+ +----------------------------------------------------------------------*/
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_hash_table_insert, 0, 0, 3)
+	ZEND_ARG_INFO(0, hash_table)
+	ZEND_ARG_INFO(0, key)
+	ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+PHP_FUNCTION(g_hash_table_insert)
+{
+	zval *hash_table;
+	zval *key;
+	zval *value;
+	
+	if (zend_parse_parameters(ZEND_NUM_ARGS(), "ozz", &hash_table, &key, &value) == FAILURE) {
+		return;
+	}
+	php_g_hash_table *obj = PHP_G_HASH_TABLE_FROM_STD(hash_table->value.obj);
+	zend_bool ret = php_g_hash_table_insert(obj, key, value);
+	RETURN_BOOL(ret);
+}
 
 
 /* {{{ gtk_functions[]
@@ -168,7 +293,12 @@ PHP_MINFO_FUNCTION(gtk)
  * Every user visible function must have an entry in gtk_functions[].
  */
 const zend_function_entry gtk_functions[] = {
-	PHP_FE(confirm_gtk_compiled,	NULL)		/* For testing, remove later. */
+    PHP_FE(confirm_gtk_compiled,	NULL)		/* For testing, remove later. */
+    PHP_FE(g_str_hash, arginfo_g_str_hash)
+    PHP_FE(g_str_equal, arginfo_g_str_equal)
+    PHP_FE(g_hash_table_new, arginfo_g_hash_table_new)
+    PHP_FE(g_hash_table_add, arginfo_g_hash_table_add)
+    PHP_FE(g_hash_table_insert, arginfo_g_hash_table_insert)
     PHP_FE_END	/* Must be the last line in gtk_functions[] */
 };
 /* }}} */
