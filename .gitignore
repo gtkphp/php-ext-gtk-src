@@ -32,3 +32,7 @@ tests/*/*.php
 tests/*/*.exp
 tests/*/*.log
 tests/*/*.sh
+
+PhpExtGtk.*
+git
+
