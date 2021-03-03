@@ -39,7 +39,7 @@
 #   define PHP_GLIB_EXPORT
 #endif
 
-#define TRACE() 
+#define TRACE()
 //#define TRACE() g_print("%s\n", __FUNCTION__)
 
 

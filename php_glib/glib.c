@@ -45,7 +45,6 @@ zend_object *php_glib_create_object(zend_class_entry *class_type)
 }
 /* }}} */
 
-
 php_glib_object* php_glib_set_class(zend_class_entry *class_type, zend_bool hash_copy) /* {{{ */
 {
 	TRACE();
