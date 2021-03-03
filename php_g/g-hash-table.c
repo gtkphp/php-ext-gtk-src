@@ -35,6 +35,9 @@
 #include "g-hash-table.h"
 
 #include <glib-object.h>
+/*#include <glib.h>
+#include <gtk/gtk.h>
+#include <gmodule.h>*/
 #include <gdk/gdk.h>
 #include <ctype.h>
 
@@ -495,10 +498,11 @@ php_g_hash_table_add(php_g_hash_table *hash_table, zval *key)
     ZVAL_COPY(k, key);
     zend_bool retval = g_hash_table_add(hash, k);
 
+
+
     current_hash_table = NULL;
     return retval;
 }
-
 
 zend_bool
 php_g_hash_table_insert(php_g_hash_table *hash_table, zval *key, zval *value)
@@ -521,6 +525,91 @@ php_g_hash_table_insert(php_g_hash_table *hash_table, zval *key, zval *value)
 
 
 
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_str_equal                                           |
+ +----------------------------------------------------------------------*/
+PHP_FUNCTION(g_str_equal)
+{
+    zend_string *v1;
+    zend_string *v2;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_STR(v1);
+        Z_PARAM_STR(v2);
+    ZEND_PARSE_PARAMETERS_END();
+    gboolean equal = g_str_equal(v1->val, v2->val);
+
+    //RETURN_BOOL(equal);
+    RETURN_BOOL(equal);
+
+}
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_str_hash                                         |
+ +----------------------------------------------------------------------*/
+PHP_FUNCTION(g_str_hash)
+{
+    zend_string *v;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_STR(v);
+    ZEND_PARSE_PARAMETERS_END();
+
+    guint hash = g_str_hash(v->val);
+
+    RETURN_LONG(hash);
+}
+
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_hash_table_insert                                   |
+ +----------------------------------------------------------------------*/
+PHP_FUNCTION(g_hash_table_insert)
+{
+    zval *hash_table;
+    zval *key;
+    zval *value;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ozz", &hash_table, &key, &value) == FAILURE) {
+        return;
+    }
+    php_g_hash_table *obj = PHP_G_HASH_TABLE_FROM_STD(hash_table->value.obj);
+    zend_bool ret = php_g_hash_table_insert(obj, key, value);
+    RETURN_BOOL(ret);
+}
+
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_hash_table_add                                      |
+ +----------------------------------------------------------------------*/
+/* {{{ */
+PHP_FUNCTION(g_hash_table_add)
+{
+    zval *hash_table;
+    zval *key;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_ZVAL(hash_table);
+        Z_PARAM_ZVAL(key);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_g_hash_table *__self = PHP_G_HASH_TABLE_FROM_STD(hash_table->value.obj);
+    zend_bool __ret = php_g_hash_table_add(__self, key);
+    RETURN_BOOL(__ret);
+}
+/* }}} */
+
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_hash_table_new                                      |
+ +----------------------------------------------------------------------*/
+PHP_FUNCTION(g_hash_table_new)
+{
+    zval *hash_func = NULL;
+    zval *key_equal_func = NULL;
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "|zz", &hash_func, &key_equal_func) == FAILURE) {
+        return;
+    }
+    php_g_hash_table *intern = php_g_hash_table_new(hash_func, key_equal_func);
+
+    RETURN_OBJ(&intern->parent_instance.std);
+}
 
 /*----------------------------------------------------------------------+
  | Vendor\ExtName\GHashTable::__construct                               |

@@ -22,12 +22,6 @@
 #define PHP_G_HASH_TABLE_H
 
 
-
-
-/*if (zend_parse_parameters(ZEND_NUM_ARGS(), "Oz", &hash_table, php_g_hash_table_class_entry, &key) == FAILURE) {*/
-
-gboolean g_hash_table_add (GHashTable *hash_table, gpointer key);
-
 #define PHP_G_HASH_TABLE(ptr)                ((php_g_hash_table*)(ptr))
 #define PHP_G_HASH_TABLE_FROM_STD(ptr) \
     (php_g_hash_table*) (((void*)(ptr))-(sizeof(php_g_hash_table) - sizeof(zend_object)))
@@ -56,6 +50,55 @@ zend_bool         php_g_hash_table_insert(php_g_hash_table *hash_table, zval *ke
 void  php_g_hash_table_free(php_g_hash_table *hash_table);
 
 zend_class_entry *php_g_hash_table_class_init(zend_class_entry *ce);
+
+/*----------------------------------------------------------------------+
+ | g_hash_table_insert                                                  |
+ +----------------------------------------------------------------------*/
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_hash_table_insert, 0, 0, 3)
+    ZEND_ARG_INFO(0, hash_table)
+    ZEND_ARG_INFO(0, key)
+    ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(g_hash_table_insert);
+
+/*----------------------------------------------------------------------+
+ | g_hash_table_add                                                     |
+ +----------------------------------------------------------------------*/
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_hash_table_add, 0, 0, 0)
+    ZEND_ARG_INFO(0, hash_table)
+    ZEND_ARG_INFO(0, key)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(g_hash_table_add);
+
+
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_hash_table_new                                      |
+ +----------------------------------------------------------------------*/
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_hash_table_new, 0, 0, 0)
+    ZEND_ARG_INFO(0, hash_func)
+    ZEND_ARG_INFO(0, key_equal_func)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(g_hash_table_new);
+
+
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_str_hash                                         |
+ +----------------------------------------------------------------------*/
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_str_hash, 0, 0, 0)
+    ZEND_ARG_INFO(0, v)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(g_str_hash);
+
+/*----------------------------------------------------------------------+
+ | Vendor\ExtName\g_str_equal                                           |
+ +----------------------------------------------------------------------*/
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_str_equal, 0, 0, 0)
+    ZEND_ARG_INFO(0, v1)
+    ZEND_ARG_INFO(0, v2)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(g_str_equal);
+
+
 
 #endif	/* PHP_G_HASH_TABLE_H */
 
