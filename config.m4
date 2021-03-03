@@ -123,9 +123,10 @@ if test "$PHP_GTK" != "no"; then
 
   glib_sources="php_glib/glib.c "
 
-  g_sources="php_g/g-hash-table.c "
+  g_sources="php_g/g-list.c \
+             php_g/g-hash-table.c "
 
   sources="gtk.c"
 
-  PHP_NEW_EXTENSION(gtk, gtk.c php_glib/glib.c php_g/g-hash-table.c, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+  PHP_NEW_EXTENSION(gtk, gtk.c $glib_sources $g_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
 fi

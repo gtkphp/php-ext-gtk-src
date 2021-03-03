@@ -30,6 +30,7 @@
 #include "php_gtk.h"
 
 #include "php_glib/glib.h"
+#include "php_g/g-list.h"
 #include "php_g/g-hash-table.h"
 
 
@@ -124,6 +125,7 @@ PHP_MINIT_FUNCTION(gtk)
     //PHP_MINIT(pango)(INIT_FUNC_ARGS_PASSTHRU);
     //PHP_MINIT(gtk)(INIT_FUNC_ARGS_PASSTHRU);
     //...
+    php_g_list_class_init(&ce);
 
 	return SUCCESS;
 }
@@ -185,6 +187,8 @@ PHP_MINFO_FUNCTION(gtk)
  */
 const zend_function_entry gtk_functions[] = {
     PHP_FE(confirm_gtk_compiled,	NULL)		/* For testing, remove later. */
+    /* from g-list.h */
+    PHP_G_LIST_FE()
     /* from g-hash-table.h */
     PHP_FE(g_str_hash, arginfo_g_str_hash)
     PHP_FE(g_str_equal, arginfo_g_str_equal)
@@ -194,7 +198,6 @@ const zend_function_entry gtk_functions[] = {
     PHP_FE_END	/* Must be the last line in gtk_functions[] */
 };
 /* }}} */
-
 
 
 /* {{{ gtk_module_entry
