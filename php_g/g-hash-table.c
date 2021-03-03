@@ -103,7 +103,7 @@ zval *php_g_hash_table_get_property_ptr_ptr(zval *object, zval *member, int type
     zend_string *member_str = zval_get_string(member);
     zval *retval = NULL;
 
-    g_print("%s\n", "php_g_hash_table_get_property_ptr_ptr");
+    //g_print("%s\n", "php_g_hash_table_get_property_ptr_ptr");
     if (!obj->prop_handler || !zend_hash_exists(obj->prop_handler, member_str)) {
         zend_object_handlers *std_hnd = zend_get_std_object_handlers();
         retval = std_hnd->get_property_ptr_ptr(object, member, type, cache_slot);
@@ -123,7 +123,7 @@ zval *php_g_hash_table_read_property(zval *object, zval *member, int type, void 
     zend_string *member_str = zval_get_string(member);
     zval *retval;
     php_g_hash_table_prop_handler *hnd = NULL;
-    g_print("%s(%s)\n", "php_glib_read_property", member->value.str->val);
+    //g_print("%s(%s)\n", "php_glib_read_property", member->value.str->val);
 
     if (obj->prop_handler != NULL) {
         hnd = zend_hash_find_ptr(obj->prop_handler, member_str);

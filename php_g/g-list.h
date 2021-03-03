@@ -45,11 +45,6 @@ typedef struct _php_g_list_prop_handler {
 } php_g_list_prop_handler;
 
 
-php_g_list *php_g_list_append(php_g_list *list, zval *data);
-
-
-
-
 PHP_GLIB_EXPORT extern zend_class_entry *php_g_list_class_entry;
 extern HashTable php_g_list_prop_handlers;
 
@@ -58,16 +53,16 @@ extern HashTable php_g_list_prop_handlers;
 /*----------------------------------------------------------------------+
  | g_list_append                                                        |
  +----------------------------------------------------------------------*/
+php_g_list *php_g_list_append(php_g_list *list, zval *data);
+
+#define PHP_G_LIST_FE() \
+    PHP_FE(g_list_append, arginfo_g_list_append)
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_append, 0, 0, 0)
     ZEND_ARG_INFO(0, list)
     ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_list_append);
-
-
-#define PHP_G_LIST_FE() \
-    PHP_FE(g_list_append, arginfo_g_list_append)
-
 
 zend_class_entry *php_g_list_class_init(zend_class_entry *ce);
 

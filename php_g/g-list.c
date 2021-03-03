@@ -204,7 +204,6 @@ php_g_list_get_debug_info_helper(zval *object, int *is_temp) /* {{{ */
     zend_string            *object_str;
 
     *is_temp = 1;
-
     std_props = zend_std_get_properties(object);
     debug_info = zend_array_dup(std_props);
 
@@ -212,61 +211,19 @@ php_g_list_get_debug_info_helper(zval *object, int *is_temp) /* {{{ */
         return debug_info;
     }
 
-    /*
-    object_str = zend_string_init("(object value omitted)", sizeof("(object value omitted)")-1, 0);
+    int i=0;
+    char *str;
+    zend_string *key;
+    GList *it;
+    for(it=g_list_first(obj->ptr); it; it=it->next) {
+        zval *val = it->data;
+        str = g_strdup_printf("%d", i);
+        key = zend_string_init(str, strlen(str), 0);
+        zend_hash_add(debug_info, key, val);
 
-    ZEND_HASH_FOREACH_STR_KEY_PTR(prop_handlers, string_key, entry) {
-        zval value;
-
-        if (entry->read_func(obj, &value) == FAILURE || !string_key) {
-            continue;
-        }
-
-        if (Z_TYPE(value) == IS_OBJECT) {
-            zval_dtor(&value);
-            ZVAL_NEW_STR(&value, object_str);
-            zend_string_addref(object_str);
-        }
-
-        zend_hash_add(debug_info, string_key, &value);
-    } ZEND_HASH_FOREACH_END();
-
-    zend_string_release(object_str);
-    */
-GHashTableIter iter;
-zval *key, *value;
-zval val;
-zend_string *str_key;
-#if 0
-g_hash_table_iter_init (&iter, parent->ptr);
-while (g_hash_table_iter_next (&iter, (gpointer)&key, (gpointer)&value))
-  {
-    zval k;
-    //g_print("g_hash_table_iter(%p, %p)\n", key, value);
-    //str_key = zend_string_init((char*)key, strlen((char*)key), 0);
-    if (Z_TYPE_P(key)==IS_STRING) {
-        //k = (zval *)key;
-        ZVAL_COPY(&k, key);
-    } else if (Z_TYPE_P(key)==IS_OBJECT ) {
-        char *name = php_g_list_tostring_object(key, NULL);
-        ZVAL_STRING(&k, name);
-        g_free(name);
-    } else {
-        g_print("Unexpected 21 : php_g_list_get_debug_info_helper\n");
-    }
-    if (Z_TYPE_P(value)==IS_STRING) {
-        ZVAL_COPY(&val, value);
-    } else if (Z_TYPE_P(value)==IS_OBJECT ) {
-        ZVAL_COPY(&val, value);
-    } else {
-        g_print("Unexpected 21 : php_g_list_get_debug_info_helper\n");
+        i++;
     }
 
-    //g_print("%s=>%s\n", (char *)k->value.str->val, (char *)val.value.str->val);
-    zend_hash_add(debug_info, k.value.str, &val);
-
-  }
-#endif
     return debug_info;
 }
 /* }}} */
@@ -322,6 +279,8 @@ php_g_list_set_class(zend_class_entry *class_type,
         object_properties_init(&intern->std, class_type);
     }
 
+    intern->ptr = NULL;
+
     return intern;
 }
 /* }}} */
@@ -341,9 +300,10 @@ zend_object *php_g_list_create_object(zend_class_entry *class_type)
  +----------------------------------------------------------------------*/
 php_g_list*
 php_g_list_append(php_g_list *list, zval *data) {
-    // gpointer
-    // TODO...
-    return NULL;
+
+    list->ptr = g_list_append(list->ptr, data);
+
+    return list;
 }
 
 
@@ -365,29 +325,10 @@ PHP_FUNCTION(g_list_append)
 
     php_g_list *__self = PHP_G_LIST_FROM_STD(list->value.obj);
     php_g_list *__ret = php_g_list_append(__self, data);
-    RETURN_OBJECT(&__ret->std);
-}
-/* }}} */
 
-
-/*----------------------------------------------------------------------+
- | g_list_prepend                                                       |
- +----------------------------------------------------------------------*/
-
-/* {{{ */
-PHP_FUNCTION(g_list_prepend)
-{
-    zval *list;
-    zval *data;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(list);
-        Z_PARAM_ZVAL(data);
-    ZEND_PARSE_PARAMETERS_END();
-
-    php_g_list *__self = PHP_G_LIST_FROM_STD(list->value.obj);
-    php_g_list *__ret = php_g_list_prepend(__self, data);
-    RETURN_OBJECT(&__ret->std);
+    zval ret;
+    ZVAL_OBJ(&ret, &__ret->std);
+    RETURN_ZVAL(&ret, 1, 0);
 }
 /* }}} */
 
@@ -421,7 +362,7 @@ php_g_list_class_init(zend_class_entry *ce) {
     INIT_CLASS_ENTRY((*ce), "GList", php_g_list_methods);
     ce->create_object = php_g_list_create_object;
     php_g_list_class_entry = zend_register_internal_class_ex(ce, NULL);
-    zend_hash_init(&php_g_list_prop_handlers, 0, NULL, php_glib_dtor_prop_handler, 1);
+    zend_hash_init(&php_g_list_prop_handlers, 0, NULL, php_g_list_dtor_prop_handler, 1);
     zend_hash_add_ptr(&classes, ce->name, &php_g_list_prop_handlers);
 
     return php_g_list_class_entry;
