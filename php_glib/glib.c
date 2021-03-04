@@ -261,7 +261,6 @@ php_glib_get_debug_info(zval *object, int *is_temp)
     return php_glib_get_debug_info_helper(object, is_temp);
 }
 
-
 zend_object_handlers*
 php_glib_object_get_handlers()
 {

@@ -129,4 +129,6 @@ if test "$PHP_GTK" != "no"; then
   sources="gtk.c"
 
   PHP_NEW_EXTENSION(gtk, gtk.c $glib_sources $g_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+  PHP_ADD_BUILD_DIR($ext_builddir/php_glib, 1)
+  PHP_ADD_BUILD_DIR($ext_builddir/php_g, 1)
 fi
