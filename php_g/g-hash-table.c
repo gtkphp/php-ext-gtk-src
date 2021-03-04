@@ -467,14 +467,14 @@ php_g_hash_table_key_equal_func(gconstpointer v1, gconstpointer v2) {
 	if (NULL==key_equal_func) {
 		if (Z_TYPE_P(val1)==IS_STRING && Z_TYPE_P(val2)==IS_STRING) {
 			return g_str_equal(val1->value.str->val, val2->value.str->val);
-		} else if (Z_TYPE_P(val1)==IS_OBJECT && Z_TYPE_P(val2)==IS_OBJECT) {
-			char *name1 = php_g_hash_table_tostring_object(val1, "0123456789%s%d");
-			char *name2 = php_g_hash_table_tostring_object(val2, "0123456789%s%d");
-			gboolean equal = g_str_equal(name1, name2);
-			g_free(name1);
-			g_free(name2);
-			return equal;
-		} else {
+        } else if (Z_TYPE_P(val1)==IS_OBJECT && Z_TYPE_P(val2)==IS_OBJECT) {
+            char *name1 = php_g_hash_table_tostring_object(val1, NULL);
+            char *name2 = php_g_hash_table_tostring_object(val2, NULL);
+            gboolean equal = g_str_equal(name1, name2);
+            g_free(name1);
+            g_free(name2);
+            return equal;
+        } else {
 			g_print("Unexpected 12 : php_g_hash_table_key_equal_func\n");
 		}
 	} else {
@@ -561,7 +561,6 @@ zend_bool
 php_g_hash_table_insert(php_g_hash_table *hash_table, zval *key, zval *value)
 {
 	TRACE();
-    current_hash_table = hash_table;
     php_glib_object *obj = &hash_table->parent_instance;
     GHashTable *hash = obj->ptr;
 
@@ -569,9 +568,11 @@ php_g_hash_table_insert(php_g_hash_table *hash_table, zval *key, zval *value)
     ZVAL_COPY(k, key);
     zval *v = emalloc(sizeof(zval));
     ZVAL_COPY(v, value);
-    zend_bool retval = g_hash_table_insert(hash, k, v);
 
+    current_hash_table = hash_table;
+    zend_bool retval = g_hash_table_insert(hash, k, v);
     current_hash_table = NULL;
+
     return retval;
 }
 
