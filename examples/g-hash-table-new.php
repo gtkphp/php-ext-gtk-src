@@ -26,8 +26,8 @@ $key2 = new Key("b");
 $key3 = new Key("c");
 
 
-//$hashTable = g_hash_table_new(Null/*'g_str_hash'|'crc32'|'my_string_hash'*/, Null/*'g_str_equal'*/);
-$hashTable = g_hash_table_new();
+$hashTable = g_hash_table_new(Null/*'g_str_hash'|'crc32'|'my_string_hash'*/, Null/*'g_str_equal'*/);
+//$hashTable = g_hash_table_new();
 $added = g_hash_table_add($hashTable, $key1);
 $added = g_hash_table_add($hashTable, $key2);
 $added = g_hash_table_add($hashTable, $key3);
@@ -37,6 +37,7 @@ $added = g_hash_table_add($hashTable, $key3);
 //echo get_class($hashTable), PHP_EOL;
 
 var_dump($hashTable[$key1]);
+var_dump($hashTable["object(Key)#1"]);
 
 //$array = (array)$hashTable;
 //var_dump($array);

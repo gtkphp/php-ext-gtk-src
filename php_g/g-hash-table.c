@@ -329,24 +329,19 @@ php_g_hash_table_read_dimension(zval *object, zval *offset, int type, zval *rv) 
     }
 
 
-    g_print("offset IS_STRING %d\n", Z_TYPE_P(offset)==IS_STRING);
-    g_print("offset IS_OBJECT %d\n", Z_TYPE_P(offset)==IS_OBJECT);
-    g_print("offset IS_LONG %d\n", Z_TYPE_P(offset)==IS_LONG);
-
     //ZVAL_LONG(&offset_copy, zval_get_long(offset));
     php_g_hash_table *intern = PHP_G_HASH_TABLE_FROM_STD(Z_OBJ_P(object));
-    g_print("intern %p\n", intern);
     GHashTable *hash_table = intern->parent_instance.ptr;
     zval *value = NULL;
     if (hash_table!=NULL) {
-        current_hash_table = hash_table;
+        current_hash_table = intern;
         value = g_hash_table_lookup(hash_table, (gconstpointer)offset);
         current_hash_table = NULL;
-        g_print("value IS_OBJECT %d\n", Z_TYPE_P(value)==IS_OBJECT);
     }
 
     return value;
 } /* }}} end php_g_hash_table_read_dimension */
+
 
 static zend_object_handlers*
 php_g_hash_table_get_handlers()
@@ -412,8 +407,7 @@ zend_object *php_g_hash_table_create_object(zend_class_entry *class_type)
     php_g_hash_table *intern = php_g_hash_table_set_class(class_type, 1);
     php_glib_object  *parent = PHP_GLIB_OBJECT(&intern->parent_instance);
     parent->type = PHP_GLIB_G_HASH_TABLE_TYPE;
-    parent->std.handlers = &php_g_hash_table_handlers;//-------------------------------------
-    g_print("*intern %p\n", intern);
+    parent->std.handlers = &php_g_hash_table_handlers;
     return &parent->std;
 }
 /* }}} */

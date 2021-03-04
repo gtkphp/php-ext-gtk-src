@@ -32,7 +32,6 @@
 #include "g-list.h"
 
 
-
 extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
 
