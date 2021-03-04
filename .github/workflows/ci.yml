@@ -1,0 +1,38 @@
+name: build
+
+on: [push]
+
+jobs:
+  build-test:
+    name: "${{ matrix.operating-system }} / PHP ${{ matrix.php-version }}"
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: ['ubuntu-latest']
+        php-version: ['7.1.0', '7.2.24']
+        
+    steps:
+      - name: "Clone repository"
+        uses: actions/checkout@v2
+
+      - name: "Install PHP with extensions"
+        uses: shivammathur/setup-php@2.7.0
+        with:
+          coverage: "none"
+          extensions: "intl, mbstring, pdo_sqlite"
+          php-version: ${{ matrix.php-version }}
+          tools: composer:v2
+          
+      - if: matrix.php-version == '7.2.24'
+        run: echo "Simple check..."
+        
+      - name : "Test extension on PHP ${{ matrix.php-version }}"
+        run: phpize
+          && sudo apt-get install libgtk-3-dev
+          && mkdir ../php-ext-gtk-release
+          && cd ../php-ext-gtk-release
+          && ../php-ext-gtk-src/configure --enable-gtk
+          && make -j4
+          && php -dextension_dir=./modules -dextension=gtk.so ../php-ext-gtk-src/examples/g-hash-table-new.php
+          && TRAVIS=1 && make test
+        
