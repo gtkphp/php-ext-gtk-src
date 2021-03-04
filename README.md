@@ -5,7 +5,7 @@ It is intended for creating Hybrid GUI applications.
 Partial binding support for the following libraries is currently implemented:
 
 - GTK
-- GLib
+- GLib ![GLib](https://github.com/gtkphp/php-ext-gtk-src/actions/workflows/ci.yml/badge.svg?branch=ci)
 - Pango
 - Cairo
 
