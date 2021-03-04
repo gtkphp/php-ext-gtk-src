@@ -53,6 +53,7 @@ static void php_g_list_dtor_prop_handler(zval *zv) /* {{{ */
 
 static void
 php_g_list_element_unref(gpointer data) {
+    g_print("php_g_list_element_unref\n");
     zval *val = (zval*) data;
     Z_TRY_DELREF_P(val);
     efree(val);
@@ -71,11 +72,8 @@ void php_g_list_free_storage(zend_object *object)
     int retcount;
 #endif
 
-    zend_object_std_dtor(&intern->std);// maybe use PHP_STD_FROM_G_HASH_TABLE()
-
-    //g_list_foreach(intern->ptr, php_g_list_element_unref, NULL);
     g_list_free_full(intern->ptr, php_g_list_element_unref);
-
+    zend_object_std_dtor(&intern->std);// maybe use PHP_STD_FROM_G_HASH_TABLE()
     efree(intern);
 // FIXME
 #if 0
@@ -326,7 +324,10 @@ php_g_list_append(php_g_list *list, zval *data) {
 php_g_list*
 php_g_list_prepend(php_g_list *list, zval *data) {
 
-    list->ptr = g_list_prepend(list->ptr, data);
+    zval *val = emalloc(sizeof(zval));
+    ZVAL_COPY(val, data);
+
+    list->ptr = g_list_prepend(list->ptr, val);
 
     return list;
 }

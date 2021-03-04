@@ -30,6 +30,6 @@ $list = new GList();
 g_list_append($list, "value1");
 g_list_append($list, "value2");
 g_list_append($list, "value3");
-//g_list_prepend($list, "value2");
+g_list_prepend($list, "value0");
 
 var_dump($list);
