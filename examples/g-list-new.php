@@ -19,15 +19,17 @@ $list = new GList();
 
 
 $list = g_list_append($list, $key1);
-//$list = g_list_append($list, $key2);
+$list = g_list_prepend($list, $key2);
 //$list = g_list_append($list, $key3);
 
 var_dump($list);
 */
 
 
-
 $list = new GList();
-$list = g_list_append($list, "value1");
+g_list_append($list, "value1");
+g_list_append($list, "value2");
+g_list_append($list, "value3");
+//g_list_prepend($list, "value2");
 
 var_dump($list);

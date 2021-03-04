@@ -56,13 +56,26 @@ extern HashTable php_g_list_prop_handlers;
 php_g_list *php_g_list_append(php_g_list *list, zval *data);
 
 #define PHP_G_LIST_FE() \
-    PHP_FE(g_list_append, arginfo_g_list_append)
+    PHP_FE(g_list_append,  arginfo_g_list_append) \
+    PHP_FE(g_list_prepend, arginfo_g_list_prepend)
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_append, 0, 0, 0)
     ZEND_ARG_INFO(0, list)
     ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_list_append);
+
+/*----------------------------------------------------------------------+
+ | g_list_prepend                                                       |
+ +----------------------------------------------------------------------*/
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_prepend, 0, 0, 0)
+    ZEND_ARG_INFO(0, list)
+    ZEND_ARG_INFO(0, data)
+ZEND_END_ARG_INFO()
+/* {{{ */
+PHP_FUNCTION(g_list_prepend);
+
+
 
 zend_class_entry *php_g_list_class_init(zend_class_entry *ce);
 
