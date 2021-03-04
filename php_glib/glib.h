@@ -39,8 +39,8 @@
 #   define PHP_GLIB_EXPORT
 #endif
 
-#define TRACE()
-//#define TRACE() g_print("%s\n", __FUNCTION__)
+//#define TRACE()
+#define TRACE() g_print("%s\n", __FUNCTION__)
 
 
 extern zend_object_handlers php_glib_handlers;
