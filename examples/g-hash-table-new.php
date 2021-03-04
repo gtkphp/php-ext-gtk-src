@@ -19,11 +19,6 @@ class Key {
     //return 'object('.static::class.')#'.spl_object_id($this);
     // since PHP 7.2>
   }
-    TODO: override internal toInt
-    function __toKey():int {
-      return (int)spl_object_hash($this);
-      //return crc32((string)$this);
-    }
     function __toHash():int {
       return (int)spl_object_hash($this);
       //return crc32((string)$this);
@@ -34,13 +29,16 @@ class Key {
     }
   */
 }
+
 $key1 = new Key("a");
 $key2 = new Key("b");
 $key3 = new Key("c");
 
 $hashTable = g_hash_table_new();
 $added = g_hash_table_add($hashTable, $key1);
-//$added = g_hash_table_add($hashTable, $key2);
-//$added = g_hash_table_add($hashTable, $key3);
+$added = g_hash_table_add($hashTable, $key2);
+$added = g_hash_table_add($hashTable, $key3);
+$key1->value="aaa";
 
+//var_dump($hashTable[$key1]);
 var_dump($hashTable);
