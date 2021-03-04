@@ -33,7 +33,6 @@
 #include "php_g/g-list.h"
 #include "php_g/g-hash-table.h"
 
-
 HashTable classes;
 
 

@@ -50,6 +50,16 @@ static void php_g_list_dtor_prop_handler(zval *zv) /* {{{ */
     free(Z_PTR_P(zv));
 }
 
+
+static void
+php_g_list_element_unref(gpointer data) {
+    g_print("php_g_list_element_unref\n");
+    zval *val = (zval*) data;
+    Z_TRY_DELREF_P(val);
+    efree(val);
+}
+
+
 /* {{{ dom_objects_free_storage */
 void php_g_list_free_storage(zend_object *object)
 {
@@ -62,6 +72,7 @@ void php_g_list_free_storage(zend_object *object)
     int retcount;
 #endif
 
+    g_list_free_full(intern->ptr, php_g_list_element_unref);
     zend_object_std_dtor(&intern->std);// maybe use PHP_STD_FROM_G_HASH_TABLE()
     efree(intern);
 // FIXME
@@ -219,6 +230,8 @@ php_g_list_get_debug_info_helper(zval *object, int *is_temp) /* {{{ */
         str = g_strdup_printf("%d", i);
         key = zend_string_init(str, strlen(str), 0);
         zend_hash_add(debug_info, key, val);
+        zend_string_delref(key);
+        g_free(str);
 
         i++;
     }
@@ -300,7 +313,21 @@ zend_object *php_g_list_create_object(zend_class_entry *class_type)
 php_g_list*
 php_g_list_append(php_g_list *list, zval *data) {
 
-    list->ptr = g_list_append(list->ptr, data);
+    zval *val = emalloc(sizeof(zval));
+    ZVAL_COPY(val, data);
+
+    list->ptr = g_list_append(list->ptr, val);
+
+    return list;
+}
+
+php_g_list*
+php_g_list_prepend(php_g_list *list, zval *data) {
+
+    zval *val = emalloc(sizeof(zval));
+    ZVAL_COPY(val, data);
+
+    list->ptr = g_list_prepend(list->ptr, val);
 
     return list;
 }
@@ -316,6 +343,7 @@ PHP_FUNCTION(g_list_append)
 {
     zval *list;
     zval *data;
+    zval ret;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_ZVAL(list);
@@ -325,12 +353,35 @@ PHP_FUNCTION(g_list_append)
     php_g_list *__self = PHP_G_LIST_FROM_STD(list->value.obj);
     php_g_list *__ret = php_g_list_append(__self, data);
 
-    zval ret;
     ZVAL_OBJ(&ret, &__ret->std);
     RETURN_ZVAL(&ret, 1, 0);
 }
 /* }}} */
 
+
+/*----------------------------------------------------------------------+
+ | g_list_prepend                                                       |
+ +----------------------------------------------------------------------*/
+
+/* {{{ */
+PHP_FUNCTION(g_list_prepend)
+{
+    zval *list;
+    zval *data;
+    zval ret;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_ZVAL(list);
+        Z_PARAM_ZVAL(data);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_g_list *__self = PHP_G_LIST_FROM_STD(list->value.obj);
+    php_g_list *__ret = php_g_list_prepend(__self, data);
+
+    ZVAL_OBJ(&ret, &__ret->std);
+    RETURN_ZVAL(&ret, 1, 0);
+}
+/* }}} */
 
 
 /*----------------------------------------------------------------------+
