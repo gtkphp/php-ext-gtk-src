@@ -4,11 +4,13 @@ This file show all technical debt.
 By continuously improving the design of code, we make it easier and easier to work with.
 
 ## Priority
-g_hash_table notifydestroy( free emalloc)
-Build shared extension
 Implemente g_hash_table, g_hash_table_iter, g_hash_func/g_equal_func
 Compatibility PHP5 -> PHP8
 
+// maybe is better to Z_ADDREF_P();
+zval *val = emalloc(sizeof(zval));
+ZVAL_COPY(val, data);
+// efree();
 
 create config.nice
 

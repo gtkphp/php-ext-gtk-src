@@ -43,6 +43,8 @@ zend_object_handlers php_g_list_handlers;
 /*----------------------------------------------------------------------+
  | zend_object_handlers                                                 |
  +----------------------------------------------------------------------*/
+static void php_g_list_free_storage(zend_object *object);
+static void php_g_list_dtor_obj(zend_object *obj);
 
 static void php_g_list_dtor_prop_handler(zval *zv) /* {{{ */
 {
@@ -51,49 +53,7 @@ static void php_g_list_dtor_prop_handler(zval *zv) /* {{{ */
 }
 
 
-static void
-php_g_list_element_unref(gpointer data) {
-    g_print("php_g_list_element_unref\n");
-    zval *val = (zval*) data;
-    Z_TRY_DELREF_P(val);
-    efree(val);
-}
-
-
-/* {{{ dom_objects_free_storage */
-void php_g_list_free_storage(zend_object *object)
-{
-    TRACE();
-
-    php_g_list *intern = PHP_G_LIST_FROM_STD(object);
-#if defined(__GNUC__) && __GNUC__ >= 3
-    int retcount __attribute__((unused)); /* keep compiler quiet */
-#else
-    int retcount;
-#endif
-
-    g_list_free_full(intern->ptr, php_g_list_element_unref);
-    zend_object_std_dtor(&intern->std);// maybe use PHP_STD_FROM_G_HASH_TABLE()
-    efree(intern);
-// FIXME
-#if 0
-    if (intern->ptr != NULL ) {
-
-        /*
-        if (((xmlNodePtr) ((php_libxml_node_ptr *)intern->ptr)->node)->type != XML_DOCUMENT_NODE && ((xmlNodePtr) ((php_libxml_node_ptr *)intern->ptr)->node)->type != XML_HTML_DOCUMENT_NODE) {
-            php_libxml_node_decrement_resource((php_libxml_node_object *) intern);
-        } else {
-            php_libxml_decrement_node_ptr((php_libxml_node_object *) intern);
-            retcount = php_libxml_decrement_doc_ref((php_libxml_node_object *)intern);
-        }
-        */
-        intern->ptr = NULL;
-    }
-#endif
-}
-/* }}} */
-
-zval *php_g_list_get_property_ptr_ptr(zval *object, zval *member, int type, void **cache_slot) /* {{{ */
+static zval *php_g_list_get_property_ptr_ptr(zval *object, zval *member, int type, void **cache_slot) /* {{{ */
 {
     TRACE();
     php_g_list *obj = PHP_G_LIST_FROM_STD(Z_OBJ_P(object));
@@ -112,7 +72,7 @@ zval *php_g_list_get_property_ptr_ptr(zval *object, zval *member, int type, void
 /* }}} */
 
 /* {{{ gtk_read_property */
-zval *php_g_list_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
+static zval *php_g_list_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
 {
     TRACE();
     php_g_list *obj = PHP_G_LIST_FROM_STD(Z_OBJ_P(object));
@@ -145,7 +105,7 @@ zval *php_g_list_read_property(zval *object, zval *member, int type, void **cach
 /* }}} */
 
 /* {{{ gtk_write_property */
-void php_g_list_write_property(zval *object, zval *member, zval *value, void **cache_slot)
+static void php_g_list_write_property(zval *object, zval *member, zval *value, void **cache_slot)
 {
     TRACE();
     php_g_list *obj = PHP_G_LIST_FROM_STD(Z_OBJ_P(object));
@@ -169,7 +129,7 @@ void php_g_list_write_property(zval *object, zval *member, zval *value, void **c
 
 
 /* {{{ dom_read_na */
-int php_g_list_read_na(php_g_list *obj, zval *retval)
+static int php_g_list_read_na(php_g_list *obj, zval *retval)
 {
     TRACE();
     zend_throw_error(NULL, "Cannot read property");
@@ -178,7 +138,7 @@ int php_g_list_read_na(php_g_list *obj, zval *retval)
 /* }}} */
 
 /* {{{ dom_write_na */
-int php_g_list_write_na(php_g_list *obj, zval *newval)
+static int php_g_list_write_na(php_g_list *obj, zval *newval)
 {
     TRACE();
     zend_throw_error(NULL, "Cannot write property");
@@ -240,7 +200,7 @@ php_g_list_get_debug_info_helper(zval *object, int *is_temp) /* {{{ */
 }
 /* }}} */
 
-HashTable*
+static HashTable*
 php_g_list_get_debug_info(zval *object, int *is_temp)
 {
     TRACE();
@@ -253,6 +213,12 @@ php_g_list_get_handlers()
     TRACE();
     memcpy(&php_g_list_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     php_g_list_handlers.offset = XtOffsetOf(php_g_list, std);
+    //php_g_list_handlers.clone_obj;
+    //php_g_list_handlers.cast_object;
+    //php_g_list_handlers.compare;
+    //php_g_list_handlers.compare_objects;
+    //php_g_list_handlers.get_constructor;
+    php_g_list_handlers.dtor_obj = php_g_list_dtor_obj;
     php_g_list_handlers.free_obj = php_g_list_free_storage;
     php_g_list_handlers.read_property = php_g_list_read_property;
     php_g_list_handlers.write_property = php_g_list_write_property;
@@ -307,6 +273,42 @@ zend_object *php_g_list_create_object(zend_class_entry *class_type)
 }
 /* }}} */
 
+static void
+php_g_list_element_unref(gpointer data) {
+    zval *val = (zval*) data;
+
+    Z_TRY_DELREF_P(val);
+    efree(val);
+}
+
+
+/* {{{ php_hashcontext_dtor */
+static void php_g_list_dtor_obj(zend_object *obj) {
+    php_g_list *intern = PHP_G_LIST_FROM_STD(obj);
+    g_list_free_full(intern->ptr, php_g_list_element_unref);
+    intern->ptr = NULL;
+}
+/* }}} */
+
+/* {{{ dom_objects_free_storage */
+static void
+php_g_list_free_storage(zend_object *object)
+{
+    TRACE();
+    g_print("php_g_list_free_storage\n");
+
+    php_g_list *intern = PHP_G_LIST_FROM_STD(object);
+#if defined(__GNUC__) && __GNUC__ >= 3
+    int retcount __attribute__((unused)); /* keep compiler quiet */
+#else
+    int retcount;
+#endif
+
+    zend_object_std_dtor(&intern->std);
+    //efree(intern);
+}
+/* }}} */
+
 /*----------------------------------------------------------------------+
  | Implementation                                                       |
  +----------------------------------------------------------------------*/
@@ -315,6 +317,7 @@ php_g_list_append(php_g_list *list, zval *data) {
 
     zval *val = emalloc(sizeof(zval));
     ZVAL_COPY(val, data);
+
 
     list->ptr = g_list_append(list->ptr, val);
 
