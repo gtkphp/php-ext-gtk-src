@@ -12,7 +12,18 @@ var_dump($list);
 
 ?>
 --EXPECT--
-object(GList)#1 (1) {
-  ["0"]=>
-  string(6) "value1"
+object(GList)#1 (3) {
+  ["prev"]=>
+  NULL
+  ["data"]=>
+  NULL
+  ["next"]=>
+  object(GList)#2 (3) {
+    ["prev"]=>
+    *RECURSION*
+    ["data"]=>
+    string(6) "value1"
+    ["next"]=>
+    NULL
+  }
 }

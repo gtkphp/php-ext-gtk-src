@@ -1,14 +1,5 @@
 <?php
-/*
-class DLList extends GList {
-    //public GList $prev;
-    //public mixed $data;
-    //public GList $next;
-    function append($data) {
 
-    }
-}
- */
 //if (!extension_loaded("glib")) die("Glib not loaded");
 //if (!extension_loaded("gio")) die("Gio not loaded");
 //if (!extension_loaded("gobject")) die("Gobject not loaded");
@@ -19,19 +10,21 @@ class DLList extends GList {
 //if (!extension_loaded("Sdk")) die("Sdk not loaded");
 if (!extension_loaded("gtk")) die("Gtk+ not loaded");
 
-
-$list = new GList("value1");// $list = g_list_append(NULL, "value1");
+$list = new GList("value0");
+g_list_append($list, "value1");
 g_list_append($list, "value2");
-g_list_append($list, "value3");
 var_dump($list);
 
+echo "---------------\n\n";
 
-//$list = g_list_append(Null, "value1");
-//g_list_append($list, "value2");
-//g_list_append($list, "value3");
+$list2 = new GList("value10");// $list = g_list_append(NULL, "value1");
+g_list_append($list2, "value20");
+//g_list_append($list2, "value30");
+var_dump($list2);
 
-//var_dump($list);
-//print_r($list);
+echo "==================\n\n";
+unset($list);
+unset($list2);
 
 /*
 
