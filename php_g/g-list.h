@@ -23,26 +23,31 @@
 
 #include "php_glib/glib.h"
 
-#define PHP_G_LIST(ptr)                ((php_g_list*)(ptr))
-#define PHP_G_LIST_FROM_STD(ptr) \
-    (php_g_list*) (((void*)(ptr))-(sizeof(php_g_list) - sizeof(zend_object)))
+
+#define PHP_G_LIST(ptr)           ((php_g_list*)(ptr))
+#define PHP_G_LIST_CLASS          php_g_list_class_entry
+#define PHP_G_LIST_OFFSET_STD     (sizeof(php_g_list) - sizeof(zend_object))
+//#define ZOBJ_XOFFSET_PHP_G_LIST
+
+//??    Z_OBJ_P/Z_OBJCE_P
+#define ZOBJ_IS_PHP_G_LIST(obj)   ((obj)!=NULL && obj->ce == php_g_list_class_entry)
+#define ZOBJ_GET_PHP_G_LIST(std)  PHP_G_LIST( ((void*)(std))-PHP_G_LIST_OFFSET_STD )
+
+//As    ZVAL_IS_NULL
+#define ZVAL_IS_PHP_G_LIST(val)   ((val)!=NULL && Z_TYPE_P(val)==IS_OBJECT && ZOBJ_IS_PHP_G_LIST((val)->value.obj))
+#define ZVAL_GET_PHP_G_LIST(val)  ZOBJ_GET_PHP_G_LIST((val)->value.obj)
 
 
 
 typedef struct _php_g_list {
     GList *ptr;
 
+    zval prev;
+    zval data;
+    zval next;
     HashTable *prop_handler;
     zend_object std;
 } php_g_list;
-
-typedef int (*php_g_list_read_t)(php_g_list *obj, zval *retval);
-typedef int (*php_g_list_write_t)(php_g_list *obj, zval *newval);
-
-typedef struct _php_g_list_prop_handler {
-    php_g_list_read_t read_func;
-    php_g_list_write_t write_func;
-} php_g_list_prop_handler;
 
 
 PHP_GLIB_EXPORT extern zend_class_entry *php_g_list_class_entry;
@@ -51,7 +56,7 @@ extern HashTable php_g_list_prop_handlers;
 
 
 /*----------------------------------------------------------------------+
- | g_list_append                                                        |
+ | Public/Export                                                        |
  +----------------------------------------------------------------------*/
 php_g_list *php_g_list_append(php_g_list *list, zval *data);
 
@@ -59,6 +64,9 @@ php_g_list *php_g_list_append(php_g_list *list, zval *data);
     PHP_FE(g_list_append,  arginfo_g_list_append) \
     PHP_FE(g_list_prepend, arginfo_g_list_prepend)
 
+/*----------------------------------------------------------------------+
+ | g_list_append                                                        |
+ +----------------------------------------------------------------------*/
 ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_append, 0, 0, 0)
     ZEND_ARG_INFO(0, list)
     ZEND_ARG_INFO(0, data)
@@ -75,6 +83,13 @@ ZEND_END_ARG_INFO()
 /* {{{ */
 PHP_FUNCTION(g_list_prepend);
 
+/*----------------------------------------------------------------------+
+ | GList::__construct                                                   |
+ +----------------------------------------------------------------------*/
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list___construct, 0, 0, 0)
+    ZEND_ARG_INFO(0, data)
+ZEND_END_ARG_INFO()
+PHP_METHOD(G_List, __construct);
 
 
 zend_class_entry *php_g_list_class_init(zend_class_entry *ce);

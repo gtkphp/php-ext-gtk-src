@@ -139,6 +139,7 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
 	/* uncomment this line if you have INI entries
 	UNREGISTER_INI_ENTRIES();
 	*/
+    //zend_object_std_dtor();
 
 	return SUCCESS;
 }
