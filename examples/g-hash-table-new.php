@@ -42,3 +42,16 @@ $key1->value="aaa";
 
 //var_dump($hashTable[$key1]);
 var_dump($hashTable);
+
+/*
+$hashTable = g_hash_table_new();
+$added = g_hash_table_add($hashTable, $key1);
+var_dump($hashTable);
+*/
+
+/*
+$key4 = new Key("d");
+$hashTable1 = g_hash_table_new();
+g_hash_table_add($hashTable1, $key4);
+var_dump($hashTable);
+*/

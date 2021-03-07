@@ -76,6 +76,89 @@ PHP_FUNCTION(confirm_gtk_compiled)
 	RETURN_STR(strg);
 }
 /* }}} */
+
+
+static char*
+g_list_dump_zval(zval *data) {
+    char *str = NULL;
+    if (ZVAL_IS_NULL(data)) {
+        str = g_strdup_printf("NULL");
+    } else if (Z_TYPE_P(data)==IS_STRING) {
+        str = g_strdup_printf("\e[1;31m\"%s\"\e[0;m", data->value.str->val);
+    } else if (Z_TYPE_P(data)==IS_LONG) {
+        str = g_strdup_printf("%ld", data->value.lval);
+    } else if (Z_TYPE_P(data)==IS_OBJECT) {
+        str = g_strdup_printf("\e[2;34m%s\e[0;m\e[2;31m#%d\e[0;m(\e[2;35m%d\e[0;m){}",
+                data->value.obj->ce->name->val,
+                Z_OBJ_HANDLE_P(data),
+                data->value.obj->gc.refcount);
+    } else {
+        str = g_strdup_printf("%ld", data->value.lval);
+    }
+    return str;
+}
+static char* g_list_dump(zval *list, int tab){
+    char *str;
+    char *tmp_prev;
+    char *tmp_data;
+    char *tmp_next;
+
+    php_g_list *__list = ZVAL_GET_PHP_G_LIST(list);
+    char *t = g_strdup_printf("%*.s", tab*4, "");
+
+    if (ZVAL_IS_NULL(list)) {
+        str = g_strdup_printf("NULL");
+    } else {
+        tmp_prev = g_list_dump_zval(&__list->prev);
+        tmp_data = g_list_dump_zval(&__list->data);
+        tmp_next = g_list_dump(&__list->next, tab+1);
+        str = g_strdup_printf("\e[2;34mzval\e[0;m(\e[2;35m%d\e[0;m){ value: \e[1;34m%s\e[0;m\e[1;31m#%d\e[0;m(\e[2;35m%d\e[0;m){\n"
+                "%s    prev: %s,\n"
+                "%s    data: %s,\n"
+                "%s    next: %s\n"
+                "%s}}",
+                list->value.counted->gc.refcount,
+                list->value.obj->ce->name->val,
+                Z_OBJ_HANDLE_P(list),
+                list->value.obj->gc.refcount,
+                t, tmp_prev,
+                t, tmp_data,
+                t, tmp_next,
+                t);
+        g_free(tmp_prev);
+        g_free(tmp_data);
+        g_free(tmp_next);
+    }
+    g_free(t);
+
+
+    return str;
+}
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_php_g_list_dump, 0, 0, 0)
+    ZEND_ARG_INFO(0, list)
+ZEND_END_ARG_INFO()
+
+/* {{{ proto string php_g_list_dump(GList list)
+   Return a string to confirm that the module is compiled in */
+PHP_FUNCTION(php_g_list_dump)
+{
+    zval *list = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &list) == FAILURE) {
+        return;
+    }
+
+    //php_g_list_first();
+    char *str = g_list_dump(list, 0);
+    g_print("%s\n", str);
+    g_free(str);
+
+    RETURN_NULL();
+}
+/* }}} */
+
+
 /* The previous line is meant for vim and emacs, so it can correctly fold and
    unfold functions in source code. See the corresponding marks just before
    function definition, where the functions purpose is also documented. Please
@@ -186,7 +269,8 @@ PHP_MINFO_FUNCTION(gtk)
  * Every user visible function must have an entry in gtk_functions[].
  */
 const zend_function_entry gtk_functions[] = {
-    PHP_FE(confirm_gtk_compiled,	NULL)		/* For testing, remove later. */
+    PHP_FE(confirm_gtk_compiled,	NULL)		     /* For testing, remove later. */
+    PHP_FE(php_g_list_dump, arginfo_php_g_list_dump) /* For debuging, remove later. */
     /* from g-list.h */
     PHP_G_LIST_FE()
     /* from g-hash-table.h */

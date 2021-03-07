@@ -13,9 +13,9 @@ dnl [  --with-gtk             Include gtk support])
 
 dnl Otherwise use enable:
 
-PHP_ARG_ENABLE(gtk, whether to enable gtk support,
+PHP_ARG_WITH(gtk, for gtk support,
 dnl Make sure that the comment is aligned:
-[  --enable-gtk           Enable gtk support])
+[  --with-gtk             Include gtk support])
 
 if test "$PHP_GTK" != "no"; then
   dnl Write more examples of tests here...
@@ -63,7 +63,7 @@ if test "$PHP_GTK" != "no"; then
 
   dnl # --with-gtk -> check for lib and symbol presence
   dnl LIBNAME=gtk # you may want to change this
-  dnl LIBSYMBOL=gtk # you most likely want to change this 
+  dnl LIBSYMBOL=gtk # you most likely want to change this
 
   dnl PHP_CHECK_LIBRARY($LIBNAME,$LIBSYMBOL,
   dnl [
