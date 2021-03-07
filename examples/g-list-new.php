@@ -10,53 +10,10 @@
 //if (!extension_loaded("Sdk")) die("Sdk not loaded");
 if (!extension_loaded("gtk")) die("Gtk+ not loaded");
 
-$list = new GList("value0");
-g_list_append($list, "value1");
-g_list_append($list, "value2");
-var_dump($list);
 
-echo "---------------\n\n";
-
-$list2 = new GList("value10");// $list = g_list_append(NULL, "value1");
-g_list_append($list2, "value20");
-//g_list_append($list2, "value30");
-var_dump($list2);
-
-echo "==================\n\n";
-unset($list);
-unset($list2);
-
-/*
-
-object(GList)#1 (3) {
-    ["prev"]=>Null,
-    ["data"]=>string(6) "value1",
-    ["next"]=>object(GList)#2 (3) {
-        ["prev"]=>*RECURSION*,
-        ["data"]=>string(6) "value2",
-        ["next"]=>object(GList)#3 (3) {
-            ["prev"]=>*RECURSION*,
-            ["data"]=>string(6) "value3",
-            ["next"]=>Null,
-        },
-    },
-}
-
-GList Object
-(
-    [0] => value1
-    [1] => value2
-    [2] => value3
-)
-
-*/
+//echo "Read: https://www.phpinternalsbook.com/php7/zvals/memory_management.html\n";
 
 
-
-//$array = (array)$list;
-//var_dump($array);
-
-/*
 class Key {
   public $value;
   function __construct($val) {
@@ -66,61 +23,23 @@ class Key {
 $key1 = new Key("aaa");
 $key2 = new Key("b");
 $key3 = new Key("c");
+$key4 = new Key("d");
 
-$list = new GList();
-
-//$list = NULL;
-
-
-$list = g_list_append($list, $key1);
-//$list = g_list_prepend($list, $key2);
+$list = new GList($key2);
 $list = g_list_append($list, $key3);
+$list = g_list_prepend($list, $key1);
+$list = g_list_append($list, $key4);
 $key1->value="a";
-//$key3->value="ccc";
 
-var_dump($list);
-*/
-
-/*
-$list = new GList();
-g_list_append($list, "value1");
-g_list_append($list, "value2");
-g_list_append($list, "value3");
-g_list_prepend($list, "value0");
-
-var_dump($list);
-
-$list = new GList();
-$list = g_list_prepend($list, "value10");
-var_dump($list);
-
-$list = new GList();
-$list = g_list_prepend($list, "value100");
-var_dump($list);
-
-$list = new GList();
-$list = g_list_prepend($list, "value1000");
-var_dump($list);
-
-unset($list);
+//var_dump($list);
+php_g_list_dump($list);
 
 
-$list = new GList();
-g_list_append($list, "value1");
-g_list_append($list, "value2");
-g_list_append($list, "value3");
-g_list_prepend($list, "value0");
-var_dump($list);
 
-$list2 = new GList();
-$list2 = g_list_prepend($list2, "value10");
-var_dump($list2);
 
-$list3 = new GList();
-$list3 = g_list_prepend($list3, "value100");
-var_dump($list3);
+$list2 = g_list_append(NULL, "key2");
+//$list2 = new GList("key2");
+g_list_append($list2, "key3");
+$list2 = g_list_prepend($list2, "key1");
+php_g_list_dump($list2);
 
-$list4 = new GList();
-$list4 = g_list_prepend($list4, "value1000");
-var_dump($list4);
-*/
