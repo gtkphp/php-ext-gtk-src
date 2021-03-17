@@ -124,7 +124,7 @@ if test "$PHP_GTK" != "no"; then
   glib_sources="php_glib/glib.c "
 
   g_sources="php_g/g-list.c \
-             php_g/g-hash-table.c "
+             php_g/g-hash-table.c"
 
   sources="gtk.c"
 
