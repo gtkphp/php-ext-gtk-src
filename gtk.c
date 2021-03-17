@@ -58,6 +58,12 @@ PHP_INI_END()
    so that your module can be compiled into PHP, it exists only for testing
    purposes. */
 
+static print_g_list(GList *list) {
+    GList *it;
+    for(it = list/*g_list_first(list)*/; it; it = it->next) {
+        g_print("GList{%s}\n", (char *)it->data);
+    }
+}
 /* Every user-visible function in PHP should document itself in the source */
 /* {{{ proto string confirm_gtk_compiled(string arg)
    Return a string to confirm that the module is compiled in */
@@ -70,6 +76,94 @@ PHP_FUNCTION(confirm_gtk_compiled)
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &arg, &arg_len) == FAILURE) {
 		return;
 	}
+
+//#define TEST_NUM_1 "04-g_list-0-insert.c"
+//#define TEST_NUM_2 "04-g_list-1-insert.c"
+//#define TEST_NUM_3 "04-g_list-2-insert.c"
+
+//#define TEST_NUM TEST_NUM_1
+
+#if 1
+    // Check the bahavior of GList
+    gchar *key1 = "key1";
+    gchar *key2 = "key2";
+    gchar *key3 = "key3";
+    gchar *key4 = "key4";
+
+    typedef GList GList_CStr;
+    GList_CStr *first=NULL, *list = NULL;
+
+    /*
+    list = g_list_insert(list, key1, 0);
+    list = g_list_insert(list, key2, 1);
+    list = g_list_insert(list->next, key3, 0);
+    //print_g_list(g_list_first(list));
+    print_g_list(list);
+    */
+
+    /*
+    list = g_list_insert(list, key1, 0);
+    list = g_list_insert(list, key2, 1);
+    list = g_list_insert(list, key3, 2);
+    list = g_list_insert(list, key4, 3);
+    print_g_list(list);//g_list_first()
+    */
+
+    /*
+    list = g_list_insert(list, key1, 0);
+    list = g_list_insert(list, key2, 0);
+    list = g_list_insert(list, key3, 0);
+    list = g_list_insert(list, key4, 0);
+    print_g_list(g_list_first(list));
+    //print_g_list(list);//g_list_first()
+    */
+
+
+    /*
+    first = g_list_append(first, key1);
+    g_print("%p\n", first);// 600
+    first = g_list_append(first, key2);
+    g_print("%p\n", first);// 600
+    list = g_list_nth(first, 1);
+    g_print("%p\n", list);// 620
+    list = g_list_append(list, key3);
+    g_print("%p\n", list);// 620
+    list = g_list_insert(list, "key", 0);
+    g_print("%p\n", list);
+    */
+
+    /*
+    first = list = g_list_append(list, key1);
+    g_print("%p\n", list);
+    list = g_list_append(list, key2);
+    list = g_list_append(list, key3);
+    list = g_list_nth(list, 2);
+    g_print("%p\n", list);
+    list = g_list_insert(list, "key", 0);
+    g_print("%p\n", list);
+    */
+
+
+    /*
+    list = g_list_prepend(list, key2);
+    g_print("%p\n", list);
+    list = g_list_prepend(list, key3);
+    g_print("%p\n", list);
+    */
+
+    /*
+    list = g_list_append(list, key1);
+    g_print("%p\n", list);
+    list = g_list_append(list, key2);
+    g_print("%p\n", list);
+    list = g_list_nth(list, 1);
+    list = g_list_append(list, key3);
+    g_print("%p\n", list);
+    */
+
+    //print_g_list(first);
+
+#endif
 
 	strg = strpprintf(0, "Congratulations! You have successfully modified ext/%.78s/config.m4. Module %.78s is now compiled into PHP.", "gtk", arg);
 
@@ -112,7 +206,8 @@ static char* g_list_dump(zval *list, int tab){
         tmp_prev = g_list_dump_zval(&__list->prev);
         tmp_data = g_list_dump_zval(&__list->data);
         tmp_next = g_list_dump(&__list->next, tab+1);
-        str = g_strdup_printf("\e[2;34mzval\e[0;m(\e[2;35m%d\e[0;m){ value: \e[1;34m%s\e[0;m\e[1;31m#%d\e[0;m(\e[2;35m%d\e[0;m){\n"
+
+        str = g_strdup_printf("\e[2;34mzval\e[0;m(\e[2;35m%d\e[0;m){ value: \e[1;34m%s\e[0;m\e[1;31m#%d\e[0;m(\e[2;35m%d\e[0;m)%p{\n"
                 "%s    prev: %s,\n"
                 "%s    data: %s,\n"
                 "%s    next: %s\n"
@@ -120,7 +215,7 @@ static char* g_list_dump(zval *list, int tab){
                 list->value.counted->gc.refcount,
                 list->value.obj->ce->name->val,
                 Z_OBJ_HANDLE_P(list),
-                list->value.obj->gc.refcount,
+                list->value.obj->gc.refcount, list->value.obj,
                 t, tmp_prev,
                 t, tmp_data,
                 t, tmp_next,
@@ -192,7 +287,7 @@ PHP_MINIT_FUNCTION(gtk)
 	*/
 
 	zend_class_entry ce;
-	zend_class_entry *g_hash_table_ce;
+    zend_class_entry *g_hash_table_ce;
 	
 	zend_object_handlers *handlers= php_glib_object_get_handlers();
 
@@ -222,7 +317,11 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
 	/* uncomment this line if you have INI entries
 	UNREGISTER_INI_ENTRIES();
 	*/
-    //zend_object_std_dtor();
+
+    zend_hash_destroy(&php_g_list_prop_handlers);
+    zend_hash_destroy(&php_g_hash_table_prop_handlers);
+    //zend_hash_destroy(&php_glib_object_handlers);
+    zend_hash_destroy(&classes);
 
 	return SUCCESS;
 }

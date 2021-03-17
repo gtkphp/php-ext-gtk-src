@@ -74,34 +74,13 @@ void php_g_hash_table_free_storage(zend_object *object)
 
     php_g_hash_table *intern = PHP_G_HASH_TABLE_FROM_STD(object);
     php_glib_object *parent = PHP_GLIB_OBJECT(&intern->parent_instance);
-#if defined(__GNUC__) && __GNUC__ >= 3
-    int retcount __attribute__((unused)); /* keep compiler quiet */
-#else
-    int retcount;
-#endif
-
 
     current_hash_table = intern;
     g_hash_table_unref((GHashTable*)parent->ptr);
     current_hash_table = NULL;
 
     zend_object_std_dtor(&parent->std);// maybe use PHP_STD_FROM_G_HASH_TABLE()
-    efree(intern);
-// FIXME
-#if 0
-    if (intern->ptr != NULL ) {
-
-        /*
-        if (((xmlNodePtr) ((php_libxml_node_ptr *)intern->ptr)->node)->type != XML_DOCUMENT_NODE && ((xmlNodePtr) ((php_libxml_node_ptr *)intern->ptr)->node)->type != XML_HTML_DOCUMENT_NODE) {
-            php_libxml_node_decrement_resource((php_libxml_node_object *) intern);
-        } else {
-            php_libxml_decrement_node_ptr((php_libxml_node_object *) intern);
-            retcount = php_libxml_decrement_doc_ref((php_libxml_node_object *)intern);
-        }
-        */
-        intern->ptr = NULL;
-    }
-#endif
+    //efree(intern);
 }
 /* }}} */
 
@@ -295,8 +274,8 @@ while (g_hash_table_iter_next (&iter, (gpointer)&key, (gpointer)&value))
 
     //g_print("%s=>%s\n", (char *)k->value.str->val, (char *)val.value.str->val);
     zend_hash_add(debug_info, k.value.str, value);
-    Z_TRY_DELREF(k);
-    Z_TRY_DELREF_P(value);
+    //Z_TRY_DELREF(k);
+    //Z_TRY_DELREF_P(value);
 
   }
     return debug_info;
