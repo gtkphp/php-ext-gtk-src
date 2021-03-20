@@ -5,6 +5,9 @@ pwd
 sudo apt-get update
 sudo apt-get install libgtk-3-dev
 
+apt-cach search valgrind
+sudo apt-get install valgrind
+
 phpize
 
 mkdir ../php-ext-gtk-release
