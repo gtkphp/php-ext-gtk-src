@@ -30,12 +30,4 @@ jobs:
         run: .github/workflows/job.sh
 
       - name : "Test extension on PHP ${{ matrix.php-version }}"
-        run: phpize
-          && sudo apt-get install libgtk-3-dev
-          && mkdir ../php-ext-gtk-release
-          && cd ../php-ext-gtk-release
-          && ../php-ext-gtk-src/configure --with-gtk
-          && make -j4
-          && php -dextension_dir=./modules -dextension=gtk.so ../php-ext-gtk-src/examples/g-hash-table-new.php
-          && TRAVIS=1 && make test
-        
+        run: php --version

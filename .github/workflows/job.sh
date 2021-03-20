@@ -1,7 +1,5 @@
 #!/bin/sh
 
-echo "Start the job"
-
 pwd
 
 sudo apt-get update
@@ -14,13 +12,10 @@ cd ../php-ext-gtk-release
 ../php-ext-gtk-src/configure --with-gtk
 
 build_result=$(make -j4)
-echo "Make is $build_result"
+echo "Result of make is : $build_result"
 
 #php -dextension_dir=./modules -dextension=gtk.so ../php-ext-gtk-src/examples/g-hash-table-new.php
 
-TRAVIS=1
-TEST_PHP_ARGS=tests/ -m --html /home/runner/work/php-ext-gtk-src/report.html
+export TRAVIS=1
+export TEST_PHP_ARGS="tests/ -m --html /home/runner/work/php-ext-gtk-src/report.html"
 make test
-
-
-echo "Job finish"
