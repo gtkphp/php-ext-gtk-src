@@ -36,9 +36,9 @@ extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
 
 
-zend_class_entry    *php_g_list_class_entry;
-HashTable            php_g_list_prop_handlers;
-zend_object_handlers php_g_list_handlers;
+zend_class_entry     *php_g_list_class_entry;
+HashTable             php_g_list_prop_handlers;
+zend_object_handlers  php_g_list_handlers;
 
 /*----------------------------------------------------------------------+
  | zend_object_handlers                                                 |
@@ -280,7 +280,7 @@ php_g_list_element_unref(gpointer data) {
 /* {{{ php_hashcontext_dtor */
 static void php_g_list_dtor_obj(zend_object *obj) {
     TRACE();
-    php_g_list *intern = ZOBJ_GET_PHP_G_LIST(obj);
+    php_g_list *intern = ZOBJ_TO_PHP_G_LIST(obj);
     //g_print("php_g_list_dtor_obj(%p) (Ref: %d)\n", &intern->std, intern->std.gc.refcount);
 
     if(!ZVAL_IS_NULL(&intern->prev))
@@ -299,7 +299,7 @@ php_g_list_free_storage(zend_object *object)
 {
     TRACE();
 
-    php_g_list *intern = ZOBJ_GET_PHP_G_LIST(object);
+    php_g_list *intern = ZOBJ_TO_PHP_G_LIST(object);
     //g_print("                  GList(%p)\n",  intern->ptr);
     //g_print("php_g_list_free_storage(%p) (Ref: %d)\n", &intern->std, intern->std.gc.refcount);
 
@@ -323,9 +323,10 @@ php_g_list_free_storage(zend_object *object)
 static zval *php_g_list_get_property_ptr_ptr(zval *object, zval *member, int type, void **cache_slot) /* {{{ */
 {
     TRACE();
-    php_g_list *obj = ZOBJ_GET_PHP_G_LIST(Z_OBJ_P(object));
+    php_g_list *obj = ZOBJ_TO_PHP_G_LIST(Z_OBJ_P(object));
     zend_string *member_str = zval_get_string(member);
     zval *retval = NULL;
+    g_print("%s(%s)\n", __FUNCTION__, member->value.str->val);
 
     if (!obj->properties || !zend_hash_exists(obj->properties, member_str)) {
         zend_object_handlers *std_hnd = zend_get_std_object_handlers();
@@ -341,11 +342,11 @@ static zval *php_g_list_get_property_ptr_ptr(zval *object, zval *member, int typ
 static zval *php_g_list_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
 {
     TRACE();
-    php_g_list *obj = ZOBJ_GET_PHP_G_LIST(Z_OBJ_P(object));
+    php_g_list *obj = ZOBJ_TO_PHP_G_LIST(Z_OBJ_P(object));
     zend_string *member_str = zval_get_string(member);
     zval *retval;
     php_g_list_prop_handler *hnd = NULL;
-    //g_print("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    g_print("%s(%s)\n", __FUNCTION__, member->value.str->val);
 
     if (obj->properties != NULL) {
         hnd = zend_hash_find_ptr(obj->properties, member_str);
@@ -374,9 +375,15 @@ static zval *php_g_list_read_property(zval *object, zval *member, int type, void
 static void php_g_list_write_property(zval *object, zval *member, zval *value, void **cache_slot)
 {
     TRACE();
-    php_g_list *obj = ZOBJ_GET_PHP_G_LIST(Z_OBJ_P(object));
+    php_g_list *obj = ZOBJ_TO_PHP_G_LIST(Z_OBJ_P(object));
     zend_string *member_str = zval_get_string(member);
     php_g_list_prop_handler *hnd = NULL;
+    g_print("%s(%s)\n", __FUNCTION__, member->value.str->val);
+
+    /*if (strcmp("Foo", member->value.str->val)==0 ) {
+        g_print("Hello World\n");
+    }*/
+
 
     if (obj->properties != NULL) {
         hnd = zend_hash_find_ptr(obj->properties, member_str);
@@ -500,33 +507,34 @@ php_g_list_append(php_g_list *list, zval *data) {
 
 
     zend_object *std_new_node = php_g_list_create_object(php_g_list_class_entry);// Ref: 1
-    php_g_list *php_new_node = ZOBJ_GET_PHP_G_LIST(std_new_node);
+    php_g_list *php_new_node = ZOBJ_TO_PHP_G_LIST(std_new_node);
     ZVAL_COPY(&php_new_node->data, data);
     //Z_TRY_ADDREF(php_new_node->data);
     //php_new_node->std.gc.refcount++;
 
-
-    if (list!=NULL) {
-        php_last_node = php_g_list_last(list);
+    if (list==NULL) {
+        return php_new_node;
     }
 
-    if(list!=NULL) {// has previous
-        GC_REFCOUNT(&php_last_node->std)++;
-        ZVAL_OBJ(&php_last_node->next, &php_new_node->std);
-        ZVAL_OBJ(&php_new_node->prev, &php_last_node->std);
-        //Z_TRY_ADDREF(php_last_node->prev);
-    }
+    php_last_node = php_g_list_last(list);
 
-    return list != NULL ? list : php_new_node;
+    GC_REFCOUNT(&php_last_node->std)++;
+    ZVAL_OBJ(&php_last_node->next, &php_new_node->std);
+    ZVAL_OBJ(&php_new_node->prev, &php_last_node->std);
+    //Z_TRY_ADDREF(php_last_node->prev);
+
+    GC_REFCOUNT(&list->std)++;
+    return list;
 }
 
 php_g_list*
 php_g_list_prepend(php_g_list *list, zval *data) {
 
     zend_object *std_new_node = php_g_list_create_object(php_g_list_class_entry);
-    php_g_list *php_new_node = ZOBJ_GET_PHP_G_LIST(std_new_node);
+    php_g_list *php_new_node = ZOBJ_TO_PHP_G_LIST(std_new_node);
     ZVAL_COPY(&php_new_node->data, data);
     //Z_TRY_ADDREF(php_new_node->data); transfer full
+
 
     if(!list) {
         return php_new_node;
@@ -547,6 +555,8 @@ php_g_list_prepend(php_g_list *list, zval *data) {
         Z_TRY_ADDREF(list->prev);//                  #2
         ZVAL_OBJ(&php_new_node->next, &list->std);// #3
     }
+
+    GC_REFCOUNT(std_new_node)++;
     return php_new_node;
 }
 
@@ -569,7 +579,7 @@ php_g_list_insert(php_g_list *list, zval *data, zval *position) {
       return php_g_list_append (list, data);
 
     zend_object *std_new_node = php_g_list_create_object(php_g_list_class_entry);
-    new_list = ZOBJ_GET_PHP_G_LIST(std_new_node);
+    new_list = ZOBJ_TO_PHP_G_LIST(std_new_node);
     ZVAL_COPY(&new_list->data, data);
 
     prev_list = ZVAL_GET_PHP_G_LIST(&tmp_list->prev);
@@ -578,7 +588,7 @@ php_g_list_insert(php_g_list *list, zval *data, zval *position) {
     ZVAL_OBJ(&new_list->next, &tmp_list);
     ZVAL_COPY(&tmp_list->prev, &new_list);
 
-
+    GC_REFCOUNT(&list->std)++;
     return list;
 }
 
@@ -603,7 +613,6 @@ php_g_list_first(php_g_list *list) {
     php_g_list *first = list;
     php_g_list *prev = list;
     while(prev){
-        //g_print("Loop\n");
         first = prev;
         if (ZVAL_IS_PHP_G_LIST(&prev->prev)) {// maybe is preferable check if ZVAL_IS_NULL
             prev = ZVAL_GET_PHP_G_LIST(&prev->prev);
@@ -612,6 +621,7 @@ php_g_list_first(php_g_list *list) {
         }
     }
 
+    GC_REFCOUNT(&first->std)++;
     return first;
 }
 
@@ -656,25 +666,16 @@ PHP_FUNCTION(g_list_append)
 {
     zval *list = NULL;
     zval *data = NULL;
-    zval ret;
-
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_ZVAL(list)
         Z_PARAM_ZVAL(data)
     ZEND_PARSE_PARAMETERS_END();
 
-
     php_g_list *__list = ZVAL_IS_PHP_G_LIST(list)? ZVAL_GET_PHP_G_LIST(list): NULL;
     php_g_list *__ret = php_g_list_append(__list, data);
 
-    ZVAL_OBJ(&ret, &__ret->std);
-
-    if(__list) {
-        RETURN_ZVAL(&ret, 1, 0);
-    } else {
-        RETURN_ZVAL(&ret, 0, 0);
-    }
+    RETURN_OBJ(&__ret->std);
 }
 /* }}} */
 
@@ -687,7 +688,6 @@ PHP_FUNCTION(g_list_prepend)
 {
     zval *list;
     zval *data;
-    zval ret;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_ZVAL(list);
@@ -697,13 +697,7 @@ PHP_FUNCTION(g_list_prepend)
     php_g_list *__list = ZVAL_IS_PHP_G_LIST(list)? ZVAL_GET_PHP_G_LIST(list): NULL;
     php_g_list *__ret = php_g_list_prepend(__list, data);
 
-    ZVAL_OBJ(&ret, &__ret->std);
-
-    if(__list) {
-        RETURN_ZVAL(&ret, 1, 0);
-    } else {
-        RETURN_ZVAL(&ret, 0, 0);
-    }
+    RETURN_OBJ(&__ret->std);
 }
 /* }}} */
 
@@ -718,8 +712,6 @@ PHP_FUNCTION(g_list_insert)
     zval *list;
     zval *data;
     zval *position;
-    zval ret;
-
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
         Z_PARAM_ZVAL(list);
@@ -730,12 +722,7 @@ PHP_FUNCTION(g_list_insert)
     php_g_list *__list = ZVAL_IS_PHP_G_LIST(list)? ZVAL_GET_PHP_G_LIST(list): NULL;
     php_g_list *__ret = php_g_list_insert(__list, data, position);
 
-    ZVAL_OBJ(&ret, &__ret->std);
-    if(__list) {
-        RETURN_ZVAL(&ret, 1, 0);
-    } else {
-        RETURN_ZVAL(&ret, 0, 0);
-    }
+    RETURN_OBJ(&__ret->std);
 }
 /* }}} */
 
@@ -755,8 +742,85 @@ PHP_FUNCTION(g_list_first)
     php_g_list *__list = ZVAL_IS_PHP_G_LIST(list)? ZVAL_GET_PHP_G_LIST(list): NULL;
     php_g_list *__ret = php_g_list_first(__list);
 
-    ZVAL_OBJ(&ret, &__ret->std);
-    RETURN_ZVAL(&ret, 1, 0);
+    RETURN_OBJ(&__ret->std);
+}
+/* }}} */
+
+
+static char*
+php_g_list_dump_zval(zval *data) {
+    char *str = NULL;
+    if (ZVAL_IS_NULL(data)) {
+        str = g_strdup_printf("NULL");
+    } else if (Z_TYPE_P(data)==IS_STRING) {
+        str = g_strdup_printf("\e[1;31m\"%s\"\e[0;m", data->value.str->val);
+    } else if (Z_TYPE_P(data)==IS_LONG) {
+        str = g_strdup_printf("%ld", data->value.lval);
+    } else if (Z_TYPE_P(data)==IS_OBJECT) {
+        str = g_strdup_printf("\e[2;34m%s\e[0;m\e[2;31m#%d\e[0;m(\e[2;35m%d\e[0;m){}",
+                data->value.obj->ce->name->val,
+                Z_OBJ_HANDLE_P(data),
+                data->value.obj->gc.refcount);
+    } else {
+        str = g_strdup_printf("%ld", data->value.lval);
+    }
+    return str;
+}
+static char* php_g_list_dump(zval *list, int tab){
+    char *str;
+    char *tmp_prev;
+    char *tmp_data;
+    char *tmp_next;
+
+    php_g_list *__list = ZVAL_GET_PHP_G_LIST(list);
+    char *t = g_strdup_printf("%*.s", tab*4, "");
+
+    if (ZVAL_IS_NULL(list)) {
+        str = g_strdup_printf("NULL");
+    } else {
+        tmp_prev = php_g_list_dump_zval(&__list->prev);
+        tmp_data = php_g_list_dump_zval(&__list->data);
+        tmp_next = php_g_list_dump(&__list->next, tab+1);
+
+        str = g_strdup_printf("\e[2;34mzval\e[0;m(\e[2;35m%d\e[0;m){ value: \e[1;34m%s\e[0;m\e[1;31m#%d\e[0;m(\e[2;35m%d\e[0;m)%p{\n"
+                "%s    prev: %s,\n"
+                "%s    data: %s,\n"
+                "%s    next: %s\n"
+                "%s}}",
+                list->value.counted->gc.refcount,
+                list->value.obj->ce->name->val,
+                Z_OBJ_HANDLE_P(list),
+                list->value.obj->gc.refcount, list->value.obj,
+                t, tmp_prev,
+                t, tmp_data,
+                t, tmp_next,
+                t);
+        g_free(tmp_prev);
+        g_free(tmp_data);
+        g_free(tmp_next);
+    }
+    g_free(t);
+
+
+    return str;
+}
+
+/* {{{ proto string php_g_list_dump(GList list)
+   Return a string to confirm that the module is compiled in */
+PHP_FUNCTION(g_list_dump)
+{
+    zval *list = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &list) == FAILURE) {
+        return;
+    }
+
+    //php_g_list_first();
+    char *str = php_g_list_dump(list, 0);
+    g_print("%s\n", str);
+    g_free(str);
+
+    RETURN_NULL();
 }
 /* }}} */
 
@@ -776,7 +840,7 @@ PHP_METHOD(G_List, __construct)
     ZEND_PARSE_PARAMETERS_END();
 
     zend_object *zobj = Z_OBJ_P(getThis());
-    php_g_list *self = ZOBJ_GET_PHP_G_LIST(zobj);
+    php_g_list *self = ZOBJ_TO_PHP_G_LIST(zobj);
 
     if (data!=NULL) {
         ZVAL_COPY(&self->data, data);
@@ -808,7 +872,6 @@ PHP_METHOD(G_List, __set_state)
     }
 
     RETURN_NULL();
-
 }
 /* }}} GList::___set_state() */
 
@@ -828,7 +891,7 @@ php_g_list_get_handlers()
 {
     TRACE();
     memcpy(&php_g_list_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
-    php_g_list_handlers.offset = XtOffsetOf(php_g_list, std);
+    php_g_list_handlers.offset = PHP_G_LIST_OFFSET;
     //php_g_list_handlers.clone_obj;
     //php_g_list_handlers.compare;
     //php_g_list_handlers.compare_objects;
@@ -867,6 +930,8 @@ php_g_list_class_init(zend_class_entry *ce) {
     ce->create_object = php_g_list_create_object;
     //ce->serialize;
     php_g_list_class_entry = zend_register_internal_class_ex(ce, NULL);
+    //zend_declare_property_null(&php_g_list_class_entry, "scheme", sizeof("scheme")-1, ZEND_ACC_PUBLIC TSRMLS_CC);
+
     zend_hash_init(&php_g_list_prop_handlers, 0, NULL, php_g_list_dtor_prop_handler, 1);
     php_g_list_register_prop_handler(&php_g_list_prop_handlers, "prev", sizeof("prev")-1, php_g_list_read_prev, php_g_list_write_prev);
     php_g_list_register_prop_handler(&php_g_list_prop_handlers, "data", sizeof("data")-1, php_g_list_read_data, php_g_list_write_data);

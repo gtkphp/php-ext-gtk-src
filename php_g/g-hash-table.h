@@ -22,9 +22,40 @@
 #define PHP_G_HASH_TABLE_H
 
 
-#define PHP_G_HASH_TABLE(ptr)                ((php_g_hash_table*)(ptr))
-#define PHP_G_HASH_TABLE_FROM_STD(ptr) \
-    (php_g_hash_table*) (((void*)(ptr))-(sizeof(php_g_hash_table) - sizeof(zend_object)))
+#define PHP_G_STR_FE() \
+    PHP_FE(g_str_hash,  arginfo_g_str_hash)   \
+    PHP_FE(g_str_equal, arginfo_g_str_equal)
+
+
+
+#define PHP_G_HASH_TABLE(ptr)           ((php_g_hash_table*)(ptr))
+#define PHP_G_HASH_TABLE_CLASS          php_g_hash_table_class_entry
+#define PHP_G_HASH_TABLE_OFFSET         (sizeof(php_g_hash_table) - sizeof(zend_object))
+
+#define ZOBJ_IS_PHP_G_HASH_TABLE(obj)   ((obj)!=NULL && obj->ce == php_g_hash_table_class_entry)
+#define ZOBJ_TO_PHP_G_HASH_TABLE(std)   PHP_G_HASH_TABLE( ((void*)(std))-PHP_G_HASH_TABLE_OFFSET )
+
+#define ZVAL_IS_PHP_G_HASH_TABLE(val)   ((val)!=NULL && Z_TYPE_P(val)==IS_OBJECT && ZOBJ_IS_PHP_G_HASH_TABLE((val)->value.obj))
+#define ZVAL_GET_PHP_G_HASH_TABLE(val)  (((val)==NULL || ZVAL_IS_NULL(val)) ? NULL : ZOBJ_TO_PHP_G_HASH_TABLE((val)->value.obj))
+
+
+#define PHP_G_HASH_TABLE_FE() \
+    PHP_FE(g_hash_table_new,    arginfo_g_hash_table_new)   \
+    PHP_FE(g_hash_table_add,    arginfo_g_hash_table_add)   \
+    PHP_FE(g_hash_table_insert, arginfo_g_hash_table_insert)\
+    PHP_G_STR_FE()
+
+
+#define PHP_G_HASH_TABLE_MINIT_FUNCTION(parent_ce) \
+    php_g_hash_table_class_init(parent_ce)
+
+#define PHP_G_HASH_TABLE_MSHUTDOWN_FUNCTION() { \
+    zend_hash_destroy(&php_g_hash_table_prop_handlers); \
+}
+
+#define PHP_G_HASH_TABLE_RSHUTDOWN_FUNCTION() {\
+}
+
 
 typedef struct _php_g_hash_table {
     zval *hash_func;

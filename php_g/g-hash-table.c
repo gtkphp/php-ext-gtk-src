@@ -72,7 +72,7 @@ void php_g_hash_table_free_storage(zend_object *object)
 {
 	TRACE();
 
-    php_g_hash_table *intern = PHP_G_HASH_TABLE_FROM_STD(object);
+    php_g_hash_table *intern = ZOBJ_TO_PHP_G_HASH_TABLE(object);
     php_glib_object *parent = PHP_GLIB_OBJECT(&intern->parent_instance);
 
     current_hash_table = intern;
@@ -87,7 +87,7 @@ void php_g_hash_table_free_storage(zend_object *object)
 zval *php_g_hash_table_get_property_ptr_ptr(zval *object, zval *member, int type, void **cache_slot) /* {{{ */
 {
 	TRACE();
-    php_g_hash_table *obj = PHP_G_HASH_TABLE_FROM_STD(Z_OBJ_P(object));
+    php_g_hash_table *obj = ZVAL_GET_PHP_G_HASH_TABLE(object);
     php_glib_object *parent = &obj->parent_instance;
     zend_string *member_str = zval_get_string(member);
     zval *retval = NULL;
@@ -107,7 +107,7 @@ zval *php_g_hash_table_get_property_ptr_ptr(zval *object, zval *member, int type
 zval *php_g_hash_table_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
 {
 	TRACE();
-    php_g_hash_table *obj = PHP_G_HASH_TABLE_FROM_STD(Z_OBJ_P(object));
+    php_g_hash_table *obj = ZVAL_GET_PHP_G_HASH_TABLE(object);
     php_glib_object *parent = &obj->parent_instance;
     zend_string *member_str = zval_get_string(member);
     zval *retval;
@@ -141,7 +141,7 @@ zval *php_g_hash_table_read_property(zval *object, zval *member, int type, void 
 void php_g_hash_table_write_property(zval *object, zval *member, zval *value, void **cache_slot)
 {
 	TRACE();
-    php_g_hash_table *obj = PHP_G_HASH_TABLE_FROM_STD(Z_OBJ_P(object));
+    php_g_hash_table *obj = ZVAL_GET_PHP_G_HASH_TABLE(object);
     php_glib_object *parent = &obj->parent_instance;
     zend_string *member_str = zval_get_string(member);
     php_g_hash_table_prop_handler *hnd = NULL;
@@ -200,7 +200,7 @@ php_g_hash_table_get_debug_info_helper(zval *object, int *is_temp) /* {{{ */
 {
 	TRACE();
 
-    php_g_hash_table *obj =  PHP_G_HASH_TABLE_FROM_STD(Z_OBJ_P(object));
+    php_g_hash_table *obj =  ZVAL_GET_PHP_G_HASH_TABLE(object);
     php_glib_object *parent = &obj->parent_instance;
     HashTable              *debug_info,
                            *prop_handlers = obj->prop_handler,
@@ -262,20 +262,11 @@ while (g_hash_table_iter_next (&iter, (gpointer)&key, (gpointer)&value))
 	} else {
 		g_print("Unexpected 21 : php_g_hash_table_get_debug_info_helper\n");
 	}
-    /*
-	if (Z_TYPE_P(value)==IS_STRING) {
-		ZVAL_COPY(&val, value);
-	} else if (Z_TYPE_P(value)==IS_OBJECT ) {
-		ZVAL_COPY(&val, value);
-	} else {
-		g_print("Unexpected 21 : php_g_hash_table_get_debug_info_helper\n");
-	}
-    */
 
     //g_print("%s=>%s\n", (char *)k->value.str->val, (char *)val.value.str->val);
     zend_hash_add(debug_info, k.value.str, value);
-    //Z_TRY_DELREF(k);
-    //Z_TRY_DELREF_P(value);
+    Z_TRY_DELREF(k);
+    Z_TRY_ADDREF_P(value);
 
   }
     return debug_info;
@@ -303,7 +294,7 @@ php_g_hash_table_has_dimension(zval *object, zval *member, int check_empty)
         //zval *length = zend_read_property(Z_OBJCE_P(object), object, "length", sizeof("length") - 1, 0, &rv);
 
         //return length && offset < Z_LVAL_P(length);
-        php_g_hash_table *intern = PHP_G_HASH_TABLE_FROM_STD(Z_OBJCE_P(object));
+        php_g_hash_table *intern = ZVAL_GET_PHP_G_HASH_TABLE(object);
         GHashTable *hash_table = intern->parent_instance.ptr;
         guint size = g_hash_table_size(hash_table);
         return size>0;
@@ -322,7 +313,7 @@ php_g_hash_table_read_dimension(zval *object, zval *offset, int type, zval *rv) 
 
 
     //ZVAL_LONG(&offset_copy, zval_get_long(offset));
-    php_g_hash_table *intern = PHP_G_HASH_TABLE_FROM_STD(Z_OBJ_P(object));
+    php_g_hash_table *intern = ZVAL_GET_PHP_G_HASH_TABLE(object);
     GHashTable *hash_table = intern->parent_instance.ptr;
     zval *value = NULL;
     if (hash_table!=NULL) {
@@ -434,8 +425,8 @@ php_g_hash_table_hash_func(gconstpointer v) {
 			ZVAL_STRING(&params[0], name);
 			g_free(name);
 		}
-        g_print("!!!%p\n", hash_func);
-        g_print("%d\n", Z_TYPE_P(hash_func));
+        //g_print("!!!%p\n", hash_func);
+        //g_print("%d\n", Z_TYPE_P(hash_func));
         result = call_user_function(NULL, NULL, hash_func, &retval, param_count, params);
 		if (result==FAILURE) {
 			g_print("Unexpected 22 : php_g_hash_table_hash_func\n");
@@ -548,7 +539,7 @@ php_g_hash_table_new(zval *hash_func, zval *key_equal_func)
 {
 	TRACE();
     zend_object *object = php_g_hash_table_create_object(php_g_hash_table_class_entry);
-    php_g_hash_table *hash_table = PHP_G_HASH_TABLE_FROM_STD(object);
+    php_g_hash_table *hash_table = ZOBJ_TO_PHP_G_HASH_TABLE(object);
     php_glib_object *obj = PHP_GLIB_OBJECT(&hash_table->parent_instance);
 
 
@@ -572,7 +563,7 @@ php_g_hash_table_new(zval *hash_func, zval *key_equal_func)
 		hash_table->key_equal_func = NULL;
 	}
 
-    return PHP_G_HASH_TABLE_FROM_STD(object);
+    return hash_table;
 }
 
 zend_bool
@@ -660,7 +651,7 @@ PHP_FUNCTION(g_hash_table_insert)
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ozz", &hash_table, &key, &value) == FAILURE) {
         return;
     }
-    php_g_hash_table *obj = PHP_G_HASH_TABLE_FROM_STD(hash_table->value.obj);
+    php_g_hash_table *obj = ZVAL_GET_PHP_G_HASH_TABLE(hash_table);
     zend_bool ret = php_g_hash_table_insert(obj, key, value);
     RETURN_BOOL(ret);
 }
@@ -679,7 +670,7 @@ PHP_FUNCTION(g_hash_table_add)
         Z_PARAM_ZVAL(key);
     ZEND_PARSE_PARAMETERS_END();
 
-    php_g_hash_table *__self = PHP_G_HASH_TABLE_FROM_STD(hash_table->value.obj);
+    php_g_hash_table *__self = ZVAL_GET_PHP_G_HASH_TABLE(hash_table);
     zend_bool __ret = php_g_hash_table_add(__self, key);
 
     //Z_TRY_DELREF(*hash_table);
