@@ -172,87 +172,6 @@ PHP_FUNCTION(confirm_gtk_compiled)
 /* }}} */
 
 
-static char*
-g_list_dump_zval(zval *data) {
-    char *str = NULL;
-    if (ZVAL_IS_NULL(data)) {
-        str = g_strdup_printf("NULL");
-    } else if (Z_TYPE_P(data)==IS_STRING) {
-        str = g_strdup_printf("\e[1;31m\"%s\"\e[0;m", data->value.str->val);
-    } else if (Z_TYPE_P(data)==IS_LONG) {
-        str = g_strdup_printf("%ld", data->value.lval);
-    } else if (Z_TYPE_P(data)==IS_OBJECT) {
-        str = g_strdup_printf("\e[2;34m%s\e[0;m\e[2;31m#%d\e[0;m(\e[2;35m%d\e[0;m){}",
-                data->value.obj->ce->name->val,
-                Z_OBJ_HANDLE_P(data),
-                data->value.obj->gc.refcount);
-    } else {
-        str = g_strdup_printf("%ld", data->value.lval);
-    }
-    return str;
-}
-static char* g_list_dump(zval *list, int tab){
-    char *str;
-    char *tmp_prev;
-    char *tmp_data;
-    char *tmp_next;
-
-    php_g_list *__list = ZVAL_GET_PHP_G_LIST(list);
-    char *t = g_strdup_printf("%*.s", tab*4, "");
-
-    if (ZVAL_IS_NULL(list)) {
-        str = g_strdup_printf("NULL");
-    } else {
-        tmp_prev = g_list_dump_zval(&__list->prev);
-        tmp_data = g_list_dump_zval(&__list->data);
-        tmp_next = g_list_dump(&__list->next, tab+1);
-
-        str = g_strdup_printf("\e[2;34mzval\e[0;m(\e[2;35m%d\e[0;m){ value: \e[1;34m%s\e[0;m\e[1;31m#%d\e[0;m(\e[2;35m%d\e[0;m)%p{\n"
-                "%s    prev: %s,\n"
-                "%s    data: %s,\n"
-                "%s    next: %s\n"
-                "%s}}",
-                list->value.counted->gc.refcount,
-                list->value.obj->ce->name->val,
-                Z_OBJ_HANDLE_P(list),
-                list->value.obj->gc.refcount, list->value.obj,
-                t, tmp_prev,
-                t, tmp_data,
-                t, tmp_next,
-                t);
-        g_free(tmp_prev);
-        g_free(tmp_data);
-        g_free(tmp_next);
-    }
-    g_free(t);
-
-
-    return str;
-}
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_php_g_list_dump, 0, 0, 0)
-    ZEND_ARG_INFO(0, list)
-ZEND_END_ARG_INFO()
-
-/* {{{ proto string php_g_list_dump(GList list)
-   Return a string to confirm that the module is compiled in */
-PHP_FUNCTION(php_g_list_dump)
-{
-    zval *list = NULL;
-
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &list) == FAILURE) {
-        return;
-    }
-
-    //php_g_list_first();
-    char *str = g_list_dump(list, 0);
-    g_print("%s\n", str);
-    g_free(str);
-
-    RETURN_NULL();
-}
-/* }}} */
-
 
 /* The previous line is meant for vim and emacs, so it can correctly fold and
    unfold functions in source code. See the corresponding marks just before
@@ -288,21 +207,14 @@ PHP_MINIT_FUNCTION(gtk)
 
 	zend_class_entry ce;
     zend_class_entry *g_hash_table_ce;
-	
+    zend_class_entry *g_list_ce;
+
 	zend_object_handlers *handlers= php_glib_object_get_handlers();
 
 	zend_hash_init(&classes, 0, NULL, NULL, 1);
 
-    //PHP_MINIT(glib)(INIT_FUNC_ARGS_PASSTHRU);
-        //PHP_MINIT(g)(INIT_FUNC_ARGS_PASSTHRU);
-    g_hash_table_ce = php_g_hash_table_class_init(&ce);
-        //PHP_MINIT(gobject)(INIT_FUNC_ARGS_PASSTHRU);
-        //PHP_MINIT(gio)(INIT_FUNC_ARGS_PASSTHRU);
-    //PHP_MINIT(cairo)(INIT_FUNC_ARGS_PASSTHRU);
-    //PHP_MINIT(pango)(INIT_FUNC_ARGS_PASSTHRU);
-    //PHP_MINIT(gtk)(INIT_FUNC_ARGS_PASSTHRU);
-    //...
-    php_g_list_class_init(&ce);
+    g_hash_table_ce = PHP_G_HASH_TABLE_MINIT_FUNCTION(&ce);
+    g_list_ce = PHP_G_LIST_MINIT_FUNCTION(&ce);
 
 	return SUCCESS;
 }
@@ -318,8 +230,10 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
 	UNREGISTER_INI_ENTRIES();
 	*/
 
-    zend_hash_destroy(&php_g_list_prop_handlers);
-    zend_hash_destroy(&php_g_hash_table_prop_handlers);
+    PHP_G_LIST_MSHUTDOWN_FUNCTION();
+
+    PHP_G_HASH_TABLE_MSHUTDOWN_FUNCTION();
+
     //zend_hash_destroy(&php_glib_object_handlers);
     zend_hash_destroy(&classes);
 
@@ -335,6 +249,8 @@ PHP_RINIT_FUNCTION(gtk)
 #if defined(COMPILE_DL_GTK) && defined(ZTS)
 	ZEND_TSRMLS_CACHE_UPDATE();
 #endif
+
+
 	return SUCCESS;
 }
 /* }}} */
@@ -344,7 +260,10 @@ PHP_RINIT_FUNCTION(gtk)
  */
 PHP_RSHUTDOWN_FUNCTION(gtk)
 {
-	return SUCCESS;
+    PHP_G_HASH_TABLE_RSHUTDOWN_FUNCTION();
+    PHP_G_LIST_RSHUTDOWN_FUNCTION();
+
+    return SUCCESS;
 }
 /* }}} */
 
@@ -369,15 +288,8 @@ PHP_MINFO_FUNCTION(gtk)
  */
 const zend_function_entry gtk_functions[] = {
     PHP_FE(confirm_gtk_compiled,	NULL)		     /* For testing, remove later. */
-    PHP_FE(php_g_list_dump, arginfo_php_g_list_dump) /* For debuging, remove later. */
-    /* from g-list.h */
     PHP_G_LIST_FE()
-    /* from g-hash-table.h */
-    PHP_FE(g_str_hash, arginfo_g_str_hash)
-    PHP_FE(g_str_equal, arginfo_g_str_equal)
-    PHP_FE(g_hash_table_new, arginfo_g_hash_table_new)
-    PHP_FE(g_hash_table_add, arginfo_g_hash_table_add)
-    PHP_FE(g_hash_table_insert, arginfo_g_hash_table_insert)
+    PHP_G_HASH_TABLE_FE()
     PHP_FE_END	/* Must be the last line in gtk_functions[] */
 };
 /* }}} */

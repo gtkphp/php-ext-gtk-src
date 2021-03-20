@@ -5,7 +5,13 @@ By continuously improving the design of code, we make it easier and easier to wo
 
 ## Priority
 
+Donner les liens
+- musique quelque chose viens de tomber
+- enfant de la lune( comic)
+
+
 +TODO: refactor ghashtable, certenly leaks
++TODO: gtk.c PHP_MINIT_FUNCTION_G_LIST
 +TODO: Implement unset($list[0]);
 
 

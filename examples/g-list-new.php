@@ -105,13 +105,6 @@ var_dump($list);
 
 
 
-//$list = new GList($key1);
-//$key1->value = "value1";
-//$list = g_list_append(NULL, "value1");
-//$list = g_list_append($list, "value2");
-//$list = g_list_append($list, "value3");
-//$list = g_list_append($list, "value4");
-//g_list_append($list, "value5");
 
 //var_dump($list);
 //$casted = (array)$list;
@@ -146,11 +139,52 @@ php_g_list_dump(g_list_first($list));
 //print_r((array)$list);
 */
 
+
+
 $list = g_list_insert(Null, "val1", 0);
 $list = g_list_insert($list, "val2", 0);
 $list = g_list_insert($list, "val3", 0);
 $list = g_list_insert($list, "val4", 0);
 //php_g_list_dump(g_list_first($list));
-php_g_list_dump($list);
+//g_list_dump($list);
+//print_r((array)$list);
+$list->foo = "bar";
+$list->Foo = "baz";
+echo $list->foo, PHP_EOL;
+echo $list->Foo, PHP_EOL;
+echo $list->nulle, PHP_EOL;
 
-confirm_gtk_compiled("");
+
+/*
+$list = g_list_append(NULL, "value1");
+g_list_append($list, "value2");
+g_list_append($list, "value3");
+g_list_append($list, "value4");
+g_list_append($list, "value5");
+php_g_list_dump($list);
+*/
+
+/*
+$list = g_list_prepend(NULL, "value1");
+$list = g_list_prepend($list, "value2");
+$list = g_list_prepend($list, "value3");
+$list = g_list_prepend($list, "value4");
+$list = g_list_prepend(g_list_first($list), "value5");
+php_g_list_dump($list);
+*/
+
+/*
+List#1 (object){
+    'prev'=> NULL,
+    'data'=> 'val1',
+    'next'=>List#2 (object){
+        'prev'=> List#1 (object){*RECURSION*},
+        'data'=> 'val2',
+        'next'=>NULL,
+    },
+    'properties'=> ,
+}
+*/
+
+
+
