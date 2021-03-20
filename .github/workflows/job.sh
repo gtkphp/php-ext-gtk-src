@@ -11,7 +11,7 @@ phpize
 
 mkdir ../php-ext-gtk-release
 cd ../php-ext-gtk-release
-../php-ext-gtk-src/configure --enable-gtk
+../php-ext-gtk-src/configure --with-gtk
 
 build_result=$(make -j4)
 echo "Make is $build_result"
