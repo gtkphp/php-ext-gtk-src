@@ -27,7 +27,7 @@ jobs:
         run: echo "Simple check..."
         
       - name : "Test extension on PHP ${{ matrix.php-version }}"
-        run: ext/gtk/.github/workflows/job.sh
+        run: .github/workflows/job.sh
 
       - name : "Test extension on PHP ${{ matrix.php-version }}"
         run: phpize
