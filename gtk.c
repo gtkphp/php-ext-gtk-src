@@ -58,7 +58,8 @@ PHP_INI_END()
    so that your module can be compiled into PHP, it exists only for testing
    purposes. */
 
-static print_g_list(GList *list) {
+static void
+print_g_list(GList *list) {
     GList *it;
     for(it = list/*g_list_first(list)*/; it; it = it->next) {
         g_print("GList{%s}\n", (char *)it->data);
@@ -70,7 +71,7 @@ static print_g_list(GList *list) {
 PHP_FUNCTION(confirm_gtk_compiled)
 {
 	char *arg = NULL;
-	size_t arg_len, len;
+    size_t arg_len;
 	zend_string *strg;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS(), "s", &arg, &arg_len) == FAILURE) {
@@ -83,7 +84,7 @@ PHP_FUNCTION(confirm_gtk_compiled)
 
 //#define TEST_NUM TEST_NUM_1
 
-#if 1
+#if 0
     // Check the bahavior of GList
     gchar *key1 = "key1";
     gchar *key2 = "key2";

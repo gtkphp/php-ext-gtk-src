@@ -205,7 +205,7 @@ php_g_list_write_dimension(zval *object, zval *offset, zval *value)
 
 static void
 php_g_list_unset_dimension(zval *object, zval *offset) {
-    php_g_list *list = ZVAL_GET_PHP_G_LIST(object);
+    //php_g_list *list = ZVAL_GET_PHP_G_LIST(object);
     void *cache;
 
     switch(Z_TYPE_P(offset)) {
@@ -584,9 +584,9 @@ php_g_list_insert(php_g_list *list, zval *data, zval *position) {
 
     prev_list = ZVAL_GET_PHP_G_LIST(&tmp_list->prev);
     ZVAL_COPY(&new_list->prev, &tmp_list->prev);
-    ZVAL_OBJ(&prev_list->next, &new_list);
-    ZVAL_OBJ(&new_list->next, &tmp_list);
-    ZVAL_COPY(&tmp_list->prev, &new_list);
+    ZVAL_OBJ(&prev_list->next, &new_list->std);
+    ZVAL_OBJ(&new_list->next, &tmp_list->std);
+    ZVAL_COPY(&tmp_list->prev, &new_list->std);
 
     GC_REFCOUNT(&list->std)++;
     return list;
@@ -857,14 +857,13 @@ PHP_METHOD(G_List, __construct)
 PHP_METHOD(G_List, __set_state)
 {
     TRACE();
-    zval ret;
     zval *properties=NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_ZVAL(properties)
     ZEND_PARSE_PARAMETERS_END();
 
-    php_g_list *self = ZVAL_GET_PHP_G_LIST(getThis());
+    //php_g_list *self = ZVAL_GET_PHP_G_LIST(getThis());
 
     if (properties!=NULL && Z_TYPE_P(properties)==IS_ARRAY) {
         g_print("Not implemented!\n");
