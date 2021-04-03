@@ -15,7 +15,7 @@ cd php-src
 git checkout PHP-7.2.24
 ./buildconf
 cd ../php-build
-../php-src/configure --disable-all  --with-gtk --enable-debug --prefix=/home/runner/work/php-ext-gtk-src
+../php-src/configure --disable-all --with-gtk --enable-debug --prefix=/home/runner/work/php-ext-gtk-src
 make -j8
 
 

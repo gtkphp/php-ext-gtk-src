@@ -1,5 +1,5 @@
 --TEST--
-Check for g_str_hash
+01-1-0 Check for g_str_hash
 --SKIPIF--
 <?php if (!extension_loaded("gtk")) print "skip"; ?>
 --FILE--

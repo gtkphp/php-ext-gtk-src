@@ -28,6 +28,3 @@ jobs:
         
       - name : "Test build extension on PHP ${{ matrix.php-version }}"
         run: .github/workflows/job.sh
-
-      - name : "Test extension on PHP ${{ matrix.php-version }}"
-        run: php --version

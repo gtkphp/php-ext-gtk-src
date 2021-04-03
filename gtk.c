@@ -30,11 +30,19 @@
 #include "php_gtk.h"
 
 #include "php_glib/glib.h"
-#include "php_g/g-list.h"
 #include "php_g/g-hash-table.h"
+#include "php_glib/list.h"
+#include "php_gobject/object.h"
+#include "php_gobject/signal.h"
+#include "php_gtk/widget.h"
+#include "php_gtk/container.h"
+#include "php_gtk/bin.h"
+#include "php_gtk/box.h"
+#include "php_gtk/window.h"
+#include "php_gtk/button.h"
+#include "php_gtk/main.h"
 
 HashTable classes;
-
 
 
 /* If you declare any globals in php_gtk.h uncomment this:
@@ -62,7 +70,7 @@ static void
 print_g_list(GList *list) {
     GList *it;
     for(it = list/*g_list_first(list)*/; it; it = it->next) {
-        g_print("GList{%s}\n", (char *)it->data);
+        g_print("GList{prev: %p, %s, next: %p}\n", it->prev, (char *)it->data, it->next);
     }
 }
 /* Every user-visible function in PHP should document itself in the source */
@@ -93,6 +101,14 @@ PHP_FUNCTION(confirm_gtk_compiled)
 
     typedef GList GList_CStr;
     GList_CStr *first=NULL, *list = NULL;
+
+
+    first = g_list_append(NULL, key1);
+    first = g_list_append(first, key2);
+    list = first->next;
+    first = g_list_remove_link(first, list);
+    g_print("%p\n", first);// 600
+    print_g_list(list);
 
     /*
     list = g_list_insert(list, key1, 0);
@@ -207,15 +223,40 @@ PHP_MINIT_FUNCTION(gtk)
 	*/
 
 	zend_class_entry ce;
-    zend_class_entry *g_hash_table_ce;
-    zend_class_entry *g_list_ce;
+    //zend_class_entry *g_hash_table_ce;
+    //zend_class_entry *g_list_ce;
+    zend_class_entry *gobject_object_ce;
+    zend_class_entry *gtk_widget_ce;
+    zend_class_entry *gtk_container_ce;
+    zend_class_entry *gtk_bin_ce;
+    zend_class_entry *gtk_window_ce;
+    zend_class_entry *gtk_box_ce;
+    zend_class_entry *gtk_button_ce;
 
 	zend_object_handlers *handlers= php_glib_object_get_handlers();
 
 	zend_hash_init(&classes, 0, NULL, NULL, 1);
 
-    g_hash_table_ce = PHP_G_HASH_TABLE_MINIT_FUNCTION(&ce);
-    g_list_ce = PHP_G_LIST_MINIT_FUNCTION(&ce);
+    //                  PHP_GLIB_MINIT_FUNCTION(&ce);
+    //                  PHP_CAIRO_MINIT_FUNCTION(&ce);
+    //                  PHP_PANGO_MINIT_FUNCTION(&ce);
+                        PHP_G_HASH_TABLE_MINIT_FUNCTION(&ce, NULL);
+                        PHP_GLIB_LIST_MINIT_FUNCTION(&ce, NULL);
+    gobject_object_ce = PHP_GOBJECT_OBJECT_MINIT_FUNCTION(&ce, NULL);
+                        PHP_GOBJECT_SIGNAL_MINIT_FUNCTION(&ce, NULL);
+    gtk_widget_ce     = PHP_GTK_WIDGET_MINIT_FUNCTION(&ce, gobject_object_ce);
+    gtk_container_ce  = PHP_GTK_CONTAINER_MINIT_FUNCTION(&ce, gtk_widget_ce);
+    gtk_bin_ce        = PHP_GTK_BIN_MINIT_FUNCTION(&ce, gtk_container_ce);
+    gtk_box_ce        = PHP_GTK_BOX_MINIT_FUNCTION(&ce, gtk_container_ce);
+    gtk_window_ce     = PHP_GTK_WINDOW_MINIT_FUNCTION(&ce, gtk_bin_ce);
+    gtk_button_ce     = PHP_GTK_BUTTON_MINIT_FUNCTION(&ce, gtk_bin_ce);
+
+    //REGISTER_GTK_ENUM(GTK_ORIENTATION_HORIZONTAL);
+    zend_register_long_constant("GTK_ORIENTATION_HORIZONTAL", sizeof("GTK_ORIENTATION_HORIZONTAL")-1,
+                                GTK_ORIENTATION_HORIZONTAL, CONST_CS | CONST_PERSISTENT, module_number);
+    //REGISTER_GTK_ENUM(GTK_ORIENTATION_VERTICAL);
+    zend_register_long_constant("GTK_ORIENTATION_VERTICAL", sizeof("GTK_ORIENTATION_VERTICAL")-1,
+                                GTK_ORIENTATION_VERTICAL, CONST_CS | CONST_PERSISTENT, module_number);
 
 	return SUCCESS;
 }
@@ -231,9 +272,25 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
 	UNREGISTER_INI_ENTRIES();
 	*/
 
-    PHP_G_LIST_MSHUTDOWN_FUNCTION();
+    PHP_GLIB_LIST_MSHUTDOWN_FUNCTION();
 
     PHP_G_HASH_TABLE_MSHUTDOWN_FUNCTION();
+
+    PHP_GOBJECT_OBJECT_MSHUTDOWN_FUNCTION();
+
+    PHP_GOBJECT_SIGNAL_MSHUTDOWN_FUNCTION();
+
+    PHP_GTK_WIDGET_MSHUTDOWN_FUNCTION();
+
+    PHP_GTK_CONTAINER_MSHUTDOWN_FUNCTION();
+
+    PHP_GTK_BIN_MSHUTDOWN_FUNCTION();
+
+    PHP_GTK_WINDOW_MSHUTDOWN_FUNCTION();
+
+    PHP_GTK_BUTTON_MSHUTDOWN_FUNCTION();
+
+    PHP_GTK_BOX_MSHUTDOWN_FUNCTION();
 
     //zend_hash_destroy(&php_glib_object_handlers);
     zend_hash_destroy(&classes);
@@ -251,7 +308,6 @@ PHP_RINIT_FUNCTION(gtk)
 	ZEND_TSRMLS_CACHE_UPDATE();
 #endif
 
-
 	return SUCCESS;
 }
 /* }}} */
@@ -262,7 +318,15 @@ PHP_RINIT_FUNCTION(gtk)
 PHP_RSHUTDOWN_FUNCTION(gtk)
 {
     PHP_G_HASH_TABLE_RSHUTDOWN_FUNCTION();
-    PHP_G_LIST_RSHUTDOWN_FUNCTION();
+    PHP_GLIB_LIST_RSHUTDOWN_FUNCTION();
+    PHP_GOBJECT_OBJECT_RSHUTDOWN_FUNCTION();
+    PHP_GOBJECT_SIGNAL_RSHUTDOWN_FUNCTION();
+    PHP_GTK_WIDGET_RSHUTDOWN_FUNCTION();
+    PHP_GTK_CONTAINER_RSHUTDOWN_FUNCTION();
+    PHP_GTK_BIN_RSHUTDOWN_FUNCTION();
+    PHP_GTK_BOX_RSHUTDOWN_FUNCTION();
+    PHP_GTK_WINDOW_RSHUTDOWN_FUNCTION();
+    PHP_GTK_BUTTON_RSHUTDOWN_FUNCTION();
 
     return SUCCESS;
 }
@@ -282,18 +346,27 @@ PHP_MINFO_FUNCTION(gtk)
 }
 /* }}} */
 
-
 /* {{{ gtk_functions[]
  *
  * Every user visible function must have an entry in gtk_functions[].
  */
 const zend_function_entry gtk_functions[] = {
     PHP_FE(confirm_gtk_compiled,	NULL)		     /* For testing, remove later. */
-    PHP_G_LIST_FE()
+    PHP_GLIB_LIST_FE()
     PHP_G_HASH_TABLE_FE()
+    PHP_GOBJECT_OBJECT_FE()
+    PHP_GOBJECT_SIGNAL_FE()
+    PHP_GTK_WIDGET_FE()
+    PHP_GTK_CONTAINER_FE()
+    PHP_GTK_BIN_FE()
+    PHP_GTK_BOX_FE()
+    PHP_GTK_WINDOW_FE()
+    PHP_GTK_BUTTON_FE()
+    PHP_GTK_MAIN_FE()
     PHP_FE_END	/* Must be the last line in gtk_functions[] */
 };
 /* }}} */
+
 
 
 /* {{{ gtk_module_entry

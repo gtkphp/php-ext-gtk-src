@@ -121,14 +121,26 @@ if test "$PHP_GTK" != "no"; then
 
   PHP_SUBST(GTK_SHARED_LIBADD)
 
-  glib_sources="php_glib/glib.c "
+  glib_sources="php_glib/list.c \
+                php_glib/glib.c "
 
-  g_sources="php_g/g-list.c \
-             php_g/g-hash-table.c"
+  g_sources="php_g/g-hash-table.c"
+
+  gobject_sources="php_gobject/object.c \
+                   php_gobject/signal.c"
+  gtk_sources="php_gtk/widget.c \
+               php_gtk/container.c \
+               php_gtk/bin.c \
+               php_gtk/box.c \
+               php_gtk/window.c \
+               php_gtk/button.c \
+               php_gtk/main.c "
 
   sources="gtk.c"
 
-  PHP_NEW_EXTENSION(gtk, gtk.c $glib_sources $g_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+  PHP_NEW_EXTENSION(gtk, gtk.c $glib_sources $gobject_sources $gtk_sources $g_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_glib, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_g, 1)
+  PHP_ADD_BUILD_DIR($ext_builddir/php_gobject, 1)
+  PHP_ADD_BUILD_DIR($ext_builddir/php_gtk, 1)
 fi

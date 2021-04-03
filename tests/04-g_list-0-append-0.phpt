@@ -1,28 +1,28 @@
 --TEST--
-Check for g_list_prepend
+04-0-0 Check for g_list_append
 --SKIPIF--
 <?php if (!extension_loaded("gtk")) print "skip"; ?>
 --FILE--
 <?php
 
 $list = new GList();
-$list = g_list_prepend($list, "value1");
+$list = g_list_append($list, "value1");
 
 var_dump($list);
 
 ?>
 --EXPECT--
-object(GList)#2 (3) {
+object(GList)#1 (3) {
   ["prev"]=>
   NULL
   ["data"]=>
-  string(6) "value1"
+  NULL
   ["next"]=>
-  object(GList)#1 (3) {
+  object(GList)#2 (3) {
     ["prev"]=>
     *RECURSION*
     ["data"]=>
-    NULL
+    string(6) "value1"
     ["next"]=>
     NULL
   }

@@ -718,15 +718,15 @@ static const zend_function_entry php_g_hash_table_methods[] = {
 
 /*{{{ juste pour var_dump(zval) ou zval est un php_g_hash_table->php_glib_object */
 zend_class_entry*
-php_g_hash_table_class_init(zend_class_entry *ce) {
+php_g_hash_table_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
 	TRACE();
    php_g_hash_table_get_handlers();
    //INIT_NS_CLASS_ENTRY((*ce), "Vendor\\ExtName", "GHashTable", php_g_hash_table_methods);
-   INIT_CLASS_ENTRY((*ce), "GHashTable", php_g_hash_table_methods);
-   ce->create_object = php_g_hash_table_create_object;
-   php_g_hash_table_class_entry = zend_register_internal_class_ex(ce, NULL);
+   INIT_CLASS_ENTRY((*container_ce), "GHashTable", php_g_hash_table_methods);
+   container_ce->create_object = php_g_hash_table_create_object;
+   php_g_hash_table_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
    zend_hash_init(&php_g_hash_table_prop_handlers, 0, NULL, php_g_hash_table_dtor_prop_handler, 1);
-   zend_hash_add_ptr(&classes, ce->name, &php_g_hash_table_prop_handlers);
+   zend_hash_add_ptr(&classes, container_ce->name, &php_g_hash_table_prop_handlers);
 
    return php_g_hash_table_class_entry;
 }/*}}} */

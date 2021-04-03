@@ -45,9 +45,10 @@
     PHP_FE(g_hash_table_insert, arginfo_g_hash_table_insert)\
     PHP_G_STR_FE()
 
+extern HashTable php_g_hash_table_prop_handlers;
 
-#define PHP_G_HASH_TABLE_MINIT_FUNCTION(parent_ce) \
-    php_g_hash_table_class_init(parent_ce)
+#define PHP_G_HASH_TABLE_MINIT_FUNCTION(container_ce, parent_ce) \
+    php_g_hash_table_class_init(container_ce, parent_ce)
 
 #define PHP_G_HASH_TABLE_MSHUTDOWN_FUNCTION() { \
     zend_hash_destroy(&php_g_hash_table_prop_handlers); \
@@ -80,7 +81,7 @@ zend_bool         php_g_hash_table_insert(php_g_hash_table *hash_table, zval *ke
 
 void  php_g_hash_table_free(php_g_hash_table *hash_table);
 
-zend_class_entry *php_g_hash_table_class_init(zend_class_entry *ce);
+zend_class_entry *php_g_hash_table_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
 
 /*----------------------------------------------------------------------+
  | g_hash_table_insert                                                  |
