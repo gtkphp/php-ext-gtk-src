@@ -329,7 +329,6 @@ php_gtk_window_create_object(zend_class_entry *class_type)
 
     gobject->ptr = NULL;
     gobject->properties = NULL;
-    g_print("window_create_object %p\n", intern);
 
     gobject->std.handlers = &php_gtk_window_handlers;
 

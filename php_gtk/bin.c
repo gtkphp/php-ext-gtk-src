@@ -328,7 +328,6 @@ php_gtk_bin_create_object(zend_class_entry *class_type)
 
     gobject->ptr = NULL;//g_object_new(G_TYPE_OBJECT, NULL);// new GObject ?
     gobject->properties = NULL;
-    g_print("bin_create_object %p\n", intern);
 
     gobject->std.handlers = &php_gtk_bin_handlers;
 

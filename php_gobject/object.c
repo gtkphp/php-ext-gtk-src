@@ -357,7 +357,6 @@ php_gobject_object_create_object(zend_class_entry *class_type)
 
     intern->ptr = NULL;//g_object_new(G_TYPE_OBJECT, NULL); //NULL;// new GObject ?
     intern->properties = NULL;
-    g_print("php_gobject_object_create_object\n");
 
     intern->std.handlers = &php_gobject_object_handlers;
 

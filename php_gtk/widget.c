@@ -357,7 +357,6 @@ php_gtk_widget_create_object(zend_class_entry *class_type)
 
     gobject->ptr = NULL;// new GObject ?
     gobject->properties = NULL;
-    g_print("widget_create_object %p\n", intern);
 
     gobject->std.handlers = &php_gtk_widget_handlers;
 
