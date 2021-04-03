@@ -84,17 +84,21 @@ Main();
 
 
 
-
 function on_add(GtkContainer $container, GtkWidget $widget, $user_data) {
     echo "on_add\n";
-    //$children = gtk_container_get_children($container);
-    //print_r((array)$children);
+    /*
+    $list = new GList("val");
+    unset($list);
+    */
+    //gtk_widget_dump($widget);
+
+    //unset($children);
 
     //var_dump("Display the children of window", $children);
     //for($it=$children; $it!=null; $it=$it->next) {
     //    var_dump($it->data);
     //}
-    //unset($children);
+
 }
 
 function on_quit(GtkWidget $object, $user_data) {
@@ -108,7 +112,7 @@ $window = gtk_window_new();
 g_signal_connect($window, "destroy", "on_quit", Null);
 
 $box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-g_signal_connect($box, "add", "on_add", new StdClass());
+//g_signal_connect($box, "add", "on_add", new StdClass());
 
 $button_a = gtk_button_new_with_label("Valide");
 $button_b = gtk_button_new_with_label("Cancel");
@@ -119,6 +123,9 @@ gtk_container_add($box, $button_b);
 gtk_container_add($window, $box);
 
 gtk_widget_show_all($window);
+
+$children = gtk_container_get_children($box);
+g_list_dump($children);
 
 gtk_main();
 

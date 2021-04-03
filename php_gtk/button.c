@@ -458,19 +458,17 @@ PHP_FUNCTION(gtk_button_new_with_label)
     zend_string *label = zlabel==NULL || ZVAL_IS_NULL(zlabel) || Z_TYPE_P(zlabel)!=IS_STRING ? NULL : zlabel->value.str;
 
     zend_object *z_button = php_gtk_button_create_object(php_gtk_button_class_entry);
-    php_gtk_button *gtk_button = ZOBJ_TO_PHP_GTK_BUTTON(z_button);
-    php_gobject_object *gobject = PHP_GTK_BUTTON_TO_PHP_G_OBJECT(gtk_button);
+    php_gtk_button *button = ZOBJ_TO_PHP_GTK_BUTTON(z_button);
+    php_gtk_button_new_with_label(button, label);
 
-    GtkWidget *button = gtk_button_new_with_label(label->val);
-
-    gobject->ptr = G_OBJECT(button);
-    g_object_set_data(G_OBJECT(button), "zend_object", z_button);
+    ZVAL_OBJ(return_value, z_button);
 
     zval member; ZVAL_STRING(&member, "label");
     zval val; ZVAL_STRING(&val, label->val);
     void *slot = NULL;
-    ZVAL_OBJ(return_value, z_button);
     php_gtk_button_write_property(return_value, &member, &val, &slot);
+    Z_TRY_DELREF(member);
+    Z_TRY_DELREF(val);
 
     //GC_REFCOUNT(z_button)++;
     RETURN_OBJ(z_button);

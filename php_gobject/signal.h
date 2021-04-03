@@ -66,6 +66,7 @@ typedef struct _php_gobject_signal php_gobject_signal;
 struct _php_gobject_signal {
 
     HashTable *properties;
+    // ptr
     zend_object std;
 };
 

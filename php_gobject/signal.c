@@ -418,13 +418,9 @@ my_callback(gpointer user_data, ...) {
             switch (G_TYPE_FUNDAMENTAL(data->query.param_types[i])) {
             case G_TYPE_OBJECT: {
                 GObject *obj = va_arg(ap, GObject*);
-                const char *name = g_type_name_from_instance((GTypeInstance*)obj);
-                zend_string *class_name = zend_string_init(name, strlen(name), 0);
-                zend_class_entry *ce = zend_lookup_class(class_name);
-                zend_object *zobject = ce->create_object(ce);
-                ZOBJ_TO_PHP_GOBJECT_OBJECT(zobject)->ptr = obj;
-                ZVAL_OBJ(&data->params[i+1], zobject);
-                zend_string_release(class_name);
+                zend_object* z_object = g_object_get_data(obj, "zend_object");
+                GC_REFCOUNT(z_object)++;
+                ZVAL_OBJ(&data->params[i+1], z_object);
             }
             break;
             }
@@ -435,23 +431,6 @@ my_callback(gpointer user_data, ...) {
     }
 
     va_end(ap);
-
-
-#if 0
-    g_print("%s::%s\n", ginstance->std.ce->name->val, g_signal_name(id));
-    g_print("  %s %s(", g_type_name(my_data->query.return_type), my_data->query.signal_name, my_data->query.n_params);
-    g_print("%s", g_type_name(my_data->query.itype));
-
-    int x;
-    char glue[]=", ";
-    //glue[0]='\0';
-    for (x=0; x<my_data->query.n_params; x++) {
-        g_print("%s%s", glue, g_type_name(my_data->query.param_types[x]));
-        glue[0]=',';
-    }
-    g_print(", %s", "gpointer user_data");
-    g_print(")\n");
-#endif
 
     result = call_user_function(NULL, NULL, &data->handler, &retval, num_params+2, data->params);
     if (result == FAILURE) {

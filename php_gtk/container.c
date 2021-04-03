@@ -476,5 +476,6 @@ PHP_FUNCTION(gtk_container_get_children)
     GList *children = gtk_container_get_children(GTK_CONTAINER(pcontainer->ptr));
     php_glib_list *list = php_glib_list_new(children);
 
+    //GC_REFCOUNT(&list->std)--;
     RETURN_OBJ(&list->std);
 }/* }}} */

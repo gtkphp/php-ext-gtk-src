@@ -96,11 +96,11 @@ extern zend_class_entry *php_glib_list_class_entry;
 
 typedef struct _php_glib_list php_glib_list;
 struct _php_glib_list {
+    GList *ptr;
     zval data;
     php_glib_list *next;
     php_glib_list *prev;
 
-    GList *ptr;
     HashTable *properties;
 
     zend_object std;

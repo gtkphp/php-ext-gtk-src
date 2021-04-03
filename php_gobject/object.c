@@ -342,8 +342,8 @@ php_gobject_object_dtor_object(zend_object *obj) {
         intern->prev=NULL;
     }
     */
-
 }
+
 
 /* {{{ php_gobject_object_create_object */
 static zend_object*

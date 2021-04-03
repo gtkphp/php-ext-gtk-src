@@ -331,6 +331,7 @@ php_glib_list_dtor_object(zend_object *obj) {
     } else {
         TRACE("php_glib_list_dtor_object(\"%s\") / %d\n", "?", obj->gc.refcount);
     }
+    g_print("php_glib_list_dtor_object\n");
 
     if (!ZVAL_IS_NULL(&intern->data)) {
         Z_TRY_DELREF_P(&intern->data);
@@ -351,6 +352,10 @@ php_glib_list_dtor_object(zend_object *obj) {
         intern->prev=NULL;
     }
 }
+static void
+php_glib_list__unset() {
+
+}
 
 /* {{{ php_glib_list_create_object */
 static zend_object*
@@ -360,6 +365,7 @@ php_glib_list_create_object(zend_class_entry *class_type)
 
     zend_object_std_init(&intern->std, class_type);
     object_properties_init(&intern->std, class_type);
+    g_print("php_glib_list_create_object\n");
 
     //php_glib_list_properties_init(intern);
     ZVAL_NULL(&intern->data);
@@ -426,9 +432,10 @@ php_glib_list_class_init(zend_class_entry *container_ce, zend_class_entry *paren
     php_glib_list_get_handlers();
     //INIT_NS_CLASS_ENTRY((*ce), "Gnome\\G", "List", php_glib_list_methods);
     INIT_CLASS_ENTRY((*container_ce), "GList", php_glib_list_methods);
-    container_ce->create_object = php_glib_list_create_object;
-    //ce->serialize;
     php_glib_list_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
+    php_glib_list_class_entry->create_object = php_glib_list_create_object;
+    //container_ce->__unset = php_glib_list__unset;
+    //ce->serialize;
     /*
     zend_hash_init(&php_glib_list_prop_handlers, 0, NULL, php_glib_list_dtor_prop_handler, 1);
     php_glib_list_register_prop_handler(&php_glib_list_prop_handlers, "prev", sizeof("prev")-1, php_glib_list_read_prev, php_glib_list_write_prev);
@@ -1053,6 +1060,7 @@ php_glib_list_new(GList *list) {
         }
     }
 
+    //g_print("ref: %d\n", head->std.gc.refcount);
     return head;
 }
 
@@ -1665,26 +1673,33 @@ PHP_FUNCTION(g_list_index)
 
 static char *php_glib_list_dump_zval(zval *data, int tab);
 static GList *recursions = NULL;// of php_glib_list
-static char *php_glib_list_dump_zobj(php_glib_list *list, int tab){
+static char *php_glib_list_dump_zobj(zend_object *z_object, int tab){
     char *str;
     char *tmp_prev;
     char *tmp_data;
     char *tmp_next;
+    php_gobject_object *ptr = NULL;
+
+
+    ptr = z_object==NULL ? NULL : ((char*)z_object) - z_object->handlers->offset;
 
     char *t = g_strdup_printf("%*.s", tab*4, "");
-    GList *is_recursion = g_list_find(recursions, (gconstpointer)list);
+    GList *is_recursion = g_list_find(recursions, (gconstpointer)z_object);
 
-    if (list==NULL) {
+    if (z_object==NULL) {
         str = g_strdup_printf("NULL");
     } else if (NULL!=is_recursion) {
         //str = g_strdup_printf("*RECURSION*");
-        str = g_strdup_printf("\e[1;34m%s\e[0;m\e[2;31m#%d\e[0;m{*RECURSION*}", "GList", list->std.handle);
-    } else {
-        recursions = g_list_append(recursions, list);
+        str = g_strdup_printf("\e[1;34m%s\e[0;m\e[2;31m#%d\e[0;m{*RECURSION*}", z_object->ce->name->val, z_object->handle);
+    } else if (z_object->ce==php_glib_list_class_entry) {
+        php_glib_list *list = ptr;
+        recursions = g_list_append(recursions, z_object);
+        zend_object *prev = list->prev ? &list->prev->std : NULL;
+        zend_object *next = list->next ? &list->next->std : NULL;
 
-        tmp_prev = php_glib_list_dump_zobj(list->prev, tab+1);
+        tmp_prev = php_glib_list_dump_zobj(prev, tab+1);
         tmp_data = php_glib_list_dump_zval(&list->data, tab+1);
-        tmp_next = php_glib_list_dump_zobj(list->next, tab+1);
+        tmp_next = php_glib_list_dump_zobj(next, tab+1);
 
         str = g_strdup_printf("\e[1;34m%s\e[0;m\e[1;31m#%d\e[0;m(\e[2;35m%d\e[0;m)%p{\n"
                 "%s    prev: %s,\n"
@@ -1701,6 +1716,19 @@ static char *php_glib_list_dump_zobj(php_glib_list *list, int tab){
         g_free(tmp_prev);
         g_free(tmp_data);
         g_free(tmp_next);
+    } else if (G_IS_OBJECT(ptr->ptr)) {
+        str = g_strdup_printf("\e[2;34m%s\e[0;m(\e[2;35m%d\e[0;m)\e[2;31m#%d\e[0;m{ %s}",
+                              g_type_name_from_instance((GTypeInstance*)ptr->ptr),
+                              z_object->gc.refcount,
+                              z_object->handle,
+                              "...");
+    } else {// for next, prev
+        str = g_strdup_printf("\e[2;34m%s\e[0;m(\e[2;35m%d\e[0;m)\e[2;31m#%d\e[0;m{ %s}",
+                              z_object->ce->name->val,
+                              z_object->gc.refcount,
+                              z_object->handle,
+                              "..."
+                              );
     }
     g_free(t);
 
@@ -1708,11 +1736,12 @@ static char *php_glib_list_dump_zobj(php_glib_list *list, int tab){
     return str;
 }
 
-
+#include "php_gtk/button.h"
 static char*
 php_glib_list_dump_zval(zval *data, int tab) {
     char *str = NULL;
     char *tmp = NULL;
+    char *t = g_strdup_printf("%*.s", tab*4, "");
     if (ZVAL_IS_NULL(data)) {
         str = g_strdup_printf("\e[2;34m%s\e[0;m{ %s}", "zval", "NULL");
     } else if (Z_TYPE_P(data)==IS_STRING) {
@@ -1720,21 +1749,22 @@ php_glib_list_dump_zval(zval *data, int tab) {
     } else if (Z_TYPE_P(data)==IS_LONG) {
         str = g_strdup_printf("\e[2;34m%s\e[0;m{ %ld}", "zval", data->value.lval);
     } else if (Z_TYPE_P(data)==IS_OBJECT) {
-        tmp = php_glib_list_dump_zobj(ZOBJ_TO_PHP_GLIB_LIST(data->value.obj), tab+1);
-        str = g_strdup_printf("\e[2;34m%s\e[0;m(\e[2;35m%d\e[0;m){ %s\n}",
+        tmp = php_glib_list_dump_zobj(data->value.obj, tab+1);
+        str = g_strdup_printf("\e[2;34m%s\e[0;m(\e[2;35m%d\e[0;m){ %s\n%s}",
                               "zval",
                               data->value.counted->gc.refcount,
-                              tmp
-                              );
+                              tmp,
+                              t);
         g_free(tmp);
     } else {
         str = g_strdup_printf("\e[2;34m%s\e[0;m{ %s}", "zval", "Unknow");
     }
+    g_free(t);
     return str;
 }
 static char *php_glib_list_dump(php_glib_list *list, int tab){
 
-    char *str = php_glib_list_dump_zobj(list, tab);
+    char *str = php_glib_list_dump_zobj(&list->std, tab);
     g_list_free(recursions);
     recursions=NULL;
     return str;
