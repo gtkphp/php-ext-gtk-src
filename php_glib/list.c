@@ -303,6 +303,7 @@ php_glib_list_free_object(zend_object *object)
         TRACE("php_glib_list_free_object(\"%s\") / %d\n", "NULL", object->gc.refcount);
     else
         TRACE("php_glib_list_free_object(\"%s\") / %d\n", intern->data.value.str->val, object->gc.refcount);
+    g_print("php_glib_list_free_object(%p)\n", intern);
 
     if (intern->ptr) {
         g_list_free_1(intern->ptr);
@@ -331,7 +332,7 @@ php_glib_list_dtor_object(zend_object *obj) {
     } else {
         TRACE("php_glib_list_dtor_object(\"%s\") / %d\n", "?", obj->gc.refcount);
     }
-    g_print("php_glib_list_dtor_object\n");
+    //g_print("php_glib_list_dtor_object(%p)\n", obj);
 
     if (!ZVAL_IS_NULL(&intern->data)) {
         Z_TRY_DELREF_P(&intern->data);
@@ -352,10 +353,7 @@ php_glib_list_dtor_object(zend_object *obj) {
         intern->prev=NULL;
     }
 }
-static void
-php_glib_list__unset() {
 
-}
 
 /* {{{ php_glib_list_create_object */
 static zend_object*
@@ -365,7 +363,7 @@ php_glib_list_create_object(zend_class_entry *class_type)
 
     zend_object_std_init(&intern->std, class_type);
     object_properties_init(&intern->std, class_type);
-    g_print("php_glib_list_create_object\n");
+    //g_print("php_glib_list_create_object\n");
 
     //php_glib_list_properties_init(intern);
     ZVAL_NULL(&intern->data);
@@ -817,18 +815,18 @@ php_glib_list_remove_all(php_glib_list *list, zval *data) {
             }
 
             // 2) attach
-            /**/
+            /*
             char *str = php_glib_list_dump(list, 1);
             g_print("    %s\n", str);
             g_free(str);
-            /**/
+            */
             php_glib_list_dtor_object(&tmp->std);
-            /**/
+            /*
             char *str2 = php_glib_list_dump(tmp, 2);
             g_print("        %s\n", str2);
             g_free(str2);
             g_print("%d / %d\n", tmp->std.gc.refcount, counter);
-            /**/
+            */
             for(i=0; i<counter; i++) {
                 zend_object_release(&tmp->std);
             }
@@ -1027,33 +1025,17 @@ php_glib_list_new(GList *list) {
 
         if (prev) {
             prev->next = plist;
-            GC_REFCOUNT(zlist)++;
+            GC_REFCOUNT(&prev->std)++;
         }
         plist->prev = prev;
-        GC_REFCOUNT(zlist)++;
-        // {{{wrapper data
+
         if (G_IS_OBJECT(it->data)) {
             GObject *object = (GObject *)it->data;
             zend_object *z_object = g_object_get_data(object, "zend_object");
             GC_REFCOUNT(z_object)++;
             ZVAL_OBJ(&plist->data, z_object);
-            // On aimerai conserver l'id (GtkButton)#1( pas de create_object, svp
-            // il faut GtkWidget->data[zend] = zend_object*
-            // mais on garde ->data pour le user, donc on va créer un array specifique.
-            // Donc :
-            // Pour chaque new GtkWidget, pop stack
-            // Set<Pair<GObject*, zend_object*>>
-            /*
-            const char *name = g_type_name_from_instance((GTypeInstance*)it->data);
-            zend_string *class_name = zend_string_init(name, strlen(name), 0);
-            zend_class_entry *ce = zend_lookup_class(class_name);
-            zend_object *zobject = ce->create_object(ce);
-            ZOBJ_TO_PHP_GOBJECT_OBJECT(zobject)->ptr = it->data;
-            ZVAL_OBJ(&plist->data, zobject);
-            zend_string_release(class_name);
-            */
         }
-        // wrapper data}}}
+
         prev = plist;
         if (it==list) {
             head = plist;

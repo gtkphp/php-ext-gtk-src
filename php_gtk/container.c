@@ -472,10 +472,12 @@ PHP_FUNCTION(gtk_container_get_children)
 
     php_gtk_container *container = ZVAL_IS_PHP_GTK_CONTAINER(zcontainer) ? ZVAL_GET_PHP_GTK_CONTAINER(zcontainer) : NULL;
     php_gobject_object *pcontainer = PHP_GTK_CONTAINER_TO_PHP_G_OBJECT(container);
+    if (NULL==pcontainer) {
+        RETURN_NULL();
+    }
 
     GList *children = gtk_container_get_children(GTK_CONTAINER(pcontainer->ptr));
     php_glib_list *list = php_glib_list_new(children);
 
-    //GC_REFCOUNT(&list->std)--;
     RETURN_OBJ(&list->std);
 }/* }}} */

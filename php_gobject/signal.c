@@ -419,7 +419,7 @@ my_callback(gpointer user_data, ...) {
             case G_TYPE_OBJECT: {
                 GObject *obj = va_arg(ap, GObject*);
                 zend_object* z_object = g_object_get_data(obj, "zend_object");
-                GC_REFCOUNT(z_object)++;
+                ///GC_REFCOUNT(z_object)++;
                 ZVAL_OBJ(&data->params[i+1], z_object);
             }
             break;
@@ -440,7 +440,7 @@ my_callback(gpointer user_data, ...) {
     for (int i=0; i<data->query.n_params; i++) {
         //TODO: switch IS_OBJECT
         zend_object *obj = data->params[i+1].value.obj;
-        zend_object_release(obj);
+        ///zend_object_release(obj);
     }
 
 }
