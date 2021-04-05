@@ -1,5 +1,5 @@
 --TEST--
-04-8-9 : Check for g_list_remove_all
+04-9-0 : Check for g_list_free
 --SKIPIF--
 <?php if (!extension_loaded("gtk")) print "skip"; ?>
 --FILE--
@@ -10,7 +10,7 @@ $list = g_list_append($list, "value0");
 $list = g_list_append($list, "value");
 $list = g_list_append($list, "value");
 
-$list = g_list_remove_all($list, "value");
+g_list_free($list);
 
 var_dump($list);
 
@@ -21,7 +21,7 @@ object(GList)#1 (3) {
   ["prev"]=>
   NULL
   ["data"]=>
-  string(6) "value0"
+  NULL
   ["next"]=>
   NULL
 }

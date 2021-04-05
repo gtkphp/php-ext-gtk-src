@@ -1,5 +1,5 @@
 --TEST--
-04-8-0 : Check for g_list_remove_all
+04-8-4 : Check for g_list_remove_all
 --SKIPIF--
 <?php if (!extension_loaded("gtk")) print "skip"; ?>
 --FILE--

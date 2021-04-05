@@ -6,34 +6,22 @@
 <?php
 
 $list = Null;
-$list = g_list_append($list, "value");
-$list = g_list_append($list, "value");
-$list = g_list_append($list, "value");
-$list = g_list_append($list, "value4");
+$list = g_list_append($list, "value0");
 
 $list = g_list_remove_all($list, "value");
 
 var_dump($list);
 
-/*
-$list = Null;
-$list = g_list_append($list, "value");
-$list = g_list_append($list, "value");
-$list = g_list_append($list, "value");
-$list = g_list_append($list, "value");
-
-$list = g_list_remove_all($list, "value");
-*/
 
 
 
 ?>
 --EXPECT--
-object(GList)#4 (3) {
+object(GList)#1 (3) {
   ["prev"]=>
   NULL
   ["data"]=>
-  string(6) "value4"
+  string(6) "value0"
   ["next"]=>
   NULL
 }

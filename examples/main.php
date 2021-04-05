@@ -88,13 +88,17 @@ function on_add(GtkContainer $container, GtkWidget $widget, $user_data) {
     echo "on_add(".$widget->label.")\n";
 
     $children = gtk_container_get_children($container);
-    g_list_dump($children);
 
-    /*for($it=$children; $it!=null; $it=$it->next) {
+    //g_list_dump($children);
+    //print_r((array)$children);
+    for($it=$children; $it!=null; $it=$it->next) {
         $button = $it->data;
         var_dump($button->label);
-    }*/
+    }
 
+    g_list_free($children);// unset($children)
+    // unset do zend_object_release();
+    // but we whant to call dtor_object() wich call release
 }
 
 function on_quit(GtkWidget $object, $user_data) {

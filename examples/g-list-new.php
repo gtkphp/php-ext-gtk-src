@@ -26,38 +26,16 @@ error_reporting(E_ALL);
 
 
 $list = Null;
-$list = g_list_append($list, "value");
+$list = g_list_append($list, "value0");
 $list = g_list_append($list, "value1");
-$list = g_list_append($list, "value");
+$list = g_list_append($list, "value2");
 
-$list = g_list_remove_all($list, "value");
+//g_list_free($list);
+unset($list);
 
-var_dump($list);
-
-
-
+echo "unset\n";
 
 
-
-
-
-
-/*
-$list = Null;
-$list = g_list_append($list, "value");
-$list = g_list_append($list, "value");
-//$list = g_list_append($list, "value");
-//$list = g_list_append($list, "value3");
-//$list = g_list_append($list, "value");
-//$list = g_list_append($list, "value");
-//$list = g_list_append($list, "value");
-g_list_dump($list);
-
-$list = g_list_remove_all($list, "value");
-//$foo = $list;
-g_list_dump($list);
-//g_list_dump(g_list_remove_all($list, "value"));
-*/
 
 
 //echo "Read: https://www.phpinternalsbook.com/php7/zvals/memory_management.html\n";
