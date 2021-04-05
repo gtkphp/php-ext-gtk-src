@@ -303,7 +303,7 @@ php_glib_list_free_object(zend_object *object)
         TRACE("php_glib_list_free_object(\"%s\") / %d\n", "NULL", object->gc.refcount);
     else
         TRACE("php_glib_list_free_object(\"%s\") / %d\n", intern->data.value.str->val, object->gc.refcount);
-    g_print("php_glib_list_free_object(%p)\n", intern);
+    //g_print("php_glib_list_free_object(%p)\n", intern);
 
     if (intern->ptr) {
         g_list_free_1(intern->ptr);
@@ -763,54 +763,182 @@ php_glib_list_delete_link(php_glib_list *list, php_glib_list *link_) {
 
 php_glib_list *
 php_glib_list_remove_all(php_glib_list *list, zval *data) {
+    php_glib_list *top = NULL;// top have is owner
     php_glib_list *head = NULL;
     php_glib_list *tmp = list;
     zend_long i = 0;
     zend_long counter;
+    zend_long adopt;
 
     if (NULL==list->prev) {
          head = list;
+         top = head;
+    } else {
+        top = php_glib_list_first(list);
     }
 
     while (tmp) {
         if (! zend_is_identical(&tmp->data, data))
             tmp = tmp->next;
         else {
+#if 1
+            php_glib_list *prev = tmp->prev;
+            php_glib_list *next = tmp->next;
+            counter = 0;
+            adopt=0;
+
+            if (prev) {
+                prev->next = next;
+                if(next) {
+                    if(prev!=head) {
+                        //g_print("     0-0-0\n");///+
+                        GC_REFCOUNT(&prev->std)++;
+                    } else {
+                        //g_print("     0-0-1\n");//+
+                    }
+                } else {
+                    //g_print("     0-1\n");///+
+                }
+                if (prev==top) {
+                    //g_print("    -1-0\n");//+
+                    GC_REFCOUNT(&prev->std)++;
+                } else if (prev==head) {
+                    //g_print("     1-0\n");//+
+                    GC_REFCOUNT(&prev->std)++;
+                } else {
+                    //g_print("     1-1\n");///+
+                }
+                counter++;
+            }
+
+            if (next) {
+                next->prev = prev;
+                if(prev) {
+                    //g_print("     2-0\n");///+
+                    GC_REFCOUNT(&next->std)++;
+                    counter++;
+                } else if (tmp==head) {
+                    //g_print("     2-1\n");
+                    GC_REFCOUNT(&next->std)++;// one element remain
+                    if(tmp==top)
+                        adopt--;
+                    counter++;
+                    head = next;
+                    list = next;
+                }
+            } else {
+                if (prev==top) {
+                    //g_print("    3-0\n");//+
+                    GC_REFCOUNT(&prev->std)--;// one element remain
+                }
+                if (tmp==top) {
+                    //g_print("    4-0\n");//+
+                    list = NULL;
+                } else if(tmp==head) {
+                    //g_print("    5-0\n");//+
+                    GC_REFCOUNT(&tmp->std)++;//HACK
+                    counter++;//HACK
+                    list = NULL;
+                }
+            }
+
+
+
+            /*
+            if (!prev && !next) {
+                g_print("     1-0\n");
+            }
+            if (!prev && next) {
+                g_print("     2-0\n");
+            }
+            if (prev && !next) {
+                g_print("     3-0\n");
+            }
+            if (prev && next) {
+                g_print("     4-0\n");
+            }
+            */
+
+            // 2) attach
+            php_glib_list_dtor_object(&tmp->std);
+            for(i=0; i<counter; i++) {
+                zend_object_release(&tmp->std);
+            }
+            tmp = next;
+
+            if(tmp)
+                GC_REFCOUNT(&tmp->std)+=adopt;
+
+#else
+
             php_glib_list *prev = tmp->prev;
             php_glib_list *next = tmp->next;
             counter = 0;
 
             // 1) detach
+            g_print("detach:\n");
             if (prev) {
+                g_print("  Case prev\n");
                 prev->next = next;
-                if(next)
+                if(next) {
+                    g_print("   has next\n");
+                    if(prev!=head) {
+                        GC_REFCOUNT(&prev->std)++;
+                    }
+                }
+                if (prev==head) {
                     GC_REFCOUNT(&prev->std)++;
+                }
                 counter++;
-            } else if(head==tmp) {
+            } else if(top==tmp) {
+                g_print("  Case top\n");
                 if (next) {
+                    g_print("   has next\n");
                     list = next;
-                    GC_REFCOUNT(&next->std)++;
-                    ///counter++;
+                    //GC_REFCOUNT(&next->std)++;//------------------
+                    //counter++;
                 } else {
+                    g_print("   void next\n");
+                    //GC_REFCOUNT(&next->std)++;
+                    //GC_REFCOUNT(&tmp->std)--;
+                    //counter++;
+                    list = NULL;
+                }
+                head = list;
+            } else if(head==tmp) {
+                g_print("  Case head\n");
+                if (next) {
+                    g_print("   has next\n");
+                    list = next;
+                    //GC_REFCOUNT(&next->std)++;
+                    //counter++;//------------------------------
+                } else {
+                    g_print("   void next\n");
                     //GC_REFCOUNT(&next->std)++;
                     //GC_REFCOUNT(&tmp->std)--;
                     counter++;
                     list = NULL;
                 }
+                head = list;
             } else {
+                g_print("  Case middle\n");
                 if (next) {
+                    g_print("   has next\n");
                     list = next;
-                    GC_REFCOUNT(&next->std)++;
+                    //GC_REFCOUNT(&next->std)++;
                 } else {
-                    g_print("Case ??\n");
+                    g_print("   void next\n");
                 }
                 //counter++;
             }// else list = NULL;
 
             if (next) {
+                g_print("  Case next\n");
                 next->prev = prev;
-                if(prev)
-                  GC_REFCOUNT(&next->std)++;
+                if(prev) {
+                    g_print("    has prev\n");
+                    GC_REFCOUNT(&next->std)++;
+                }
                 counter++;
             }
 
@@ -825,13 +953,14 @@ php_glib_list_remove_all(php_glib_list *list, zval *data) {
             char *str2 = php_glib_list_dump(tmp, 2);
             g_print("        %s\n", str2);
             g_free(str2);
-            g_print("%d / %d\n", tmp->std.gc.refcount, counter);
             */
+            g_print("%d / %d\n", tmp->std.gc.refcount, counter);
             for(i=0; i<counter; i++) {
                 zend_object_release(&tmp->std);
             }
-            //g_print("remaind: %d\n", tmp->std.gc.refcount);
             tmp = next;
+#endif
+
         }
     }
     return list;
@@ -1259,7 +1388,7 @@ PHP_FUNCTION(g_list_remove_all)
     php_glib_list *__ret = php_glib_list_remove_all(__list, data);
 
     if (__ret) {
-        //GC_REFCOUNT(&__ret->std)++;
+        GC_REFCOUNT(&__ret->std)++;
         RETURN_OBJ(&__ret->std);
     } else {
         RETURN_NULL();
