@@ -52,7 +52,6 @@
 #include "php_gtk/button.h"
 #include "php_gtk/main.h"
 
-
 HashTable classes;
 
 /* If you declare any globals in php_gtk.h uncomment this:

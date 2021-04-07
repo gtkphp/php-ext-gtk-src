@@ -74,14 +74,10 @@ typedef struct _php_glib_error php_glib_error;
 struct _php_glib_error {
     GError *ptr;
 
-    zval domain;
-    zval code;
-    zval message;
-
     zend_object std;
 };
 
-php_glib_error *php_glib_error_new(zend_long domain, zend_long code, zend_string *format, ...);
+php_glib_error *php_glib_error_new(zend_long domain, zend_long code, zend_string *format, zval *args, int argc);
 php_glib_error *php_glib_error_new_literal(zval *domain, zend_long code, zend_string message);
 void php_glib_error_free(php_glib_error *error);
 php_glib_error *php_glib_error_copy(php_glib_error *error);
@@ -92,6 +88,8 @@ void php_g_propagate_error(php_glib_error *dest, php_glib_error *src);
 void php_g_clear_error(php_glib_error *err);
 void php_g_prefix_error(php_glib_error *err, zend_string format);
 void php_g_propagate_prefixed_error(php_glib_error *dest, php_glib_error *src, zend_string format);
+
+php_glib_error *php_glib_error_create(GError *error);
 
 zend_class_entry *php_glib_error_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
 

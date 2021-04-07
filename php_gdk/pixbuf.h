@@ -25,7 +25,7 @@
 #include "config.h"
 #endif
 
-#include <gtk/gtk.h>
+#include <gdk/gdk.h>
 #include "php_gobject/object.h"
 
 #define PHP_GDK_PIXBUF(ptr)           ((php_gdk_pixbuf*)(ptr))
@@ -78,7 +78,7 @@ php_gdk_pixbuf *php_gdk_pixbuf_new_from_file(zend_string *filename, zval *error)
 zend_class_entry *php_gdk_pixbuf_class_init(zend_class_entry *container_ce, zend_class_entry *ce);
 
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_gdk_pixbuf_new_from_file, 0, 0, 2)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_gdk_pixbuf_new_from_file, 0, 0, 1)
     ZEND_ARG_INFO(0, filename)
     ZEND_ARG_INFO(1, error)
 ZEND_END_ARG_INFO()

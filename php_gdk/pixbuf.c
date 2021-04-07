@@ -27,7 +27,11 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+
 #include "pixbuf.h"
+
+#include <glib.h>
+#include "php_glib/error.h"
 
 extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
@@ -126,9 +130,22 @@ php_gdk_pixbuf_count_elements(zval *object, zend_long *count) {
 static int
 php_gdk_pixbuf_cast_object(zval *readobj, zval *retval, int type)
 {
-    ZVAL_NULL(retval);
+    php_gdk_pixbuf *pixbuf = ZVAL_GET_PHP_GDK_PIXBUF(readobj);
+    switch (type) {
+    case _IS_BOOL:
+        if (NULL==pixbuf->parent_instance.ptr) {
+            ZVAL_FALSE(retval);
+        } else {
+            ZVAL_TRUE(retval);
+        }
+        break;
+    default:
+        g_print("Unsupported type in php_gdk_pixbuf_cast_object(%d)\n", type);
+        ZVAL_NULL(retval);
+        return FAILURE;
+    }
 
-    return FAILURE;
+    return SUCCESS;
 }
 
 static HashTable*
@@ -302,8 +319,7 @@ php_gdk_pixbuf_free_object(zend_object *object)
     TRACE("php_gdk_pixbuf_free_object(\"%s\") / %d\n", intern->data.value.str->val, object->gc.refcount);
 
     if (gobject->ptr) {
-        g_free(gobject->ptr);
-        gobject->ptr = NULL;
+        g_clear_object(&gobject->ptr);
     }
 
     if (gobject->properties!=NULL) {
@@ -436,11 +452,23 @@ php_gdk_pixbuf_class_init(zend_class_entry *container_ce, zend_class_entry *pare
 /*----------------------------------------------------------------------+
  | Zend-User API                                                        |
  +----------------------------------------------------------------------*/
+
 php_gdk_pixbuf*
 php_gdk_pixbuf_new_from_file(zend_string *filename, zval *error) {
-    zend_object *new_std = php_gdk_pixbuf_create_object(php_gdk_pixbuf_class_entry);
-    php_gdk_pixbuf *new_list = ZOBJ_TO_PHP_GDK_PIXBUF(new_std);
+    zend_object *obj = php_gdk_pixbuf_create_object(php_gdk_pixbuf_class_entry);
+    php_gdk_pixbuf *intern = ZOBJ_TO_PHP_GDK_PIXBUF(obj);
+    GError *err = NULL;
+    GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(filename->val, &err);
+    if (err) {
+        php_glib_error *e = php_glib_error_create(err);
+        ZVAL_OBJ(error, &e->std);
+        zend_object_release(obj);
+        return NULL;
+    }
 
+    intern->parent_instance.ptr = pixbuf;
+
+    return intern;
 }
 
 
@@ -474,19 +502,22 @@ PHP_METHOD(gdk_pixbuf, __construct)
 /* {{{ proto GObject gdk_pixbuf_show_all(GObject list, mixed data) */
 PHP_FUNCTION(gdk_pixbuf_new_from_file)
 {
-    php_gdk_pixbuf *pixbuf = NULL;
     zval *zfilename = NULL;
     zval *zerror = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(2, 2)
+    ZEND_PARSE_PARAMETERS_START(1, 2)
         Z_PARAM_ZVAL(zfilename)
+        Z_PARAM_OPTIONAL
         Z_PARAM_ZVAL_DEREF(zerror)
     ZEND_PARSE_PARAMETERS_END();
 
     zend_string *filename = Z_TYPE_P(zfilename)==IS_STRING ? zfilename->value.str : NULL;
-    //php_glib_error *error = NULL;
-    php_gdk_pixbuf_new_from_file(filename, NULL);
+    php_gdk_pixbuf *pixbuf = php_gdk_pixbuf_new_from_file(filename, zerror);
 
+    if (NULL==pixbuf) {
+        RETURN_NULL();
+    }
 
+    RETURN_OBJ(&pixbuf->parent_instance.std);
 }/* }}} */
 

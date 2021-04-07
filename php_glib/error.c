@@ -133,8 +133,8 @@ php_glib_error_write_property(zval *object, zval *member, zval *value, void **ca
     php_glib_error *obj = ZVAL_GET_PHP_GLIB_ERROR(object);
     zend_string *member_str = zval_get_string(member);
 
-    if (zend_string_equals_literal(member->value.str, "child")
-     || zend_string_equals_literal(member->value.str, "parent") ) {
+    if (zend_string_equals_literal(member->value.str, "domain")
+     || zend_string_equals_literal(member->value.str, "code") ) {
 #if 0
         if (ZVAL_IS_PHP_GLIB_ERROR(value)) {
             // do unset(object->child) and php_glib_error_insert(object, value, 0);
@@ -161,6 +161,19 @@ php_glib_error_read_property(zval *object, zval *member, int type, void **cache_
     php_glib_error *obj = ZVAL_GET_PHP_GLIB_ERROR(object);
     zend_string *member_str = zval_get_string(member);
     zval *retval;
+
+    if (zend_string_equals_literal(member->value.str, "domain")) {
+        ZVAL_STRING(rv, g_quark_to_string(obj->ptr->domain));
+        return rv;
+    }
+    if (zend_string_equals_literal(member->value.str, "code")) {
+        ZVAL_LONG(rv, obj->ptr->code);
+        return rv;
+    }
+    if (zend_string_equals_literal(member->value.str, "message")) {
+        ZVAL_STRING(rv, obj->ptr->message);
+        return rv;
+    }
 
     zend_object_handlers *std_hnd = zend_get_std_object_handlers();
     retval = std_hnd->read_property(object, member, type, cache_slot, rv);
@@ -203,9 +216,6 @@ php_glib_error_create_object(zend_class_entry *class_type)
     object_properties_init(&intern->std, class_type);
 
     //php_glib_error_properties_init(intern);
-    ZVAL_NULL(&intern->domain);
-    ZVAL_NULL(&intern->code);
-    ZVAL_NULL(&intern->message);
 
     intern->ptr = NULL;
 
@@ -279,14 +289,121 @@ php_glib_error_class_init(zend_class_entry *container_ce, zend_class_entry *pare
 /*----------------------------------------------------------------------+
  | Zend-User utils                                                      |
  +----------------------------------------------------------------------*/
+static gpointer void_val = NULL;
+static gpointer *zval_extract_ptr(zval *val) {
+    if (NULL==val) {
+        return void_val;
+    }
+    switch (Z_TYPE_P(val)) {
+        case IS_NULL:
+        case IS_FALSE:
+        case IS_TRUE:
+        case IS_LONG:
+            return val->value.lval;
+        case IS_RESOURCE:
+        case IS_DOUBLE:
+            return &val->value.dval;
+        case IS_STRING:
+            return &val->value.str->val;
+        case IS_ARRAY:
+        case IS_OBJECT:
+            return val->value.obj;
+        default:
+            return 0;
+    }
+    return void_val;
+}
 
 
 /*----------------------------------------------------------------------+
  | Zend-User API                                                        |
  +----------------------------------------------------------------------*/
+php_glib_error*
+php_glib_error_create(GError *error) {
+    zend_object *obj = php_glib_error_create_object(php_glib_error_class_entry);
+    php_glib_error *intern = ZOBJ_TO_PHP_GLIB_ERROR(obj);
+    intern->ptr = error;
+
+    return intern;
+}
+
 php_glib_error *
-php_glib_error_new(zend_long domain, zend_long code, zend_string *format, ...) {
-    // TODO: implementation
+php_glib_error_new(zend_long domain, zend_long code, zend_string *format, zval *args, int argc) {
+    zend_object *obj = php_glib_error_create_object(php_glib_error_class_entry);
+    php_glib_error *intern = ZOBJ_TO_PHP_GLIB_ERROR(obj);
+    switch (argc) {
+    case 2:
+        intern->ptr = g_error_new((GQuark)domain, (gint)code, format->val,
+                                  zval_extract_ptr(&args[0]), NULL);
+        break;
+    case 3:
+        intern->ptr = g_error_new((GQuark)domain, (gint)code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  NULL);
+        break;
+    case 4:
+        intern->ptr = g_error_new((GQuark)domain, (gint)code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  NULL);
+        break;
+    case 5:
+        intern->ptr = g_error_new((GQuark)domain, (gint)code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  NULL);
+        break;
+    case 6:
+        intern->ptr = g_error_new((GQuark)domain, (gint)code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  NULL);
+        break;
+    case 7:
+        intern->ptr = g_error_new((GQuark)domain, (gint)code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  zval_extract_ptr(&args[5]),
+                                  NULL);
+        break;
+    case 8:
+        intern->ptr = g_error_new((GQuark)domain, (gint)code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  zval_extract_ptr(&args[5]),
+                                  zval_extract_ptr(&args[6]),
+                                  NULL);
+        break;
+    case 9:
+        intern->ptr = g_error_new((GQuark)domain, (gint)code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  zval_extract_ptr(&args[5]),
+                                  zval_extract_ptr(&args[6]),
+                                  zval_extract_ptr(&args[7]),
+                                  NULL);
+        break;
+    case 1:
+    default:
+        intern->ptr = g_error_new((GQuark)domain, (gint)code, format->val, NULL);
+    }
+    return intern;
 }
 
 php_glib_error *
@@ -357,7 +474,7 @@ PHP_METHOD(g_error, __construct)
     zend_object *zobj = Z_OBJ_P(getThis());
     php_glib_error *self = ZOBJ_TO_PHP_GLIB_ERROR(zobj);
 
-    self->ptr = g_error_new(g_quark_from_string("My"), 40, "My Message", NULL);
+    self->ptr = NULL;//g_error_new(g_quark_from_string("DOMAIN"), 40, "Message", NULL);
 
     // TODO g_error_new
 
@@ -367,30 +484,6 @@ PHP_METHOD(g_error, __construct)
 /*----------------------------------------------------------------------+
 | PHP_FUNCTION                                                         |
 +----------------------------------------------------------------------*/
-static gpointer void_val = NULL;
-static gpointer *zval_extract_ptr(zval *val) {
-    if (NULL==val) {
-        return void_val;
-    }
-    switch (Z_TYPE_P(val)) {
-        case IS_NULL:
-        case IS_FALSE:
-        case IS_TRUE:
-        case IS_LONG:
-            return val->value.lval;
-        case IS_RESOURCE:
-        case IS_DOUBLE:
-            return &val->value.dval;
-        case IS_STRING:
-            return &val->value.str->val;
-        case IS_ARRAY:
-        case IS_OBJECT:
-            return val->value.obj;
-        default:
-            return 0;
-    }
-    return void_val;
-}
 
 /* {{{ proto GError g_error_new(mixed domain, int code, string format) */
 PHP_FUNCTION(g_error_new)
@@ -413,84 +506,9 @@ PHP_FUNCTION(g_error_new)
     zend_long __code = Z_TYPE_P(zcode)==IS_LONG? zcode->value.lval: 0;
     zend_string *__format = Z_TYPE_P(zformat)==IS_STRING? zformat->value.str: 0;
 
-    //php_glib_error *__ret = php_glib_error_new(__domain, __code, __format->val);
-    zend_object *__ret = php_glib_error_create_object(php_glib_error_class_entry);
-    php_glib_error *intern = ZOBJ_TO_PHP_GLIB_ERROR(__ret);
-    switch (argc) {
-    case 2:
-        intern->ptr = g_error_new((GQuark)__domain, (gint)__code, __format->val,
-                                  zval_extract_ptr(&args[0]), NULL);
-        break;
-    case 3:
-        intern->ptr = g_error_new((GQuark)__domain, (gint)__code, __format->val,
-                                  zval_extract_ptr(&args[0]),
-                                  zval_extract_ptr(&args[1]),
-                                  NULL);
-        break;
-    case 4:
-        intern->ptr = g_error_new((GQuark)__domain, (gint)__code, __format->val,
-                                  zval_extract_ptr(&args[0]),
-                                  zval_extract_ptr(&args[1]),
-                                  zval_extract_ptr(&args[2]),
-                                  NULL);
-        break;
-    case 5:
-        intern->ptr = g_error_new((GQuark)__domain, (gint)__code, __format->val,
-                                  zval_extract_ptr(&args[0]),
-                                  zval_extract_ptr(&args[1]),
-                                  zval_extract_ptr(&args[2]),
-                                  zval_extract_ptr(&args[3]),
-                                  NULL);
-        break;
-    case 6:
-        intern->ptr = g_error_new((GQuark)__domain, (gint)__code, __format->val,
-                                  zval_extract_ptr(&args[0]),
-                                  zval_extract_ptr(&args[1]),
-                                  zval_extract_ptr(&args[2]),
-                                  zval_extract_ptr(&args[3]),
-                                  zval_extract_ptr(&args[4]),
-                                  NULL);
-        break;
-    case 7:
-        intern->ptr = g_error_new((GQuark)__domain, (gint)__code, __format->val,
-                                  zval_extract_ptr(&args[0]),
-                                  zval_extract_ptr(&args[1]),
-                                  zval_extract_ptr(&args[2]),
-                                  zval_extract_ptr(&args[3]),
-                                  zval_extract_ptr(&args[4]),
-                                  zval_extract_ptr(&args[5]),
-                                  NULL);
-        break;
-    case 8:
-        intern->ptr = g_error_new((GQuark)__domain, (gint)__code, __format->val,
-                                  zval_extract_ptr(&args[0]),
-                                  zval_extract_ptr(&args[1]),
-                                  zval_extract_ptr(&args[2]),
-                                  zval_extract_ptr(&args[3]),
-                                  zval_extract_ptr(&args[4]),
-                                  zval_extract_ptr(&args[5]),
-                                  zval_extract_ptr(&args[6]),
-                                  NULL);
-        break;
-    case 9:
-        intern->ptr = g_error_new((GQuark)__domain, (gint)__code, __format->val,
-                                  zval_extract_ptr(&args[0]),
-                                  zval_extract_ptr(&args[1]),
-                                  zval_extract_ptr(&args[2]),
-                                  zval_extract_ptr(&args[3]),
-                                  zval_extract_ptr(&args[4]),
-                                  zval_extract_ptr(&args[5]),
-                                  zval_extract_ptr(&args[6]),
-                                  zval_extract_ptr(&args[7]),
-                                  NULL);
-        break;
-    case 1:
-    default:
-        intern->ptr = g_error_new((GQuark)__domain, (gint)__code, __format->val, NULL);
-    }
+    php_glib_error *__ret = php_glib_error_new(__domain, __code, __format, args, argc);
 
-    //GC_REFCOUNT(__ret)++;
-    RETURN_OBJ(__ret);
+    RETURN_OBJ(&__ret->std);
 }/* }}} */
 
 

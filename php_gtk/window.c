@@ -29,6 +29,8 @@
 
 #include "window.h"
 
+#include "php_gdk/pixbuf.h"
+
 extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
 
@@ -422,7 +424,7 @@ php_gtk_window_new(php_gtk_window *self, zend_long type) {
     gtk_window_set_title(GTK_WINDOW(window), file_name);
     g_free(file_name);
 
-    gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/logo-6.png", NULL);
+    //gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/logo-6.png", NULL);
     //gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/php-icon.png", NULL);
     /*
     gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/vigne/vigne-transparent.png", NULL);
@@ -501,4 +503,23 @@ PHP_FUNCTION(gtk_window_new)
 
     //GC_REFCOUNT(z_window)++;
     RETURN_OBJ(z_window);
+}/* }}} */
+
+/* {{{ proto GObject gtk_window_new(GObject list, mixed data) */
+PHP_FUNCTION(gtk_window_set_icon)
+{
+    zval *zwindow = NULL;
+    zval *zpixbuf = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_ZVAL(zwindow)
+        Z_PARAM_ZVAL(zpixbuf)
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_gtk_window *window = ZVAL_IS_PHP_GTK_WINDOW(zwindow) ? ZVAL_GET_PHP_GTK_WINDOW(zwindow) : NULL;
+    php_gdk_pixbuf *pixbuf = ZVAL_IS_PHP_GDK_PIXBUF(zpixbuf) ? ZVAL_GET_PHP_GDK_PIXBUF(zpixbuf) : NULL;
+
+    gtk_window_set_icon(GTK_WINDOW(PHP_GTK_WINDOW_TO_PHP_G_OBJECT(window)->ptr),
+                        GDK_PIXBUF(pixbuf->parent_instance.ptr));
+
 }/* }}} */

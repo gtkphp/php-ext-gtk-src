@@ -127,6 +127,7 @@ php_gobject_object_count_elements(zval *object, zend_long *count) {
 static int
 php_gobject_object_cast_object(zval *readobj, zval *retval, int type)
 {
+    g_print("php_gobject_object_cast_object\n");
     ZVAL_NULL(retval);
 
     return FAILURE;

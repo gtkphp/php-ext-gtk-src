@@ -118,7 +118,7 @@ $window = gtk_window_new();
 g_signal_connect($window, "destroy", "on_quit", Null);
 
 $box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-g_signal_connect($box, "add", "on_add", new StdClass());
+//g_signal_connect($box, "add", "on_add", new StdClass());
 
 $button_a = gtk_button_new_with_label("Valide");
 $button_b = gtk_button_new_with_label("Cancel");
@@ -145,6 +145,16 @@ $children = gtk_container_get_children($box);
 g_list_dump($children);
 g_list_free_full($children, "on_destroy");
 */
+
+//TODO: $filename = "https://image.freepik.com/icones-gratuites/symbole-php_318-1694.jpg";
+$filename = "/home/dev/Images/logo-6.png";
+$pixbuf = gdk_pixbuf_new_from_file($filename, $error);
+if($pixbuf) {
+    gtk_window_set_icon($window, $pixbuf);
+} else {
+    var_dump($error);
+}
+
 
 gtk_main();
 
