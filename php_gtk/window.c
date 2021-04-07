@@ -422,13 +422,41 @@ php_gtk_window_new(php_gtk_window *self, zend_long type) {
     gtk_window_set_title(GTK_WINDOW(window), file_name);
     g_free(file_name);
 
-    gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/php-icon.png", NULL);
+    gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/logo-6.png", NULL);
+    //gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/php-icon.png", NULL);
     /*
     gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/vigne/vigne-transparent.png", NULL);
 
     GList *list = gtk_window_get_icon_list(GTK_WINDOW(window));
     g_print("list: %p, %d\n", list, g_list_length(list));
     */
+
+#if 0
+    gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
+
+    GtkWidget *titlebar = gtk_header_bar_new();
+    gtk_window_set_titlebar (window, titlebar);
+    gtk_widget_show(titlebar);
+    //gtk_widget_set_visible(titlebar, FALSE);
+
+    char *css = "window, window.background, *>.titlebar, >* {"
+                "border-radius: 30px;"
+            "}"
+            ;
+
+    GtkCssProvider *provider = gtk_css_provider_new();
+    GdkDisplay *display = gdk_display_get_default();
+    GdkScreen *screen = gdk_display_get_default_screen (display);
+    gtk_style_context_add_provider_for_screen (screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+    //gtk_css_provider_load_from_path(GTK_CSS_PROVIDER(provider),"styles.css",NULL);
+    gtk_css_provider_load_from_data(GTK_CSS_PROVIDER(provider), css, strlen(css), NULL);
+
+    GtkStyleContext *context;
+    context = gtk_widget_get_style_context(window);
+    gtk_style_context_add_class(context,"my");
+
+    //gtk_window_set_interactive_debugging (TRUE);
+#endif
 }
 
 

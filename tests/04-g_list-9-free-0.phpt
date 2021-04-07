@@ -17,11 +17,4 @@ var_dump($list);
 
 ?>
 --EXPECT--
-object(GList)#1 (3) {
-  ["prev"]=>
-  NULL
-  ["data"]=>
-  NULL
-  ["next"]=>
-  NULL
-}
+NULL

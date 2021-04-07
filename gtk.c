@@ -27,13 +27,21 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+/// include "php_gtkml.h"
 #include "php_gtk.h"
 
-#include "php_glib/glib.h"
-#include "php_g/g-hash-table.h"
+/// include "php_glib.h"
+#include "php_glib/hash-table.h"
 #include "php_glib/list.h"
+
+/// include "php_gobject.h"
 #include "php_gobject/object.h"
 #include "php_gobject/signal.h"
+
+/// include "php_gdk.h"
+#include "php_gdk/pixbuf.h"
+
+/// include "php_gtk.h"
 #include "php_gtk/widget.h"
 #include "php_gtk/container.h"
 #include "php_gtk/bin.h"
@@ -43,7 +51,6 @@
 #include "php_gtk/main.h"
 
 HashTable classes;
-
 
 /* If you declare any globals in php_gtk.h uncomment this:
 ZEND_DECLARE_MODULE_GLOBALS(gtk)
@@ -226,6 +233,7 @@ PHP_MINIT_FUNCTION(gtk)
     //zend_class_entry *g_hash_table_ce;
     //zend_class_entry *g_list_ce;
     zend_class_entry *gobject_object_ce;
+    zend_class_entry *gdk_pixbuf_ce;
     zend_class_entry *gtk_widget_ce;
     zend_class_entry *gtk_container_ce;
     zend_class_entry *gtk_bin_ce;
@@ -233,17 +241,16 @@ PHP_MINIT_FUNCTION(gtk)
     zend_class_entry *gtk_box_ce;
     zend_class_entry *gtk_button_ce;
 
-	zend_object_handlers *handlers= php_glib_object_get_handlers();
-
 	zend_hash_init(&classes, 0, NULL, NULL, 1);
 
     //                  PHP_GLIB_MINIT_FUNCTION(&ce);
     //                  PHP_CAIRO_MINIT_FUNCTION(&ce);
     //                  PHP_PANGO_MINIT_FUNCTION(&ce);
-                        PHP_G_HASH_TABLE_MINIT_FUNCTION(&ce, NULL);
+                        PHP_GLIB_HASH_TABLE_MINIT_FUNCTION(&ce, NULL);
                         PHP_GLIB_LIST_MINIT_FUNCTION(&ce, NULL);
     gobject_object_ce = PHP_GOBJECT_OBJECT_MINIT_FUNCTION(&ce, NULL);
                         PHP_GOBJECT_SIGNAL_MINIT_FUNCTION(&ce, NULL);
+    gdk_pixbuf_ce     = PHP_GDK_PIXBUF_MINIT_FUNCTION(&ce, gobject_object_ce);
     gtk_widget_ce     = PHP_GTK_WIDGET_MINIT_FUNCTION(&ce, gobject_object_ce);
     gtk_container_ce  = PHP_GTK_CONTAINER_MINIT_FUNCTION(&ce, gtk_widget_ce);
     gtk_bin_ce        = PHP_GTK_BIN_MINIT_FUNCTION(&ce, gtk_container_ce);
@@ -273,23 +280,18 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
 	*/
 
     PHP_GLIB_LIST_MSHUTDOWN_FUNCTION();
-
-    PHP_G_HASH_TABLE_MSHUTDOWN_FUNCTION();
+    PHP_GLIB_HASH_TABLE_MSHUTDOWN_FUNCTION();
 
     PHP_GOBJECT_OBJECT_MSHUTDOWN_FUNCTION();
-
     PHP_GOBJECT_SIGNAL_MSHUTDOWN_FUNCTION();
 
+    PHP_GDK_PIXBUF_MSHUTDOWN_FUNCTION();
+
     PHP_GTK_WIDGET_MSHUTDOWN_FUNCTION();
-
     PHP_GTK_CONTAINER_MSHUTDOWN_FUNCTION();
-
     PHP_GTK_BIN_MSHUTDOWN_FUNCTION();
-
     PHP_GTK_WINDOW_MSHUTDOWN_FUNCTION();
-
     PHP_GTK_BUTTON_MSHUTDOWN_FUNCTION();
-
     PHP_GTK_BOX_MSHUTDOWN_FUNCTION();
 
     //zend_hash_destroy(&php_glib_object_handlers);
@@ -298,6 +300,7 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
 	return SUCCESS;
 }
 /* }}} */
+
 
 /* Remove if there's nothing to do at request start */
 /* {{{ PHP_RINIT_FUNCTION
@@ -317,10 +320,14 @@ PHP_RINIT_FUNCTION(gtk)
  */
 PHP_RSHUTDOWN_FUNCTION(gtk)
 {
-    PHP_G_HASH_TABLE_RSHUTDOWN_FUNCTION();
+    PHP_GLIB_HASH_TABLE_RSHUTDOWN_FUNCTION();
     PHP_GLIB_LIST_RSHUTDOWN_FUNCTION();
+
     PHP_GOBJECT_OBJECT_RSHUTDOWN_FUNCTION();
     PHP_GOBJECT_SIGNAL_RSHUTDOWN_FUNCTION();
+
+    PHP_GDK_PIXBUF_RSHUTDOWN_FUNCTION();
+
     PHP_GTK_WIDGET_RSHUTDOWN_FUNCTION();
     PHP_GTK_CONTAINER_RSHUTDOWN_FUNCTION();
     PHP_GTK_BIN_RSHUTDOWN_FUNCTION();
@@ -353,9 +360,13 @@ PHP_MINFO_FUNCTION(gtk)
 const zend_function_entry gtk_functions[] = {
     PHP_FE(confirm_gtk_compiled,	NULL)		     /* For testing, remove later. */
     PHP_GLIB_LIST_FE()
-    PHP_G_HASH_TABLE_FE()
+    PHP_GLIB_HASH_TABLE_FE()
+
     PHP_GOBJECT_OBJECT_FE()
     PHP_GOBJECT_SIGNAL_FE()
+
+    PHP_GDK_PIXBUF_FE()
+
     PHP_GTK_WIDGET_FE()
     PHP_GTK_CONTAINER_FE()
     PHP_GTK_BIN_FE()

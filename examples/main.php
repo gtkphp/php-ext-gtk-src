@@ -89,16 +89,22 @@ function on_add(GtkContainer $container, GtkWidget $widget, $user_data) {
 
     $children = gtk_container_get_children($container);
 
-    //g_list_dump($children);
+    g_list_dump($children);
+    /*
     //print_r((array)$children);
     for($it=$children; $it!=null; $it=$it->next) {
         $button = $it->data;
         var_dump($button->label);
     }
+    */
 
-    g_list_free($children);// unset($children)
+    g_list_free($children);
+    var_dump($children);
+    //g_list_dump($children);
+    //unset($children);
     // unset do zend_object_release();
     // but we whant to call dtor_object() wich call release
+
 }
 
 function on_quit(GtkWidget $object, $user_data) {
@@ -117,16 +123,28 @@ g_signal_connect($box, "add", "on_add", new StdClass());
 $button_a = gtk_button_new_with_label("Valide");
 $button_b = gtk_button_new_with_label("Cancel");
 $button_c = gtk_button_new_with_label("Pause");
+$button_d = gtk_button_new_with_label("Stop");
+//g_signal_connect($button_d, "clicked", "on_quit", Null);
 
 gtk_container_add($box, $button_a);
 gtk_container_add($box, $button_b);
 gtk_container_add($box, $button_c);
+gtk_container_add($box, $button_d);
 
 gtk_container_add($window, $box);
 
-gtk_widget_show_all($window);
+//gtk_widget_show_all($window);
+gtk_widget_show_all($box);
+gtk_widget_show($window);
 
-
+/*
+function on_destroy($data) {
+    var_dump($data);
+}
+$children = gtk_container_get_children($box);
+g_list_dump($children);
+g_list_free_full($children, "on_destroy");
+*/
 
 gtk_main();
 

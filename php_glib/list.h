@@ -142,6 +142,11 @@ php_glib_list* php_glib_list_new(GList *list);
 zend_class_entry *php_glib_list_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
 
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list___construct, 0, 0, 0)
+    ZEND_ARG_INFO(0, data)
+ZEND_END_ARG_INFO()
+PHP_METHOD(g_list, __construct);
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_append, 0, 0, 0)
     ZEND_ARG_INFO(0, list)
     ZEND_ARG_INFO(0, data)
@@ -199,13 +204,13 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_remove_all, 0, 0, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_list_remove_all);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_free, 0, 0, 0)
-    ZEND_ARG_INFO(0, list)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_free, 0, 0, 1)
+    ZEND_ARG_INFO(1, list)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_list_free);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_free_full, 0, 0, 0)
-    ZEND_ARG_INFO(0, list)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_free_full, 0, 0, 2)
+    ZEND_ARG_INFO(1, list)
     ZEND_ARG_INFO(0, free_func)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_list_free_full);
@@ -327,11 +332,6 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_index, 0, 0, 0)
     ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_list_index);
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list___construct, 0, 0, 0)
-    ZEND_ARG_INFO(0, data)
-ZEND_END_ARG_INFO()
-PHP_METHOD(g_list, __construct);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_dump, 0, 0, 0)
     ZEND_ARG_INFO(0, list)

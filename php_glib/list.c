@@ -303,7 +303,7 @@ php_glib_list_free_object(zend_object *object)
         TRACE("php_glib_list_free_object(\"%s\") / %d\n", "NULL", object->gc.refcount);
     else
         TRACE("php_glib_list_free_object(\"%s\") / %d\n", intern->data.value.str->val, object->gc.refcount);
-    g_print("php_glib_list_free_object(%p)\n", intern);
+    //g_print("php_glib_list_free_object(%p)\n", intern);
 
     if (intern->ptr) {
         g_list_free_1(intern->ptr);
@@ -332,7 +332,7 @@ php_glib_list_dtor_object(zend_object *obj) {
     } else {
         TRACE("php_glib_list_dtor_object(\"%s\") / %d\n", "?", obj->gc.refcount);
     }
-    g_print("php_glib_list_dtor_object(%p)\n", intern);
+    //g_print("php_glib_list_dtor_object(%p)\n", intern);
 
     if (!ZVAL_IS_NULL(&intern->data)) {
         Z_TRY_DELREF_P(&intern->data);
@@ -434,20 +434,34 @@ php_glib_list_class_init(zend_class_entry *container_ce, zend_class_entry *paren
     php_glib_list_class_entry->create_object = php_glib_list_create_object;
 
 
+    // zend_register_internal_interface("GtkBuildable")
+    //zend_class_implements();php_gtk_buildable_class_entry
+
     /*
-    _zend_function php_glib_list___unset;
-    zend_internal_function fe;
-    fe.type = ZEND_INTERNAL_FUNCTION;
+     * TODO METHOD implement __unset
+     *
+    static zend_function php_glib_list___unset;
+    static zend_arg_info arg_info_php_glib_list___unset;
+    static zend_internal_function fe;
+
+    fe.type = ZEND_OVERLOADED_FUNCTION;//ZEND_INTERNAL_FUNCTION;//
     fe.handler = ZEND_FN(g_list_free);
     fe.function_name = NULL;
     fe.scope = NULL;
-    fe.fn_flags = 0;
+    fe.fn_flags = ZEND_ACC_CALL_VIA_HANDLER;// 0
     fe.prototype = NULL;
     fe.num_args = 1;
-    fe.arg_info = NULL;
-    zend_set_function_arg_flags((zend_function*)&fe);
-    php_glib_list_class_entry->__unset->internal_function = fe;
+    fe.arg_info = &arginfo_g_list_free;
+    //zend_set_function_arg_flags((zend_function*)&fe);
+    php_glib_list___unset.common.num_args = 1;
+    php_glib_list___unset.common.arg_info = &arginfo_g_list_free;
+    php_glib_list___unset.internal_function = fe;
+    //php_glib_list___unset.quick_arg_flags = 1;
+    //php_glib_list___unset.type = ZEND_INTERNAL_FUNCTION;//ZEND_USER_FUNCTION;
+    php_glib_list_class_entry->__unset = & php_glib_list___unset;
     */
+
+
 
     //ce->serialize;
     /*
@@ -891,13 +905,56 @@ php_glib_list_remove_all(php_glib_list *list, zval *data) {
 
 void
 php_glib_list_free(php_glib_list *list) {
-    if(list)
-        php_glib_list_dtor_object(&list->std);
+
+    if (list==NULL) {
+        return;
+    }
+
+    php_glib_list *tmp = list;
+    php_glib_list *last = php_glib_list_last(tmp);
+    while(last) {
+        tmp = last->prev;
+        zend_object_release(&last->std);
+        if (tmp)
+            tmp->next = NULL;
+        last = tmp;
+    }
 }
 
 void
 php_glib_list_free_full(php_glib_list *list, zval *free_func) {
-    // TODO: implementation
+    int result;
+    int param_count = 1;
+    zval retval;
+    zval params[1];
+
+    if (list==NULL) {
+        return;
+    }
+    if (ZVAL_IS_NULL(free_func)) {
+        return list;
+    }
+
+    php_glib_list *tmp = list;
+    php_glib_list *last = php_glib_list_last(tmp);
+    while(last) {
+        tmp = last->prev;
+
+        ZVAL_COPY(&params[0], &last->data);
+
+        result = call_user_function(NULL, NULL, free_func, &retval, param_count, params);
+        if (result==FAILURE) {
+            php_printf("Unexpected 333 : php_glib_list_free_full\n");
+        }
+
+        zend_object_release(&last->std);
+
+        if (tmp)
+            tmp->next = NULL;
+        last = tmp;
+    }
+
+
 }
 
 php_glib_list *
@@ -1302,13 +1359,16 @@ PHP_FUNCTION(g_list_free)
     zval *list = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(list)
+        //Z_PARAM_ZVAL(list)
+        Z_PARAM_ZVAL_DEREF(list)
     ZEND_PARSE_PARAMETERS_END();
 
     php_glib_list *__list = ZVAL_IS_PHP_GLIB_LIST(list)? ZVAL_GET_PHP_GLIB_LIST(list): NULL;
     php_glib_list_free(__list);
 
-    RETURN_NULL();
+    //convert_to_null(list);
+    ZVAL_NULL(list);
+
 }/* }}} */
 
 /* {{{ proto void g_list_free_full(GList list, callback free_func) */
@@ -1318,14 +1378,14 @@ PHP_FUNCTION(g_list_free_full)
     zval *free_func = NULL;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(list)
+        Z_PARAM_ZVAL_DEREF(list)
         Z_PARAM_ZVAL(free_func)
     ZEND_PARSE_PARAMETERS_END();
 
     php_glib_list *__list = ZVAL_IS_PHP_GLIB_LIST(list)? ZVAL_GET_PHP_GLIB_LIST(list): NULL;
     php_glib_list_free_full(__list, free_func);
 
-    RETURN_NULL();
+
 }/* }}} */
 
 /* {{{ proto GList g_list_alloc() */

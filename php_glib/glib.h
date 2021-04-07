@@ -80,6 +80,9 @@ struct php_gtk_widget {
 }
 */
 
+Hello World;
+Comment : il ? va ;
+
 #define PHP_GLIB_OBJECT_FROM_STD(ptr) \
     (php_glib_object*) (((void*)(ptr))-(sizeof(php_glib_object) - sizeof(zend_object)))
 

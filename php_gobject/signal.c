@@ -455,8 +455,8 @@ static void
 destroy_data(gpointer	 data,
              GClosure	*closure) {
     CallbackHandler *user_data = (CallbackHandler*)data;
-    Z_TRY_DELREF(user_data->context);
-    Z_TRY_DELREF(user_data->data);
+    zval_ptr_dtor(&user_data->context);
+    zval_ptr_dtor(&user_data->data);
     g_free(user_data->params);
     g_free(user_data);
 }
