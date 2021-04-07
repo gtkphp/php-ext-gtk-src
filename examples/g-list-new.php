@@ -14,8 +14,33 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+//$list = g_list_insert_before(Null, Null, "value1");
+//$list = g_list_insert_before($list, Null, "value2");
+//$list = g_list_insert_before($list, Null, "value3");
+//$list = g_list_insert_before($list, Null, "value4");
+//$list = g_list_insert_before($list, Null, "value5");
+
+//var_dump($list);
+
+
+
+
+$list = Null;
+$list = g_list_append($list, "value0");
+$list = g_list_append($list, "value1");
+$list = g_list_append($list, "value2");
+
+//g_list_free($list);
+unset($list);
+
+echo "unset\n";
+
+
+
+
 //echo "Read: https://www.phpinternalsbook.com/php7/zvals/memory_management.html\n";
 //confirm_gtk_compiled("");
+
 
 class Key {
   public $value;
@@ -135,56 +160,179 @@ $list = g_list_prepend(NULL, "val1");
 g_list_prepend($list, "val5");
 g_list_prepend($list, "val6");
 g_list_prepend($list, "val7");
-php_g_list_dump(g_list_first($list));
-//print_r((array)$list);
+//php_g_list_dump(g_list_first($list));
+print_r((array)$list);
 */
 
+/*
+$list = g_list_prepend(Null, "val1");
+g_list_prepend($list, "val2");
+g_list_prepend($list, "val3");
+g_list_prepend($list, "val4");
+g_list_dump($list);
 
+//print_r((array)$list);
+//var_dump($list);
+*/
 
+/*
 $list = g_list_insert(Null, "val1", 0);
 $list = g_list_insert($list, "val2", 0);
 $list = g_list_insert($list, "val3", 0);
 $list = g_list_insert($list, "val4", 0);
-//php_g_list_dump(g_list_first($list));
-//g_list_dump($list);
+var_dump($list);
+*/
+
+
+/*
+$list = g_list_insert_before(Null, Null, "val1");
+$list = g_list_insert_before($list, $list, "val2");
+$list = g_list_insert_before($list, $list, "val3");
+$list = g_list_insert_before($list, $list, "val4");
+//var_dump($list);
+g_list_dump($list);
+*/
+
+
+/*
 //print_r((array)$list);
+$list = new GList("val");
 $list->foo = "bar";
 $list->Foo = "baz";
 echo $list->foo, PHP_EOL;
 echo $list->Foo, PHP_EOL;
 echo $list->nulle, PHP_EOL;
-
+*/
 
 /*
 $list = g_list_append(NULL, "value1");
-g_list_append($list, "value2");
-g_list_append($list, "value3");
+$list = g_list_append($list, "value2");
+$list = g_list_append($list, "value3");
 g_list_append($list, "value4");
 g_list_append($list, "value5");
-php_g_list_dump($list);
+//g_list_dump($list);
+//var_dump($list);
+print_r((array)$list);
 */
+
 
 /*
 $list = g_list_prepend(NULL, "value1");
 $list = g_list_prepend($list, "value2");
 $list = g_list_prepend($list, "value3");
 $list = g_list_prepend($list, "value4");
-$list = g_list_prepend(g_list_first($list), "value5");
-php_g_list_dump($list);
+//$list = g_list_prepend(g_list_first($list), "value5");
+var_dump($list);
+
+//var_dump(g_list_first($list->next));
+//var_dump($list->next->next->next);
+//$node = $list->next;
+//var_dump($list->next);
+*/
+
+
+
+
+
+/*
+$list = new GList("value1");
+$list = g_list_append($list, "value2");
+$list = g_list_append($list, "value3");
+$list = g_list_append($list, "value4");
+
+$list = g_list_remove($list, "value4");
+
+g_list_dump($list);
 */
 
 /*
-List#1 (object){
-    'prev'=> NULL,
-    'data'=> 'val1',
-    'next'=>List#2 (object){
-        'prev'=> List#1 (object){*RECURSION*},
-        'data'=> 'val2',
-        'next'=>NULL,
-    },
-    'properties'=> ,
+$list = new GList("value1");
+$list = g_list_append($list, "value2");
+$list = g_list_append($list, "value3");
+
+$tmp = $list->next;
+
+$list = g_list_remove($list, "value2");
+
+var_dump($list);
+var_dump($tmp);
+*/
+
+/*
+function testRemove($data, $item) {
+    $list = Null;
+    $ln = count($data);
+    for($i=0; $i<$ln; $i++) {
+        $list = g_list_append($list, $data[$i]);
+    }
+
+    $link = Null;
+    $it = Null;
+    for($it=$list; $it!=Null; $it=$it->next) {
+        if ($it->data==$item) {
+            $link = $it;
+            unset($it);
+            break;
+        }
+    }
+    //$link = $list->next->next;
+
+    $list = g_list_remove_link($list, $link);
+    //echo "-------------------------------------\n";
+    g_list_dump($list);
+    g_list_dump($link);
+
+    //unset($list);
+    //unset($link);
+
+    //unset($list);
+
 }
+
+$data = array("val1");
+//$data = array("val1", "val2");
+//$data = array("val1", "val2", "val3");
+//$data = array("val1", "val2", "val3", "val4");
+//$data = array("val1", "val2", "val3", "val4", "val5");
+testRemove($data, "val1");
 */
 
 
 
+
+
+
+/*
+$list = g_list_append(Null, "value1");
+$list = g_list_append($list, "value2");
+$list = g_list_append($list, "value3");
+
+$link = $list->next;
+$list = g_list_remove_link($list, $link);
+
+//var_dump($list);
+g_list_dump($list);
+g_list_dump($link);
+*/
+
+
+
+/*
+$list = new GList("value1");
+$list = g_list_append($list, "value2");
+$list = g_list_append($list, "value3");
+$list = g_list_append($list, "value4");
+
+//$list = g_list_remove($list, "value2");
+
+//$link = $list->next->next->next;
+$list = g_list_remove_link($list, $link);
+//$list = g_list_remove_link($list, $list->next->next->next);
+//$list = g_list_remove_link($list, $list->next->next);
+//$list = g_list_remove_link($list, $list->next);
+//$list = g_list_remove_link($list, $list);
+
+g_list_dump($list);
+//g_list_dump($tmp);
+//g_list_dump($link);
+*/

@@ -9,10 +9,42 @@ Donner les liens
 - musique quelque chose viens de tomber
 - enfant de la lune( comic)
 
+ext/gtk => ext/gtkml
 
-+TODO: refactor ghashtable, certenly leaks
-+TODO: gtk.c PHP_MINIT_FUNCTION_G_LIST
++TODO(to GList): php_gtk/container.c => gtk_container_get_children():GList
+ Implement GArray(Pair<GObject|Boxed, zend_object>) binarysearch
+ When signal is emited, callback need to retrive the good (Object)#id
+ associate zend_object with GObject, and so on
+Quicksort algorithm:
+https://code.woboq.org/userspace/glibc/stdlib/qsort.c.html
+Binary search algorithm:
+https://en.wikipedia.org/wiki/Binary_search_algorithm#Syntax_difficulties
+GArray<zend_object, GObject>
+
++TODO: php_gobject/signal.c( each parametre type need to be implemented)
+
+
++TODO: php_g/g-hash-table.c => php_glib/hash-table.c (GHashTable)
++TODO:                         php_gio/application.c (GApplication)
++TODO:                         php_gmodule/module.c  (GModule)
 +TODO: Implement unset($list[0]);
+
+
+--with-glib=static
+    --with-gobject=static
+    --with-gio=static
+
+--with-pango=static
+    --with-pango-gobject=static
+    --with-cairo=static
+
+--with-gtk=static
+    --with-atk=static
+    --with-gdk-pixbuf=static
+    --with-gdk=static
+
+
+--with-gtk=Gnome,3,shared
 
 
 --with-gtk=shared
@@ -20,6 +52,8 @@ Donner les liens
 --with-gtk=Gnome,4,shared => libgtk-4.so
 --with-gtk=Gtk3,3,shared
 --with-gtk=2,shared
+
+see /home/dev/Projects/php-ubuntu/ext/gtkml/php_gobject/signal.h
 
 <?php
 require_once("Gtk.php");// Wrapper get latest
