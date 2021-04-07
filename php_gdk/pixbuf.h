@@ -75,6 +75,7 @@ struct _php_gdk_pixbuf {
 
 php_gdk_pixbuf *php_gdk_pixbuf_new_from_file(zend_string *filename, zval *error);
 
+php_gdk_pixbuf *php_gdk_pixbuf_create(GdkPixbuf *pixbuf);
 zend_class_entry *php_gdk_pixbuf_class_init(zend_class_entry *container_ce, zend_class_entry *ce);
 
 

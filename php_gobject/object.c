@@ -512,3 +512,36 @@ PHP_FUNCTION(g_object_connect)
     ///@see: /home/dev/Projects/php-ubuntu/ext/gtkml/php_gobject/object.c
 
 }/* }}} */
+
+/* {{{ proto g_object_unref(GObject object) */
+PHP_FUNCTION(g_object_unref)
+{
+    zval *zobject = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_ZVAL(zobject);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_gobject_object *gobject = ZVAL_GET_PHP_GOBJECT_OBJECT(zobject);
+
+    g_object_unref(gobject->ptr);
+    //zend_object_release(&gobject->std);
+
+}/* }}} */
+
+/* {{{ proto g_object_unref(GObject object) */
+PHP_FUNCTION(g_object_ref)
+{
+    zval *zobject = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_ZVAL(zobject);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_gobject_object *gobject = ZVAL_GET_PHP_GOBJECT_OBJECT(zobject);
+
+    //GC_REFCOUNT(&gobject->std)++;
+    g_object_ref(gobject->ptr);
+
+}/* }}} */
+

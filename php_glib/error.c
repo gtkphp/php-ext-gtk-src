@@ -74,10 +74,9 @@ php_glib_error_get_debug_info(zval *object, int *is_temp) /* {{{ */
     debug_info = zend_array_dup(std_props);
 
 
-    /*ZEND_HASH_FOREACH_STR_KEY_VAL(obj->std.properties, string_key, value) {
+    ZEND_HASH_FOREACH_STR_KEY_VAL(intern->std.properties, string_key, value) {
         zend_hash_add(debug_info, string_key, value);
-    } ZEND_HASH_FOREACH_END();*/
-
+    } ZEND_HASH_FOREACH_END();
 
     zval zdomain;
     zval zcode;
@@ -134,7 +133,8 @@ php_glib_error_write_property(zval *object, zval *member, zval *value, void **ca
     zend_string *member_str = zval_get_string(member);
 
     if (zend_string_equals_literal(member->value.str, "domain")
-     || zend_string_equals_literal(member->value.str, "code") ) {
+     || zend_string_equals_literal(member->value.str, "code")
+     || zend_string_equals_literal(member->value.str, "message") ) {
 #if 0
         if (ZVAL_IS_PHP_GLIB_ERROR(value)) {
             // do unset(object->child) and php_glib_error_insert(object, value, 0);
@@ -143,7 +143,7 @@ php_glib_error_write_property(zval *object, zval *member, zval *value, void **ca
             zend_error(E_USER_WARNING, "Cannot assign %s to property Node::$next of type Node", type->val);
         }
 #else
-        zend_error(E_USER_WARNING, "Readonly property Node::$%s", member->value.str->val);
+        zend_error(E_USER_WARNING, "Readonly property GError::$%s", member->value.str->val);
 #endif
         return;
     }

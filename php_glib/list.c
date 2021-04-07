@@ -915,6 +915,8 @@ php_glib_list_free(php_glib_list *list) {
     while(last) {
         tmp = last->prev;
         zend_object_release(&last->std);
+        //if ()
+        //    zend_object_release(&last->data.value.obj);
         if (tmp)
             tmp->next = NULL;
         last = tmp;

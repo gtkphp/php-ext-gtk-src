@@ -452,6 +452,15 @@ php_gdk_pixbuf_class_init(zend_class_entry *container_ce, zend_class_entry *pare
 /*----------------------------------------------------------------------+
  | Zend-User API                                                        |
  +----------------------------------------------------------------------*/
+php_gdk_pixbuf*
+php_gdk_pixbuf_create(GdkPixbuf *pixbuf) {
+    zend_object *object = php_gdk_pixbuf_create_object(php_gdk_pixbuf_class_entry);
+    php_gdk_pixbuf *intern = ZOBJ_TO_PHP_GDK_PIXBUF(object);
+    intern->parent_instance.ptr = pixbuf;
+
+    return intern;
+}
+
 
 php_gdk_pixbuf*
 php_gdk_pixbuf_new_from_file(zend_string *filename, zval *error) {

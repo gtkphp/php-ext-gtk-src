@@ -51,7 +51,10 @@
 extern zend_class_entry *php_gobject_object_class_entry;
 
 #define PHP_GOBJECT_OBJECT_FE() \
-    PHP_FE(g_object_connect, arginfo_g_object_connect)
+    PHP_FE(g_object_connect, arginfo_g_object_connect) \
+    PHP_FE(g_object_ref, arginfo_g_object_ref) \
+    PHP_FE(g_object_unref, arginfo_g_object_unref) \
+
 
 #define PHP_GOBJECT_OBJECT_MINIT_FUNCTION(container_ce, parent_ce) \
     php_gobject_object_class_init(container_ce, parent_ce)
@@ -85,6 +88,15 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_g_object_connect, 0, 0, 4)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_object_connect);
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_object_ref, 0, 0, 1)
+    ZEND_ARG_INFO(0, object)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(g_object_ref);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_object_unref, 0, 0, 1)
+    ZEND_ARG_INFO(0, object)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(g_object_unref);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_g_object___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()
