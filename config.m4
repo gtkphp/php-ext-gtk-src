@@ -122,6 +122,8 @@ if test "$PHP_GTK" != "no"; then
   PHP_SUBST(GTK_SHARED_LIBADD)
 
   glib_sources="php_glib/list.c \
+                php_glib/quark.c \
+                php_glib/error.c \
                 php_glib/hash-table.c"
 
 dnl g_sources="php_g/g-hash-table.c"

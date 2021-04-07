@@ -33,6 +33,8 @@
 /// include "php_glib.h"
 #include "php_glib/hash-table.h"
 #include "php_glib/list.h"
+#include "php_glib/quark.h"
+#include "php_glib/error.h"
 
 /// include "php_gobject.h"
 #include "php_gobject/object.h"
@@ -49,6 +51,7 @@
 #include "php_gtk/window.h"
 #include "php_gtk/button.h"
 #include "php_gtk/main.h"
+
 
 HashTable classes;
 
@@ -248,6 +251,7 @@ PHP_MINIT_FUNCTION(gtk)
     //                  PHP_PANGO_MINIT_FUNCTION(&ce);
                         PHP_GLIB_HASH_TABLE_MINIT_FUNCTION(&ce, NULL);
                         PHP_GLIB_LIST_MINIT_FUNCTION(&ce, NULL);
+                        PHP_GLIB_ERROR_MINIT_FUNCTION(&ce, NULL);
     gobject_object_ce = PHP_GOBJECT_OBJECT_MINIT_FUNCTION(&ce, NULL);
                         PHP_GOBJECT_SIGNAL_MINIT_FUNCTION(&ce, NULL);
     gdk_pixbuf_ce     = PHP_GDK_PIXBUF_MINIT_FUNCTION(&ce, gobject_object_ce);
@@ -281,6 +285,8 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
 
     PHP_GLIB_LIST_MSHUTDOWN_FUNCTION();
     PHP_GLIB_HASH_TABLE_MSHUTDOWN_FUNCTION();
+    PHP_GLIB_ERROR_MSHUTDOWN_FUNCTION();
+    PHP_GLIB_QUARK_MSHUTDOWN_FUNCTION();
 
     PHP_GOBJECT_OBJECT_MSHUTDOWN_FUNCTION();
     PHP_GOBJECT_SIGNAL_MSHUTDOWN_FUNCTION();
@@ -322,6 +328,8 @@ PHP_RSHUTDOWN_FUNCTION(gtk)
 {
     PHP_GLIB_HASH_TABLE_RSHUTDOWN_FUNCTION();
     PHP_GLIB_LIST_RSHUTDOWN_FUNCTION();
+    PHP_GLIB_ERROR_RSHUTDOWN_FUNCTION();
+    PHP_GLIB_QUARK_RSHUTDOWN_FUNCTION();
 
     PHP_GOBJECT_OBJECT_RSHUTDOWN_FUNCTION();
     PHP_GOBJECT_SIGNAL_RSHUTDOWN_FUNCTION();
@@ -361,6 +369,8 @@ const zend_function_entry gtk_functions[] = {
     PHP_FE(confirm_gtk_compiled,	NULL)		     /* For testing, remove later. */
     PHP_GLIB_LIST_FE()
     PHP_GLIB_HASH_TABLE_FE()
+    PHP_GLIB_ERROR_FE()
+    PHP_GLIB_QUARK_FE()
 
     PHP_GOBJECT_OBJECT_FE()
     PHP_GOBJECT_SIGNAL_FE()
