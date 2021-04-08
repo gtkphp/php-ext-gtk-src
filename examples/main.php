@@ -155,11 +155,17 @@ if($pixbuf) {
 } else {
     var_dump($error);
 }
-*/
 
 $list = gtk_window_get_icon_list($window);
 var_dump($list);
 //g_list_free($list);
+*/
+
+$list = null;
+$list = g_list_append($list, gdk_pixbuf_new_from_file("/home/dev/Images/logo-5.png", $error));
+$list = g_list_append($list, gdk_pixbuf_new_from_file("/home/dev/Images/logo-6.png", $error));
+
+gtk_window_set_icon_list($window, $list);
 
 
 gtk_main();

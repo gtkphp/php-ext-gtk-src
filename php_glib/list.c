@@ -234,8 +234,7 @@ php_glib_list_write_property(zval *object, zval *member, zval *value, void **cac
     TRACE("%s(%s)\n", __FUNCTION__, member->value.str->val);
 
     if (zend_string_equals_literal(member->value.str, "next")
-     || zend_string_equals_literal(member->value.str, "prev")
-     || zend_string_equals_literal(member->value.str, "data") ) {
+     || zend_string_equals_literal(member->value.str, "prev") ) {
 #if 0
         if (ZVAL_IS_PHP_GLIB_LIST(value)) {
             // do unset(object->next) and php_glib_list_insert(object, value, 0);
@@ -247,6 +246,9 @@ php_glib_list_write_property(zval *object, zval *member, zval *value, void **cac
         zend_error(E_USER_WARNING, "Readonly property GList::$%s", member->value.str->val);
 #endif
         return;
+    } else if (zend_string_equals_literal(member->value.str, "data")) {
+        //zval_ptr_dtor(&obj->data);
+        ZVAL_COPY(&obj->data, value);
     }
     zend_object_handlers *std_hnd = zend_get_std_object_handlers();
     std_hnd->write_property(object, member, value, cache_slot);
@@ -562,19 +564,37 @@ php_glib_list_insert_sorted_real(php_glib_list *list, zval *data, zval *func, zv
 /*----------------------------------------------------------------------+
  | Zend-User API                                                        |
  +----------------------------------------------------------------------*/
+#include "php_gobject/object.h"
 php_glib_list *
 php_glib_list_append(php_glib_list *list, zval *data) {
     php_glib_list *last = NULL;
+    php_gobject_object *value = NULL;
 
     zend_object *new_std = php_glib_list_create_object(php_glib_list_class_entry);
     php_glib_list *new_list = ZOBJ_TO_PHP_GLIB_LIST(new_std);
+    new_list->ptr = g_list_alloc();
     ZVAL_COPY(&new_list->data, data);
+    switch (Z_TYPE_P(data)) {
+    case IS_STRING:
+    break;
+    case IS_OBJECT:
+        if (instanceof_function(data->value.obj->ce, php_gobject_object_class_entry)) {
+            value = ZVAL_GET_PHP_GOBJECT_OBJECT(data);
+            new_list->ptr->data = value->ptr;
+        }
+    break;
+    default:
+        break;
+    }
 
     if (list) {
         last = php_glib_list_last(list);
         last->next = new_list;
         new_list->prev = last;
         GC_REFCOUNT(&last->std)++;
+
+        last->ptr->next = new_list->ptr;
+        new_list->ptr->prev = last->ptr;
 
         return list;
     }
@@ -1376,24 +1396,30 @@ PHP_FUNCTION(g_list_free)
 /* {{{ proto void g_list_free_full(GList list, callback free_func) */
 PHP_FUNCTION(g_list_free_full)
 {
-    zval *list = NULL;
-    zval *free_func = NULL;
+    zval *zlist = NULL;
+    zval *zfree_func = NULL;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL_DEREF(list)
-        Z_PARAM_ZVAL(free_func)
+        Z_PARAM_ZVAL_DEREF(zlist)
+        Z_PARAM_ZVAL(zfree_func)
     ZEND_PARSE_PARAMETERS_END();
 
-    php_glib_list *__list = ZVAL_IS_PHP_GLIB_LIST(list)? ZVAL_GET_PHP_GLIB_LIST(list): NULL;
-    php_glib_list_free_full(__list, free_func);
+    php_glib_list *__list = ZVAL_IS_PHP_GLIB_LIST(zlist)? ZVAL_GET_PHP_GLIB_LIST(zlist): NULL;
+    php_glib_list_free_full(__list, zfree_func);
 
+    ZVAL_NULL(zlist);
 
 }/* }}} */
 
 /* {{{ proto GList g_list_alloc() */
 PHP_FUNCTION(g_list_alloc)
 {
-    php_glib_list *__ret = php_glib_list_alloc();
+    ZEND_PARSE_PARAMETERS_START(0, 0)
+    ZEND_PARSE_PARAMETERS_END();
+
+    zend_object *object = php_glib_list_create_object(php_glib_list_class_entry);
+    php_glib_list *__ret = ZOBJ_TO_PHP_GLIB_LIST(object);
+    __ret->ptr = g_list_alloc();
 
     RETURN_OBJ(&__ret->std);
 }/* }}} */
@@ -1401,16 +1427,20 @@ PHP_FUNCTION(g_list_alloc)
 /* {{{ proto void g_list_free_1(GList list) */
 PHP_FUNCTION(g_list_free_1)
 {
-    zval *list = NULL;
+    zval *zlist = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(list)
+        Z_PARAM_ZVAL_DEREF(zlist)
     ZEND_PARSE_PARAMETERS_END();
 
-    php_glib_list *__list = ZVAL_IS_PHP_GLIB_LIST(list)? ZVAL_GET_PHP_GLIB_LIST(list): NULL;
-    php_glib_list_free_1(__list);
+    php_glib_list *__list = ZVAL_IS_PHP_GLIB_LIST(zlist)? ZVAL_GET_PHP_GLIB_LIST(zlist): NULL;
 
-    RETURN_NULL();
+    g_list_free_1(__list->ptr);
+    __list->ptr = NULL;
+
+    zend_object_release(&__list->std);
+
+    ZVAL_NULL(zlist);
 }/* }}} */
 
 /* {{{ proto int g_list_length(GList list) */
@@ -1438,9 +1468,12 @@ PHP_FUNCTION(g_list_copy)
     ZEND_PARSE_PARAMETERS_END();
 
     php_glib_list *__list = ZVAL_IS_PHP_GLIB_LIST(list)? ZVAL_GET_PHP_GLIB_LIST(list): NULL;
-    php_glib_list *__ret = php_glib_list_copy(__list);
 
-    RETURN_OBJ(&__ret->std);
+    GList *copy = g_list_copy(__list->ptr);
+    php_glib_list *__copy = php_glib_list_create_object(php_glib_list_class_entry);
+    __copy->ptr = copy;
+
+    RETURN_OBJ(&__copy->std);
 }/* }}} */
 
 /* {{{ proto GList g_list_copy_deep(GList list, mixed func, mixed user_data) */

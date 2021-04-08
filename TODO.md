@@ -19,6 +19,10 @@ By continuously improving the design of code, we make it easier and easier to wo
 >       $src = zval{php_glib_error} has it's own ptr set to null,
 >       but not released so we can do $src->message="msg"; Or ptr is null
 
+- **TODO**: continue g_list_copy
+
+- **TODO**: add zend_module_dep
+
 ```
 <?php
 require_once("Gtk.php");// Wrapper get latest
