@@ -63,8 +63,13 @@ create config.nice
 - Server-Cache
 - Client-Cache
 - Seperate responsability
-  [ ] Create ext/glib, ext/gtk, ext/cairo, ext/pango
-  Find usage:
+  - [ ] Rename ext/gtk by ext/gtkml
+  - [ ] ext/glib
+  - [ ] ext/gtk
+  - [ ] ext/cairo
+  - [ ] ext/pango
+  - [ ] Find usage
+
 ```
   --with-glib=static
       --with-gobject=static
