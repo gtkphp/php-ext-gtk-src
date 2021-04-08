@@ -14,27 +14,29 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-//$list = g_list_insert_before(Null, Null, "value1");
-//$list = g_list_insert_before($list, Null, "value2");
-//$list = g_list_insert_before($list, Null, "value3");
-//$list = g_list_insert_before($list, Null, "value4");
-//$list = g_list_insert_before($list, Null, "value5");
+$list = Null;
+$list = g_list_append($list, "value0");
+echo g_list_length($list), PHP_EOL;
+$list = g_list_append($list, "value1");
+echo g_list_length($list), PHP_EOL;
+$list = g_list_append($list, "value2");
+echo g_list_length($list), PHP_EOL;
 
-//var_dump($list);
 
 
 
+/*
+function on_destroy($data) {
+    var_dump($data);
+}
 
 $list = Null;
 $list = g_list_append($list, "value0");
 $list = g_list_append($list, "value1");
 $list = g_list_append($list, "value2");
 
-//g_list_free($list);
-unset($list);
-
-echo "unset\n";
-
+g_list_free_full($list, "on_destroy");
+*/
 
 
 

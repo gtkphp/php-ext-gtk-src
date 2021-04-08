@@ -417,13 +417,13 @@ php_gtk_window_new(php_gtk_window *self, zend_long type) {
     object->ptr = G_OBJECT(window);
     g_object_set_data(G_OBJECT(window), "zend_object", &object->std);
 
-
     //zend_make_compiled_string_description(const char *name) /* {{{ */
     const char *cur_filename = zend_get_executed_filename();
     gchar *file_name = g_path_get_basename (cur_filename);
     gtk_window_set_title(GTK_WINDOW(window), file_name);
     g_free(file_name);
 
+#if 0
     GdkPixbuf *icon_32 = gdk_pixbuf_new_from_file("/home/dev/Images/logo-6.png", NULL);
     GdkPixbuf *icon_16 = gdk_pixbuf_new_from_file("/home/dev/Images/php-icon.png", NULL);
     GList *icons = NULL;
@@ -431,6 +431,8 @@ php_gtk_window_new(php_gtk_window *self, zend_long type) {
     icons = g_list_append(icons, icon_16);
     gtk_window_set_icon_list(GTK_WINDOW(window), icons);
     g_list_free(icons);
+#endif
+
     //gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/logo-6.png", NULL);
     //gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/php-icon.png", NULL);
     /*
@@ -557,4 +559,23 @@ PHP_FUNCTION(gtk_window_get_icon_list)
     php_glib_list *zlist = php_glib_list_new(list);
 
     RETURN_OBJ(&zlist->std);
+}/* }}} */
+
+/* {{{ proto void gtk_window_set_icon_list(GtkWindow window, GList list) */
+PHP_FUNCTION(gtk_window_set_icon_list)
+{
+    zval *zwindow = NULL;
+    zval *zlist = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_ZVAL(zwindow)
+        Z_PARAM_ZVAL(zlist)
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_gtk_window *window = ZVAL_IS_PHP_GTK_WINDOW(zwindow) ? ZVAL_GET_PHP_GTK_WINDOW(zwindow) : NULL;
+    php_glib_list *list = ZVAL_IS_PHP_GLIB_LIST(zlist) ? ZVAL_GET_PHP_GLIB_LIST(zlist) : NULL;
+
+    GtkWindow *gtk_window = GTK_WINDOW(window->parent_instance.parent_instance.parent_instance.ptr);
+    gtk_window_set_icon_list(gtk_window, list->ptr);
+
 }/* }}} */

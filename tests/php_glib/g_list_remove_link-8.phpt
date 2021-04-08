@@ -1,5 +1,5 @@
 --TEST--
-1-05-6-2 : Check for g_list_delete_link
+1-05-5-8 : Check for g_list_delete_link
 --SKIPIF--
 <?php if (!extension_loaded("gtk")) print "skip"; ?>
 --FILE--

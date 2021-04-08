@@ -219,12 +219,12 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_alloc, 0, 0, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_list_alloc);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_free_1, 0, 0, 0)
-    ZEND_ARG_INFO(0, list)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_free_1, 0, 0, 1)
+    ZEND_ARG_INFO(1, list)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_list_free_1);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_length, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_list_length, 0, 0, 1)
     ZEND_ARG_INFO(0, list)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_list_length);
