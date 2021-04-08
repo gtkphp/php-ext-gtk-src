@@ -52,6 +52,8 @@
 #include "php_gtk/button.h"
 #include "php_gtk/main.h"
 
+
+
 HashTable classes;
 
 /* If you declare any globals in php_gtk.h uncomment this:
@@ -100,6 +102,18 @@ PHP_FUNCTION(confirm_gtk_compiled)
 //#define TEST_NUM_3 "04-g_list-2-insert.c"
 
 //#define TEST_NUM TEST_NUM_1
+
+    //$error=new GError();// Must be null
+
+
+    /*
+    GError *error=NULL;
+    g_set_error(&error, g_quark_from_string("MY"), 403, "'%s' do not exist", "Application", NULL);
+    g_set_error(&error, g_quark_from_string("YOU"), 404, "'%s' unvalid", "Application", NULL);
+    //g_prefix_error(&error, "GNOME", NULL);
+    g_print("%s\n", error->message);
+    */
+
 
 #if 0
     // Check the bahavior of GList

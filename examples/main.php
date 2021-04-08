@@ -146,6 +146,7 @@ g_list_dump($children);
 g_list_free_full($children, "on_destroy");
 */
 
+/*
 //TODO: $filename = "https://image.freepik.com/icones-gratuites/symbole-php_318-1694.jpg";
 $filename = "/home/dev/Images/logo-6.png";
 $pixbuf = gdk_pixbuf_new_from_file($filename, $error);
@@ -154,6 +155,11 @@ if($pixbuf) {
 } else {
     var_dump($error);
 }
+*/
+
+$list = gtk_window_get_icon_list($window);
+var_dump($list);
+//g_list_free($list);
 
 
 gtk_main();

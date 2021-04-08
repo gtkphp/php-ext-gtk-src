@@ -51,8 +51,9 @@
     } while (0)
 
 #define PHP_GTK_WINDOW_FE() \
-    PHP_FE(gtk_window_new, arginfo_gtk_window_new) \
-    PHP_FE(gtk_window_set_icon, arginfo_gtk_window_set_icon) \
+    PHP_FE(gtk_window_new,           arginfo_gtk_window_new) \
+    PHP_FE(gtk_window_set_icon,      arginfo_gtk_window_set_icon) \
+    PHP_FE(gtk_window_get_icon_list, arginfo_gtk_window_get_icon_list) \
 
 
 #define PHP_GTK_WINDOW_MINIT_FUNCTION(container_ce, parent_ce) \
@@ -87,6 +88,11 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_window_set_icon, 0, 0, 2)
     ZEND_ARG_INFO(0, pixbuf)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(gtk_window_set_icon);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_window_get_icon_list, 0, 0, 1)
+    ZEND_ARG_INFO(0, window)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(gtk_window_get_icon_list);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_window___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()

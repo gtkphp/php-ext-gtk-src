@@ -1,11 +1,9 @@
+--TEST--
+03-9-0 : Check for g_propagate_prefixed_error
+--SKIPIF--
+<?php if (!extension_loaded("gtk")) print "skip"; ?>
+--FILE--
 <?php
-
-if (!extension_loaded("gtk")) die("Gtk+ not loaded");
-
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 
 function my_quark():int {
     static $q=null;
@@ -20,5 +18,13 @@ g_propagate_prefixed_error($err, $error, "GTKML:%s:", "GLIB", null);
 
 var_dump($err);
 
-
-//confirm_gtk_compiled("");
+?>
+--EXPECT--
+object(GError)#2 (3) {
+  ["domain"]=>
+  string(2) "MY"
+  ["code"]=>
+  int(403)
+  ["message"]=>
+  string(37) "GTKML:GLIB:'Application' do not exist"
+}
