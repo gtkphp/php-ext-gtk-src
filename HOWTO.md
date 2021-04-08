@@ -1,3 +1,8 @@
+<wpd>/
+  + php-ext-gtk-build/
+  + php-ext-gtk-src/
+     + configure
+
 $ mkdir php-ext-gtk-build
 $ cd php-ext-gtk-src
 $ phpize

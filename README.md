@@ -23,13 +23,16 @@ The following example can be found in [Examples](https://github.com/gtkphp/hello
 
 ```
 <?php
+class Window extends Gtk\Window {
+    public function __construct() {
+        parent::__construct();
+        G\Signal\Connect($this, "destroy", "Gtk\MainQuit", null);
+    }
+}
 
 Gtk\Init($argc, $argv);
-
-$window = new Gtk\Window;
-G\Signal\Connect($window, "destroy", "Gtk\MainQuit", Null);
+$window = new Window;
 $window->showAll();
-
 Gtk\Main();
 ```
 

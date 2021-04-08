@@ -14,18 +14,14 @@ function my_quark():int {
     return $q;
 }
 
-//$error = new GError();
-$error = g_error_new (my_quark(), 404, "'%s' not found near line %d", "Application", 23, NULL);
+//$error=new GError();// Must be null
+
+
+g_set_error($error, my_quark(), 404, "'%s' invalid", "Application", null);
+g_prefix_error($error, "GTK:", null);
+g_prefix_error($error, "GNOME:", null);
 
 var_dump($error);
 
 
-
-
-
-/*
-$quark = g_quark_from_static_string ("string");
-var_dump($quark);
-$string = g_quark_to_string ($quark);
-var_dump($string);
-*/
+//confirm_gtk_compiled("");

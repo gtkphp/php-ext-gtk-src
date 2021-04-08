@@ -78,16 +78,16 @@ struct _php_glib_error {
 };
 
 php_glib_error *php_glib_error_new(zend_long domain, zend_long code, zend_string *format, zval *args, int argc);
-php_glib_error *php_glib_error_new_literal(zval *domain, zend_long code, zend_string message);
+php_glib_error *php_glib_error_new_literal(zend_long domain, zend_long code, zend_string *message);
 void php_glib_error_free(php_glib_error *error);
 php_glib_error *php_glib_error_copy(php_glib_error *error);
-zend_bool php_glib_error_matches(php_glib_error *error, zval *domain, zend_long code);
-void php_g_set_error(php_glib_error *err, zval *domain, zend_long code, zend_string format);
-void php_g_set_error_literal(php_glib_error *err, zval *domain, zend_long code, zend_string message);
-void php_g_propagate_error(php_glib_error *dest, php_glib_error *src);
-void php_g_clear_error(php_glib_error *err);
-void php_g_prefix_error(php_glib_error *err, zend_string format);
-void php_g_propagate_prefixed_error(php_glib_error *dest, php_glib_error *src, zend_string format);
+zend_bool php_glib_error_matches(php_glib_error *error, zend_long domain, zend_long code);
+void php_glib_set_error(php_glib_error **err, zend_long domain, zend_long code, zend_string *format, zval *args, int argc);
+void php_glib_set_error_literal(php_glib_error **err, zval *domain, zend_long code, zend_string *message);
+void php_glib_propagate_error(php_glib_error **dest, php_glib_error *src);
+void php_glib_clear_error(php_glib_error *err);
+void php_glib_prefix_error(php_glib_error **err, zend_string *format, zval *args, int argc);
+void php_glib_propagate_prefixed_error(php_glib_error **dest, php_glib_error *src, zend_string *format, zval *args, int argc);
 
 php_glib_error *php_glib_error_create(GError *error);
 
@@ -106,39 +106,40 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_g_error_new, 0, 0, 4)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_error_new);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_error_new_literal, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_error_new_literal, 0, 0, 3)
     ZEND_ARG_INFO(0, domain)
     ZEND_ARG_INFO(0, code)
     ZEND_ARG_INFO(0, message)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_error_new_literal);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_error_free, 0, 0, 0)
-    ZEND_ARG_INFO(0, error)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_error_free, 0, 0, 1)
+    ZEND_ARG_INFO(1, error)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_error_free);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_error_copy, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_error_copy, 0, 0, 1)
     ZEND_ARG_INFO(0, error)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_error_copy);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_error_matches, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_error_matches, 0, 0, 3)
     ZEND_ARG_INFO(0, error)
     ZEND_ARG_INFO(0, domain)
     ZEND_ARG_INFO(0, code)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_error_matches);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_set_error, 0, 0, 0)
-    ZEND_ARG_INFO(0, err)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_set_error, 0, 0, 5)
+    ZEND_ARG_INFO(1, err)
     ZEND_ARG_INFO(0, domain)
     ZEND_ARG_INFO(0, code)
     ZEND_ARG_INFO(0, format)
+    ZEND_ARG_VARIADIC_INFO(0, params)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_set_error);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_set_error_literal, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_set_error_literal, 0, 0, 4)
     ZEND_ARG_INFO(0, err)
     ZEND_ARG_INFO(0, domain)
     ZEND_ARG_INFO(0, code)
@@ -146,27 +147,29 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_g_set_error_literal, 0, 0, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_set_error_literal);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_propagate_error, 0, 0, 0)
-    ZEND_ARG_INFO(0, dest)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_propagate_error, 0, 0, 2)
+    ZEND_ARG_INFO(1, dest)
     ZEND_ARG_INFO(0, src)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_propagate_error);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_clear_error, 0, 0, 0)
-    ZEND_ARG_INFO(0, err)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_clear_error, 0, 0, 1)
+    ZEND_ARG_INFO(1, err)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_clear_error);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_prefix_error, 0, 0, 0)
-    ZEND_ARG_INFO(0, err)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_prefix_error, 0, 0, 3)
+    ZEND_ARG_INFO(1, err)
     ZEND_ARG_INFO(0, format)
+    ZEND_ARG_VARIADIC_INFO(0, params)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_prefix_error);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_g_propagate_prefixed_error, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_propagate_prefixed_error, 0, 0, 4)
     ZEND_ARG_INFO(0, dest)
     ZEND_ARG_INFO(0, src)
     ZEND_ARG_INFO(0, format)
+    ZEND_ARG_VARIADIC_INFO(0, params)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_propagate_prefixed_error);
 

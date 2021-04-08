@@ -407,53 +407,251 @@ php_glib_error_new(zend_long domain, zend_long code, zend_string *format, zval *
 }
 
 php_glib_error *
-php_glib_error_new_literal(zval *domain, zend_long code, zend_string message) {
-    // TODO: implementation
+php_glib_error_new_literal(zend_long domain, zend_long code, zend_string *message) {
+    zend_object *obj = php_glib_error_create_object(php_glib_error_class_entry);
+    php_glib_error *intern = ZOBJ_TO_PHP_GLIB_ERROR(obj);
+    intern->ptr = g_error_new((GQuark)domain, (gint)code, message->val);
+    return intern;
 }
 
 void
 php_glib_error_free(php_glib_error *error) {
-    // TODO: implementation
+    int ref = GC_REFCOUNT(&error->std);
+    while(ref-->0) {
+        zend_object_release(&error->std);
+    }
 }
 
 php_glib_error *
 php_glib_error_copy(php_glib_error *error) {
-    // TODO: implementation
+    zend_object *obj = php_glib_error_create_object(php_glib_error_class_entry);
+    php_glib_error *intern = ZOBJ_TO_PHP_GLIB_ERROR(obj);
+    intern->ptr = g_error_copy(error->ptr);
+    return intern;
 }
 
 zend_bool
-php_glib_error_matches(php_glib_error *error, zval *domain, zend_long code) {
+php_glib_error_matches(php_glib_error *error, zend_long domain, zend_long code) {
+    gboolean ret = g_error_matches(error->ptr, domain, code);
+    return ret;
+}
+
+//TODO: use g_strdup_printf ?
+void
+php_glib_set_error(php_glib_error **err, zend_long domain, zend_long code, zend_string *format, zval *args, int argc) {
+    zend_object *obj;
+    php_glib_error *intern = *err;
+    GError *error = intern ? intern->ptr : NULL;
+    if (NULL!=intern) {
+        zend_error(E_USER_WARNING, "GError set over the top of a previous GError#%d", intern->std.handle);
+    }
+    switch (argc) {
+    case 2:
+        g_set_error(&error, domain, code, format->val,
+                    zval_extract_ptr(&args[0]),
+                    NULL);
+        break;
+    case 3:
+        g_set_error(&error, domain, code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  NULL);
+        break;
+    case 4:
+        g_set_error(&error, domain, code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  NULL);
+        break;
+    case 5:
+        g_set_error(&error, domain, code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  NULL);
+        break;
+    case 6:
+        g_set_error(&error, domain, code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  NULL);
+        break;
+    case 7:
+        g_set_error(&error, domain, code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  zval_extract_ptr(&args[5]),
+                                  NULL);
+        break;
+    case 8:
+        g_set_error(&error, domain, code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  zval_extract_ptr(&args[5]),
+                                  zval_extract_ptr(&args[6]),
+                                  NULL);
+        break;
+    case 9:
+        g_set_error(&error, domain, code, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  zval_extract_ptr(&args[5]),
+                                  zval_extract_ptr(&args[6]),
+                                  zval_extract_ptr(&args[7]),
+                                  NULL);
+        break;
+    case 1:
+    default:
+        g_set_error(&error, domain, code, format->val, NULL);
+    }
+    if (NULL==intern) {
+        obj = php_glib_error_create_object(php_glib_error_class_entry);
+        intern = ZOBJ_TO_PHP_GLIB_ERROR(obj);
+        intern->ptr = error;
+        *err = intern;
+    }
+}
+
+void
+php_glib_set_error_literal(php_glib_error **err, zval *domain, zend_long code, zend_string *message) {
+    zend_object *obj = php_glib_error_create_object(php_glib_error_class_entry);
+    php_glib_error *intern = ZOBJ_TO_PHP_GLIB_ERROR(obj);
+    GError *error = NULL;
+    g_set_error_literal(&error, domain, code, message->val);
+
+    intern->ptr = error;
+    *err = intern;
+}
+
+void
+php_glib_propagate_error(php_glib_error **dest, php_glib_error *src) {
+    zend_object *obj = php_glib_error_create_object(php_glib_error_class_entry);
+    php_glib_error *intern = ZOBJ_TO_PHP_GLIB_ERROR(obj);
+    GError *error = NULL;
+    GError *error_src = src->ptr;
+
+    g_propagate_error(&error, error_src);
+    src->ptr = NULL;
+
+    intern->ptr = error;
+    *dest = intern;
+}
+
+void
+php_glib_clear_error(php_glib_error *err) {
     // TODO: implementation
 }
 
 void
-php_g_set_error(php_glib_error *err, zval *domain, zend_long code, zend_string format) {
-    // TODO: implementation
+php_glib_prefix_error(php_glib_error **err, zend_string *format, zval *args, int argc) {
+    if(NULL==*err) {
+        return;
+    }
+    GError *error = (*err)->ptr;
+    switch (argc) {
+    case 2:
+        g_prefix_error(&error, format->val,
+                    zval_extract_ptr(&args[0]),
+                    NULL);
+        break;
+    case 3:
+        g_prefix_error(&error, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  NULL);
+        break;
+    case 4:
+        g_prefix_error(&error, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  NULL);
+        break;
+    case 5:
+        g_prefix_error(&error, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  NULL);
+        break;
+    case 6:
+        g_prefix_error(&error, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  NULL);
+        break;
+    case 7:
+        g_prefix_error(&error, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  zval_extract_ptr(&args[5]),
+                                  NULL);
+        break;
+    case 8:
+        g_prefix_error(&error, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  zval_extract_ptr(&args[5]),
+                                  zval_extract_ptr(&args[6]),
+                                  NULL);
+        break;
+    case 9:
+        g_prefix_error(&error, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  zval_extract_ptr(&args[5]),
+                                  zval_extract_ptr(&args[6]),
+                                  zval_extract_ptr(&args[7]),
+                                  NULL);
+        break;
+    case 1:
+    default:
+        g_prefix_error(&error, format->val, NULL);
+    }
+
 }
 
 void
-php_g_set_error_literal(php_glib_error *err, zval *domain, zend_long code, zend_string message) {
-    // TODO: implementation
-}
+php_glib_propagate_prefixed_error(php_glib_error **dest, php_glib_error *src, zend_string *format, zval *args, int argc) {
+/*
+    zend_object *obj = php_glib_error_create_object(php_glib_error_class_entry);
+    php_glib_error *intern = ZOBJ_TO_PHP_GLIB_ERROR(obj);
+    GError *error = NULL;
+    GError *error_src = src->ptr;
 
-void
-php_g_propagate_error(php_glib_error *dest, php_glib_error *src) {
-    // TODO: implementation
-}
+    g_propagate_prefixed_error(&error, error_src, format->val, ..., NULL);
+    src->ptr = NULL;
 
-void
-php_g_clear_error(php_glib_error *err) {
-    // TODO: implementation
-}
-
-void
-php_g_prefix_error(php_glib_error *err, zend_string format) {
-    // TODO: implementation
-}
-
-void
-php_g_propagate_prefixed_error(php_glib_error *dest, php_glib_error *src, zend_string format) {
-    // TODO: implementation
+    intern->ptr = error;
+    *dest = intern;
+*/
 }
 
 
@@ -515,108 +713,132 @@ PHP_FUNCTION(g_error_new)
 /* {{{ proto GError g_error_new_literal(mixed domain, int code, string message) */
 PHP_FUNCTION(g_error_new_literal)
 {
-    zval *domain = NULL;
-    zval *code = NULL;
-    zval *message = NULL;
+    zval *zdomain = NULL;
+    zval *zcode = NULL;
+    zval *zmessage = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(0, 3)
-        Z_PARAM_ZVAL(domain)
-        Z_PARAM_ZVAL(code)
-        Z_PARAM_ZVAL(message)
+    ZEND_PARSE_PARAMETERS_START(3, 13)
+        Z_PARAM_ZVAL(zdomain)
+        Z_PARAM_ZVAL(zcode)
+        Z_PARAM_ZVAL(zmessage)
     ZEND_PARSE_PARAMETERS_END();
 
-    zend_long __domain = Z_TYPE_P(domain)==IS_LONG? domain->value.lval: 0;
-    //php_glib_error *__ret = php_glib_error_new_literal(__list, data);
+    zend_long __domain = Z_TYPE_P(zdomain)==IS_LONG? zdomain->value.lval: 0;
+    zend_long __code = Z_TYPE_P(zcode)==IS_LONG? zcode->value.lval: 0;
+    zend_string *__message = Z_TYPE_P(zmessage)==IS_STRING? zmessage->value.str: 0;
 
+    php_glib_error *intern = php_glib_error_new_literal(__domain, __code, __message);
 
+    RETURN_OBJ(&intern->std);
 }/* }}} */
 
 /* {{{ proto void g_error_free(GError error) */
 PHP_FUNCTION(g_error_free)
 {
-    zval *error = NULL;
+    zval *zerror = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(0, 1)
-        Z_PARAM_ZVAL(error)
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_ZVAL_DEREF(zerror)
     ZEND_PARSE_PARAMETERS_END();
 
-    php_glib_error *__error = ZVAL_IS_PHP_GLIB_ERROR(error)? ZVAL_GET_PHP_GLIB_ERROR(error): NULL;
-    //php_glib_error *__ret = php_glib_error_free(__list, data);
+    php_glib_error *__error = ZVAL_IS_PHP_GLIB_ERROR(zerror)? ZVAL_GET_PHP_GLIB_ERROR(zerror): NULL;
+    php_glib_error_free(__error);
 
+    ZVAL_NULL(zerror);
 
 }/* }}} */
 
 /* {{{ proto GError g_error_copy(GError error) */
 PHP_FUNCTION(g_error_copy)
 {
-    zval *error = NULL;
+    zval *zerror = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(0, 1)
-        Z_PARAM_ZVAL(error)
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_ZVAL(zerror)
     ZEND_PARSE_PARAMETERS_END();
 
-    php_glib_error *__error = ZVAL_IS_PHP_GLIB_ERROR(error)? ZVAL_GET_PHP_GLIB_ERROR(error): NULL;
-    //php_glib_error *__ret = php_glib_error_copy(__list, data);
+    php_glib_error *__error = ZVAL_IS_PHP_GLIB_ERROR(zerror)? ZVAL_GET_PHP_GLIB_ERROR(zerror): NULL;
+    php_glib_error *__ret = php_glib_error_copy(__error);
 
-
+    RETURN_OBJ(&__ret->std);
 }/* }}} */
 
 /* {{{ proto bool g_error_matches(GError error, mixed domain, int code) */
 PHP_FUNCTION(g_error_matches)
 {
-    zval *error = NULL;
-    zval *domain = NULL;
-    zval *code = NULL;
+    zval *zerror = NULL;
+    zval *zdomain = NULL;
+    zval *zcode = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(0, 3)
-        Z_PARAM_ZVAL(error)
-        Z_PARAM_ZVAL(domain)
-        Z_PARAM_ZVAL(code)
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+        Z_PARAM_ZVAL(zerror)
+        Z_PARAM_ZVAL(zdomain)
+        Z_PARAM_ZVAL(zcode)
     ZEND_PARSE_PARAMETERS_END();
 
-    php_glib_error *__error = ZVAL_IS_PHP_GLIB_ERROR(error)? ZVAL_GET_PHP_GLIB_ERROR(error): NULL;
-    //php_glib_error *__ret = php_glib_error_matches(__list, data);
+    php_glib_error *__error = ZVAL_IS_PHP_GLIB_ERROR(zerror)? ZVAL_GET_PHP_GLIB_ERROR(zerror): NULL;
+    zend_long *__domain = Z_TYPE_P(zdomain)==IS_LONG? zdomain->value.lval: NULL;
+    zend_long *__code = Z_TYPE_P(zcode)==IS_LONG? zcode->value.lval: NULL;
+    zend_bool __ret = php_glib_error_matches(__error, __domain, __code);
 
+    if (__ret) {
+        RETURN_TRUE;
+    } else {
+        RETURN_FALSE;
+    }
 }/* }}} */
 
 /* {{{ proto void g_set_error(GError err, mixed domain, int code, string format) */
 PHP_FUNCTION(g_set_error)
 {
-    zval *err = NULL;
-    zval *domain = NULL;
-    zval *code = NULL;
-    zval *format = NULL;
+    zval *zerror = NULL;
+    zval *zdomain = NULL;
+    zval *zcode = NULL;
+    zval *zformat = NULL;
+    int argc;
+    zval *args = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(0, 4)
-        Z_PARAM_ZVAL(err)
-        Z_PARAM_ZVAL(domain)
-        Z_PARAM_ZVAL(code)
-        Z_PARAM_ZVAL(format)
+    ZEND_PARSE_PARAMETERS_START(4, 14)
+        Z_PARAM_ZVAL_DEREF(zerror)
+        Z_PARAM_ZVAL(zdomain)
+        Z_PARAM_ZVAL(zcode)
+        Z_PARAM_ZVAL(zformat)
+        Z_PARAM_VARIADIC('+', args, argc);
     ZEND_PARSE_PARAMETERS_END();
 
-    php_glib_error *__err = ZVAL_IS_PHP_GLIB_ERROR(err)? ZVAL_GET_PHP_GLIB_ERROR(err): NULL;
-    //php_glib_error *__ret = php_g_set_error(__list, data);
+    php_glib_error *__error = ZVAL_IS_PHP_GLIB_ERROR(zerror)? ZVAL_GET_PHP_GLIB_ERROR(zerror): NULL;
+    zend_long __domain = Z_TYPE_P(zdomain)==IS_LONG? zdomain->value.lval: 0;
+    zend_long __code = Z_TYPE_P(zcode)==IS_LONG? zcode->value.lval: 0;
+    zend_string *__format = Z_TYPE_P(zformat)==IS_STRING? zformat->value.str: NULL;
 
+    php_glib_set_error(&__error, __domain, __code, __format, args, argc);
+
+    ZVAL_OBJ(zerror, &__error->std);
 }/* }}} */
 
 /* {{{ proto void g_set_error_literal(GError err, mixed domain, int code, string message) */
 PHP_FUNCTION(g_set_error_literal)
 {
-    zval *err = NULL;
-    zval *domain = NULL;
-    zval *code = NULL;
-    zval *message = NULL;
+    zval *zerror = NULL;
+    zval *zdomain = NULL;
+    zval *zcode = NULL;
+    zval *zmessage = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(0, 4)
-        Z_PARAM_ZVAL(err)
-        Z_PARAM_ZVAL(domain)
-        Z_PARAM_ZVAL(code)
-        Z_PARAM_ZVAL(message)
+    ZEND_PARSE_PARAMETERS_START(4, 4)
+        Z_PARAM_ZVAL_DEREF(zerror)
+        Z_PARAM_ZVAL(zdomain)
+        Z_PARAM_ZVAL(zcode)
+        Z_PARAM_ZVAL(zmessage)
     ZEND_PARSE_PARAMETERS_END();
 
-    php_glib_error *__err = ZVAL_IS_PHP_GLIB_ERROR(err)? ZVAL_GET_PHP_GLIB_ERROR(err): NULL;
-    //php_glib_error *__ret = php_g_set_error_literal(__list, data);
+    php_glib_error *__error = NULL;
+    zend_long __domain = Z_TYPE_P(zdomain)==IS_LONG? zdomain->value.lval: 0;
+    zend_long __code = Z_TYPE_P(zcode)==IS_LONG? zcode->value.lval: 0;
+    zend_string *__message = Z_TYPE_P(zmessage)==IS_STRING? zmessage->value.str: NULL;
 
+    php_glib_set_error_literal(&__error, __domain, __code, __message);
+
+    ZVAL_OBJ(zerror, &__error->std);
 }/* }}} */
 
 /* {{{ proto void g_propagate_error(GError dest, GError src) */
@@ -625,27 +847,34 @@ PHP_FUNCTION(g_propagate_error)
     zval *zdest = NULL;
     zval *zsrc = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(0, 2)
-        Z_PARAM_ZVAL(zdest)
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_ZVAL_DEREF(zdest)
         Z_PARAM_ZVAL(zsrc)
     ZEND_PARSE_PARAMETERS_END();
 
-    php_glib_error *__dest = ZVAL_IS_PHP_GLIB_ERROR(zdest)? ZVAL_GET_PHP_GLIB_ERROR(zdest): NULL;
-    //php_glib_error *__ret = php_g_propagate_error(__list, data);
+    php_glib_error *__dest = NULL;
+    php_glib_error *__src = ZVAL_IS_PHP_GLIB_ERROR(zsrc)? ZVAL_GET_PHP_GLIB_ERROR(zsrc): NULL;
 
+    php_glib_propagate_error(&__dest, __src);
+
+    ZVAL_OBJ(zdest, &__dest->std);
 }/* }}} */
 
 /* {{{ proto void g_clear_error(GError err) */
 PHP_FUNCTION(g_clear_error)
 {
-    zval *zerr = NULL;
+    zval *zerror = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(0, 1)
-        Z_PARAM_ZVAL(zerr)
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_ZVAL_DEREF(zerror)
     ZEND_PARSE_PARAMETERS_END();
 
-    php_glib_error *__err = ZVAL_IS_PHP_GLIB_ERROR(zerr)? ZVAL_GET_PHP_GLIB_ERROR(zerr): NULL;
-    //php_glib_error *__ret = php_g_clear_error(__list, data);
+    php_glib_error *__error = ZVAL_IS_PHP_GLIB_ERROR(zerror)? ZVAL_GET_PHP_GLIB_ERROR(zerror): NULL;
+
+    g_clear_error(&__error->ptr);
+    __error->ptr = NULL;
+    zend_object_release(&__error->std);
+    ZVAL_NULL(zerror);
 
 }/* }}} */
 
@@ -654,14 +883,19 @@ PHP_FUNCTION(g_prefix_error)
 {
     zval *zerr = NULL;
     zval *zformat = NULL;
+    int argc;
+    zval *args = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(0, 2)
-        Z_PARAM_ZVAL(zerr)
+    ZEND_PARSE_PARAMETERS_START(3, -1)
+        Z_PARAM_ZVAL_DEREF(zerr)
         Z_PARAM_ZVAL(zformat)
+        Z_PARAM_VARIADIC('+', args, argc);
     ZEND_PARSE_PARAMETERS_END();
 
     php_glib_error *__err = ZVAL_IS_PHP_GLIB_ERROR(zerr)? ZVAL_GET_PHP_GLIB_ERROR(zerr): NULL;
-    //php_glib_error *__ret = php_g_prefix_error(__err, format, ...);
+    zend_string *__format = Z_TYPE_P(zformat)==IS_STRING? zformat->value.str: NULL;
+    php_glib_prefix_error(&__err, __format, args, argc);
+
 
 }/* }}} */
 
@@ -671,17 +905,22 @@ PHP_FUNCTION(g_propagate_prefixed_error)
     zval *zdest = NULL;
     zval *zsrc = NULL;
     zval *zformat = NULL;
+    int argc;
+    zval *args = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(0, 3)
+    ZEND_PARSE_PARAMETERS_START(0, 4)
         Z_PARAM_ZVAL(zdest)
         Z_PARAM_ZVAL(zsrc)
         Z_PARAM_ZVAL(zformat)
+        Z_PARAM_VARIADIC('+', args, argc);
     ZEND_PARSE_PARAMETERS_END();
 
+    /*
     php_glib_error *__dest = ZVAL_IS_PHP_GLIB_ERROR(zdest)? ZVAL_GET_PHP_GLIB_ERROR(zdest): NULL;
     php_glib_error *__src  = ZVAL_IS_PHP_GLIB_ERROR(zsrc)? ZVAL_GET_PHP_GLIB_ERROR(zsrc): NULL;
     zend_string    *__format = Z_TYPE_P(zformat)==IS_STRING? zformat->value.str: NULL;
-    //php_glib_error *__ret = php_g_propagate_prefixed_error(__dest, __src, __format);
+    php_glib_propagate_prefixed_error(&__dest, __src, __format, args, argc);
+    */
 
 }/* }}} */
 
