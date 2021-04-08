@@ -15,8 +15,9 @@ By continuously improving the design of code, we make it easier and easier to wo
 +TODO:              php_gio/application.c (GApplication)
 +TODO:              php_gmodule/module.c  (GModule)
 +TODO: Implement unset($list[0]);
-+TODO: Implement g_propagate_prefixed_error
-
++TODO: Fix g_propagate_prefixed_error, g_propagate_error
+       $src = zval{php_glib_error} has it's own ptr set to null,
+       but not released so we can do $src->message="msg"; Or ptr is null
 
 
 <?php

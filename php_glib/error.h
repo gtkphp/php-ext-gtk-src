@@ -166,7 +166,7 @@ ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_prefix_error);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_g_propagate_prefixed_error, 0, 0, 4)
-    ZEND_ARG_INFO(0, dest)
+    ZEND_ARG_INFO(1, dest)
     ZEND_ARG_INFO(0, src)
     ZEND_ARG_INFO(0, format)
     ZEND_ARG_VARIADIC_INFO(0, params)

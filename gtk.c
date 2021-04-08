@@ -105,6 +105,7 @@ PHP_FUNCTION(confirm_gtk_compiled)
 
     //$error=new GError();// Must be null
 
+
     /*
     GError *error=NULL;
     g_set_error(&error, g_quark_from_string("MY"), 403, "'%s' do not exist", "Application", NULL);

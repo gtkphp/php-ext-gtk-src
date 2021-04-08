@@ -640,18 +640,93 @@ php_glib_prefix_error(php_glib_error **err, zend_string *format, zval *args, int
 
 void
 php_glib_propagate_prefixed_error(php_glib_error **dest, php_glib_error *src, zend_string *format, zval *args, int argc) {
-/*
-    zend_object *obj = php_glib_error_create_object(php_glib_error_class_entry);
-    php_glib_error *intern = ZOBJ_TO_PHP_GLIB_ERROR(obj);
-    GError *error = NULL;
+    zend_object *obj;
+    php_glib_error *intern = *dest;
+
+    GError *error = intern ? intern->ptr : NULL;
     GError *error_src = src->ptr;
 
-    g_propagate_prefixed_error(&error, error_src, format->val, ..., NULL);
+    switch (argc) {
+    case 2:
+        g_propagate_prefixed_error(&error, error_src, format->val,
+                                   zval_extract_ptr(&args[0]),
+                                   NULL);
+        break;
+    case 3:
+        g_propagate_prefixed_error(&error, error_src, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  NULL);
+        break;
+    case 4:
+        g_propagate_prefixed_error(&error, error_src, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  NULL);
+        break;
+    case 5:
+        g_propagate_prefixed_error(&error, error_src, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  NULL);
+        break;
+    case 6:
+        g_propagate_prefixed_error(&error, error_src, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  NULL);
+        break;
+    case 7:
+        g_propagate_prefixed_error(&error, error_src, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  zval_extract_ptr(&args[5]),
+                                  NULL);
+        break;
+    case 8:
+        g_propagate_prefixed_error(&error, error_src, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  zval_extract_ptr(&args[5]),
+                                  zval_extract_ptr(&args[6]),
+                                  NULL);
+        break;
+    case 9:
+        g_propagate_prefixed_error(&error, error_src, format->val,
+                                  zval_extract_ptr(&args[0]),
+                                  zval_extract_ptr(&args[1]),
+                                  zval_extract_ptr(&args[2]),
+                                  zval_extract_ptr(&args[3]),
+                                  zval_extract_ptr(&args[4]),
+                                  zval_extract_ptr(&args[5]),
+                                  zval_extract_ptr(&args[6]),
+                                  zval_extract_ptr(&args[7]),
+                                  NULL);
+        break;
+    case 1:
+    default:
+        g_propagate_prefixed_error(&error, error_src, format->val, NULL);
+    }
+    if (NULL==intern) {
+        obj = php_glib_error_create_object(php_glib_error_class_entry);
+        intern = ZOBJ_TO_PHP_GLIB_ERROR(obj);
+        intern->ptr = error;
+        *dest = intern;
+    }
     src->ptr = NULL;
 
-    intern->ptr = error;
-    *dest = intern;
-*/
 }
 
 
@@ -908,19 +983,19 @@ PHP_FUNCTION(g_propagate_prefixed_error)
     int argc;
     zval *args = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(0, 4)
-        Z_PARAM_ZVAL(zdest)
+    ZEND_PARSE_PARAMETERS_START(4, 14)
+        Z_PARAM_ZVAL_DEREF(zdest)
         Z_PARAM_ZVAL(zsrc)
         Z_PARAM_ZVAL(zformat)
         Z_PARAM_VARIADIC('+', args, argc);
     ZEND_PARSE_PARAMETERS_END();
 
-    /*
     php_glib_error *__dest = ZVAL_IS_PHP_GLIB_ERROR(zdest)? ZVAL_GET_PHP_GLIB_ERROR(zdest): NULL;
     php_glib_error *__src  = ZVAL_IS_PHP_GLIB_ERROR(zsrc)? ZVAL_GET_PHP_GLIB_ERROR(zsrc): NULL;
     zend_string    *__format = Z_TYPE_P(zformat)==IS_STRING? zformat->value.str: NULL;
     php_glib_propagate_prefixed_error(&__dest, __src, __format, args, argc);
-    */
+
+    ZVAL_OBJ(zdest, &__dest->std);
 
 }/* }}} */
 
