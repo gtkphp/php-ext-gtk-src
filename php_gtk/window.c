@@ -83,6 +83,7 @@ php_gtk_window_write_dimension(zval *object, zval *offset, zval *value)
 {
     void *cache = NULL;
     zval member;
+
     ZVAL_COPY(&member, offset);
     php_gtk_window_write_property(object, &member, value, &cache);
 }

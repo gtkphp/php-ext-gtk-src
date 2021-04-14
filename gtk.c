@@ -31,6 +31,9 @@
 #include "php_gtk.h"
 
 /// include "php_glib.h"
+#include "php_cairo/matrix.h"
+
+/// include "php_glib.h"
 #include "php_glib/hash-table.h"
 #include "php_glib/list.h"
 #include "php_glib/quark.h"
@@ -261,6 +264,7 @@ PHP_MINIT_FUNCTION(gtk)
 
     //                  PHP_GLIB_MINIT_FUNCTION(&ce);
     //                  PHP_CAIRO_MINIT_FUNCTION(&ce);
+                        PHP_CAIRO_MATRIX_MINIT_FUNCTION(&ce, NULL);
     //                  PHP_PANGO_MINIT_FUNCTION(&ce);
                         PHP_GLIB_HASH_TABLE_MINIT_FUNCTION(&ce, NULL);
                         PHP_GLIB_LIST_MINIT_FUNCTION(&ce, NULL);
@@ -295,6 +299,8 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
 	/* uncomment this line if you have INI entries
 	UNREGISTER_INI_ENTRIES();
 	*/
+
+    PHP_CAIRO_MATRIX_MSHUTDOWN_FUNCTION();
 
     PHP_GLIB_LIST_MSHUTDOWN_FUNCTION();
     PHP_GLIB_HASH_TABLE_MSHUTDOWN_FUNCTION();
@@ -339,6 +345,9 @@ PHP_RINIT_FUNCTION(gtk)
  */
 PHP_RSHUTDOWN_FUNCTION(gtk)
 {
+
+    PHP_CAIRO_MATRIX_RSHUTDOWN_FUNCTION();
+
     PHP_GLIB_HASH_TABLE_RSHUTDOWN_FUNCTION();
     PHP_GLIB_LIST_RSHUTDOWN_FUNCTION();
     PHP_GLIB_ERROR_RSHUTDOWN_FUNCTION();
@@ -380,6 +389,8 @@ PHP_MINFO_FUNCTION(gtk)
  */
 const zend_function_entry gtk_functions[] = {
     PHP_FE(confirm_gtk_compiled,	NULL)		     /* For testing, remove later. */
+    PHP_CAIRO_MATRIX_FE()
+
     PHP_GLIB_LIST_FE()
     PHP_GLIB_HASH_TABLE_FE()
     PHP_GLIB_ERROR_FE()
@@ -418,6 +429,7 @@ zend_module_entry gtk_module_entry = {
 	STANDARD_MODULE_PROPERTIES
 };
 /*}}} */
+
 
 
 #ifdef COMPILE_DL_GTK

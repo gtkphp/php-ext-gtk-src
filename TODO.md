@@ -5,9 +5,15 @@ By continuously improving the design of code, we make it easier and easier to wo
 
 ## Priority
 
+- **TODO**: php_doc
+- **TODO**: php_gtk/button::_new_with_label( hineritance)
+- **TODO**: GtkWidget::get_prefered_width( hineritance)
+- **TODO**: CairoMatrix => perfect hash for G properties
+
 - **TODO**: Rename ext/gtk => ext/gtkml
 
 
+- **TODO**: In GError remove zval domain; zval code; zval message; and use ptr->domain|code|message
 - **TODO**: fix g_propagate_error
 - **TODO**: php_gobject/signal.c( each parametre type need to be implemented: GParam, GdkEvent)
 

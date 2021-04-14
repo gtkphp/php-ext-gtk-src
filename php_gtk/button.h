@@ -72,6 +72,24 @@ struct _php_gtk_button {
     // Keep blank
 };
 
+typedef struct _php_gtk_button_class php_gtk_button_class;
+struct _php_gtk_button_class {
+    /*     php_gtk_widget_class    */
+    /*     php_gtk_container_class */
+    /* use php_gtk_bin_class       */
+    void     (*get_preferred_width)   (GtkWidget *widget,
+                                       gint      *minimum_width,
+                                       gint      *natural_width);
+};
+
+#if 0
+typedef struct _php_gtk_class_entry php_gtk_class_entry;
+struct _php_gtk_class_entry {
+    zend_class_entry parent;
+    int overrides;// liste des function override by class
+};
+#endif
+
 void php_gtk_button_new_with_label(php_gtk_button *self, zend_string *label);
 
 zend_class_entry *php_gtk_button_class_init(zend_class_entry *container_ce, zend_class_entry *ce);

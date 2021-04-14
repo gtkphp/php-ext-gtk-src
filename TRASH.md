@@ -1,5 +1,54 @@
 config.m4
 
+--------------------------------------------------------------
+- Reflection for override GtkWidget::get_prefered_width
+--------------------------------------------------------------
+Howto do it for GtkWidget from Module ?
+- Binding php for module
+- GIntrospection ?
+
+GtkWidgetClass *klass;
+origin = klass->get_prefered_width;
+klass->get_prefered_width = function() {
+
+  zend_call_user_function();
+    -> parent::get_prefered_width()
+         -> origin();
+}
+
+#if 0
+    zend_object *zobj = Z_OBJ_P(getThis());
+    zval obj;
+    zend_reflection_class_factory(zobj->ce, &obj);
+    zend_class_entry *ref = obj.value.obj->ce;
+    g_print("reflection: %s\n", ref->name->val);
+
+
+    zend_string *lc_method_name = zend_string_init("getDocComment", strlen("getDocComment"), 0);
+    zend_function *fbc;
+    fbc = zend_hash_find_ptr(&ref->function_table, lc_method_name);
+
+    zval retval_ptr;
+    zval function_name; ZVAL_STR(&function_name, lc_method_name);
+    uint32_t param_count = 0;
+    zval params[0];
+    int no_separation = 0;
+    int ret = _call_user_function_ex(&obj, &function_name, &retval_ptr, param_count, params, no_separation);
+    g_print("%d == %d\n", IS_STRING, Z_TYPE(retval_ptr));
+    g_print("%s\n", retval_ptr.value.str->val);
+
+
+    zend_function *fdecl;
+    ZEND_HASH_FOREACH_PTR(&zobj->ce->function_table, fdecl) {
+        g_print("  + %s\n", fdecl->common.function_name->val);
+        // $reflector->getMethod('get_preferred_width')->getDocComment();
+    } ZEND_HASH_FOREACH_END();
+#endif
+
+--------------------------------------------------------------
+-
+--------------------------------------------------------------
+
 PKG_CONFIG_PATH="" && configure --with-gtk=Gnome\Gtk,4
 
 ```
