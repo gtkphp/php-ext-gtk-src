@@ -75,6 +75,7 @@ struct _php_gtk_widget {
     // Keep blank
 };
 
+
 void php_gtk_widget_show_all(php_gtk_widget *list, zval *data);
 
 zend_class_entry *php_gtk_widget_class_init(zend_class_entry *container_ce, zend_class_entry *ce);

@@ -52,9 +52,21 @@ php_doc_comment_create(char *comment) {
     return doc_block;
 }
 
-zend_array* //of php_doc_tag*
-php_doc_comment_get_tag_by_name(php_doc_block *comment, char *tag_name) {
+php_doc_tag*
+php_doc_comment_get_tag_by_name(php_doc_block *doc_block, char *tag_name) {
+    php_doc_tag *tag = NULL;
+    int i = 0;
+    if (doc_block && doc_block->tags)
+    while (NULL!=doc_block->tags[i]) {
+        tag = doc_block->tags[i];
+        if (0==g_strcmp0(tag->name, tag_name)) {
+            break;
+        }
+        tag = NULL;
+        i++;
+    }
 
+    return tag;
 }
 
 void
@@ -64,7 +76,22 @@ php_doc_comment_free(php_doc_block *comment) {
     if (NULL!=comment) {
 
         for (i = 0; NULL!=comment->tags[i]; i++) {
+            if (NULL!=comment->tags[i]->description) {
+                g_free(comment->tags[i]->description);
+            }
+            if (NULL!=comment->tags[i]->name) {
+                g_free(comment->tags[i]->name);
+            }
+            if (NULL!=comment->tags[i]->value) {
+                g_free(comment->tags[i]->value);
+            }
             g_free(comment->tags[i]);
+        }
+        if (NULL!=comment->tags) {
+            g_free(comment->tags);
+        }
+        if (NULL!=comment->description) {
+            g_free(comment->description);
         }
 
         g_free(comment);

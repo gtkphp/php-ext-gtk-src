@@ -65,13 +65,7 @@ extern zend_class_entry* php_gdk_pixbuf_class_entry;
 #define PHP_GDK_PIXBUF_RSHUTDOWN_FUNCTION() {\
 }
 
-typedef struct _php_gdk_pixbuf php_gdk_pixbuf;
-struct _php_gdk_pixbuf {
-    // put here members
-
-    php_gobject_object parent_instance;
-    // Keep blank
-};
+typedef php_gobject_object php_gdk_pixbuf;
 
 php_gdk_pixbuf *php_gdk_pixbuf_new_from_file(zend_string *filename, zval *error);
 

@@ -5,9 +5,16 @@ By continuously improving the design of code, we make it easier and easier to wo
 
 ## Priority
 
-- **TODO**: php_doc
-- **TODO**: php_gtk/button::_new_with_label( hineritance)
-- **TODO**: GtkWidget::get_prefered_width( hineritance)
+
+
+- **TODO**: implement => php_glib/hash-table.c and g_hash_table_iter
+- **TODO**:               php_gio/application.c (GApplication)
+- **TODO**:               php_gmodule/module.c  (GModule)
+- **TODO**: php_gobject/signal.c( each parametre type need to be implemented: GParam, GdkEvent)
+- **TODO**: php_glib/list => Implement unset($list[0]);
+- **TODO**:                  continue g_list_copy
+- **TODO**: php_doc create scanner and make test
+- **TODO**: improve hineritance( see php_gtk/button, php_gobject/object)
 - **TODO**: CairoMatrix => perfect hash for G properties
 
 - **TODO**: Rename ext/gtk => ext/gtkml
@@ -15,17 +22,10 @@ By continuously improving the design of code, we make it easier and easier to wo
 
 - **TODO**: In GError remove zval domain; zval code; zval message; and use ptr->domain|code|message
 - **TODO**: fix g_propagate_error
-- **TODO**: php_gobject/signal.c( each parametre type need to be implemented: GParam, GdkEvent)
-
-- **TODO**: implement => php_glib/hash-table.c and g_hash_table_iter
-- **TODO**:               php_gio/application.c (GApplication)
-- **TODO**:               php_gmodule/module.c  (GModule)
-- **TODO**: Implement unset($list[0]);
 - **TODO**: Fix g_propagate_prefixed_error, g_propagate_error
 >       $src = zval{php_glib_error} has it's own ptr set to null,
 >       but not released so we can do $src->message="msg"; Or ptr is null
 
-- **TODO**: continue g_list_copy
 
 - **TODO**: add zend_module_dep
 
@@ -51,7 +51,8 @@ create config.nice
 
 ## Refactoring
 - Readability
-> [ ] Rename ext/gtk by ext/gtkml
+> Create php API files
+> Create php wrapper( Gtkmm)
 - Code smell
 - Code pooling
 - Reduced complexity
@@ -74,9 +75,9 @@ create config.nice
 - Client-Cache
 - Seperate responsability
   - [ ] Rename ext/gtk by ext/gtkml
-  - [ ] ext/glib
-  - [ ] ext/gtk
-  - [ ] ext/cairo
+  - [ ] ext/glib( gobject, gio, g)
+  - [ ] ext/gtk( gdk, gsk, atk)
+  - [ ] ext/cairo( cairo-gobject)
   - [ ] ext/pango
   - [ ] Find usage
 

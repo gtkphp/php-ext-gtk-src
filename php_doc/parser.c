@@ -130,7 +130,7 @@ parseDocBlockDescription(char **str, char *end, php_doc_block *doc_block) {
     char *tmp;
     char *last_line = ptr;
     char *token;
-    char *buffer = g_strdup("");
+    char *buffer = NULL;
     char *buf = NULL;
 
     SKIP_WS(ptr, end);
@@ -167,6 +167,9 @@ parseDocBlockDescription(char **str, char *end, php_doc_block *doc_block) {
         }
         last_line = ptr;
 
+        if (NULL==buffer) {
+            buffer = g_strdup("");
+        }
         buf = g_strdup_printf("%s%.*s\n", buffer, ptr-tmp, tmp);
         g_free(buffer);
         buffer = buf;
@@ -175,7 +178,7 @@ parseDocBlockDescription(char **str, char *end, php_doc_block *doc_block) {
         SKIP_WS(ptr, end);
     }
 
-    if (buffer[0]!='\0') {
+    if (NULL!=buffer && buffer[0]!='\0') {
         //buffer[strlen(buffer)-1]='\0';// remove laste EOL
         doc_block->description = buffer;
         *str = last_line;

@@ -38,7 +38,7 @@ struct _php_doc_block {
 php_doc_block* php_doc_comment_create(char *comment);
 void           php_doc_comment_free(php_doc_block *comment);
 
-zend_array* //of php_doc_tag*
+php_doc_tag*//array null-terminated
 php_doc_comment_get_tag_by_name(php_doc_block *comment, char *tag_name);
 
 

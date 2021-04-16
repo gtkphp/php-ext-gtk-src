@@ -103,6 +103,9 @@ class Btn extends GtkButton {
     }
     /**
      * Override GtkWidgetClass::draw
+     * GtkWidget::get_preferred_width
+     * or
+     * GtkWidgetClass.get_preferred_width
      *
      * @override GtkWidget::draw
      */
@@ -203,8 +206,9 @@ $box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 //g_signal_connect($box, "add", "on_add", new StdClass());
 
 $btn = new Btn();
-g_signal_connect($btn, "clicked", "on_clicked", Null);
-//$btn->get_preferred_width($minimum_width, $natural_width);// dot not make override
+//g_signal_connect($btn, "clicked", "on_clicked", Null);
+//$btn->getPreferredWidth($minimum_width, $natural_width);// dot not make override
+//gtk_widget_get_preferred_width($btn, $minimum_width, $natural_width);
 //echo $minimum_width, ', ', $natural_width, PHP_EOL;
 
 
@@ -212,7 +216,7 @@ $button_a = gtk_button_new_with_label("Valide");
 $button_b = gtk_button_new_with_label("Cancel");
 $button_c = gtk_button_new_with_label("Pause");
 $button_d = gtk_button_new_with_label("Stop");
-//g_signal_connect($button_d, "clicked", "on_quit", Null);
+///g_signal_connect($button_d, "clicked", "on_quit", Null);
 
 gtk_container_add($box, $btn);
 gtk_container_add($box, $button_a);
@@ -226,12 +230,15 @@ gtk_widget_show_all($box);
 gtk_widget_show($window);
 
 
-//function on_destroy($data) {
+function on_destroy(&$data) {
 //    var_dump($data);
-//}
-//$children = gtk_container_get_children($box);
+}
+$children = gtk_container_get_children($box);
+//$list = $children;
 //g_list_dump($children);
+//g_list_free($children);
 //g_list_free_full($children, "on_destroy");
+//var_dump($list);
 
 
 //TODO: $filename = "https://image.freepik.com/icones-gratuites/symbole-php_318-1694.jpg";
@@ -244,17 +251,32 @@ gtk_widget_show($window);
 //var_dump($list);
 //g_list_free($list);
 
+/*
+$icon_32 = gdk_pixbuf_new_from_file("/home/dev/Images/logo-6.png", $error);
+$icon_16 = gdk_pixbuf_new_from_file("/home/dev/Images/php-icon.png", $error);
 
 $list = null;
-$list = g_list_append($list, gdk_pixbuf_new_from_file("/home/dev/Images/logo-5.png", $error));
-$list = g_list_append($list, gdk_pixbuf_new_from_file("/home/dev/Images/logo-6.png", $error));
+$list = g_list_append($list, $icon_16);
+$list = g_list_append($list, $icon_32);
 
 gtk_window_set_icon_list($window, $list);
 
+g_list_free_full($list, "g_object_unref");
+*/
+
+
+$list = null;
+$list = g_list_append($list, gdk_pixbuf_new_from_file("/home/dev/Images/logo-6.png", $error));
+$list = g_list_append($list, gdk_pixbuf_new_from_file("/home/dev/Images/php-icon.png", $error));
+g_list_dump($list);
+
+gtk_window_set_icon_list($window, $list);
+
+g_list_free_full($list, "g_object_unref");
+
+$list = gtk_window_get_icon_list($window);
+g_list_dump($list);
+g_list_free($list);
 
 
 gtk_main();
-
-
-
-
