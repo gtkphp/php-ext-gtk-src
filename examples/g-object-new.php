@@ -20,3 +20,7 @@ g_object_connect($object,
 $id = g_signal_connect_data($object, "notify::title", "my_callback", NULL, "my_destroy", 0);
 
 var_dump($object);
+
+//g_object_unref($object);
+
+var_dump($object);

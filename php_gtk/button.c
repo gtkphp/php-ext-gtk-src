@@ -27,7 +27,12 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+#include <gtk/gtk.h>
+
+#include "php_gobject/object.h"
+
 #include "button.h"
+
 
 extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
@@ -378,10 +383,9 @@ php_gtk_button_get_handlers()
 }
 
 
-
 /*----------------------------------------------------------------------+
-| PHP_MINIT                                                            |
-+----------------------------------------------------------------------*/
+ | PHP_MINIT                                                            |
+ +----------------------------------------------------------------------*/
 /*{{{ php_gtk_button_class_init */
 zend_class_entry*
 php_gtk_button_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
@@ -391,6 +395,7 @@ php_gtk_button_class_init(zend_class_entry *container_ce, zend_class_entry *pare
     php_gtk_button_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_gtk_button_class_entry->create_object = php_gtk_button_create_object;
     //ce->serialize;
+
     /*
     zend_hash_init(&php_gtk_button_prop_handlers, 0, NULL, php_gtk_button_dtor_prop_handler, 1);
     php_gtk_button_register_prop_handler(&php_gtk_button_prop_handlers, "prev", sizeof("prev")-1, php_gtk_button_read_prev, php_gtk_button_write_prev);
@@ -406,6 +411,158 @@ php_gtk_button_class_init(zend_class_entry *container_ce, zend_class_entry *pare
  | Zend-User utils                                                      |
  +----------------------------------------------------------------------*/
 
+//static php_gtk_button_class php_gtk_button_virtuals;
+static GtkButtonClass php_gtk_button_klass = {G_TYPE_INVALID};
+
+static void
+php_gtk_button_override_widget_get_preferred_width(GtkWidget *widget,
+                                                   gint      *minimum_width,
+                                                   gint      *natural_width) {
+    static GList *recursive_widget = NULL;
+    zend_object *zobject = g_object_get_data(G_OBJECT(widget), "zend_object");
+
+    zend_function *func = NULL;
+    zend_bool is_override = FALSE;
+    zend_bool is_recursive = NULL!=
+    g_list_find(recursive_widget, widget);
+
+    if (NULL==zobject) {
+       g_print(" UNLIKELY REACHED : %s\n");
+       GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_button_klass);
+       klass->get_preferred_width(widget, minimum_width, natural_width);
+    }
+
+    if (!is_recursive) {
+        // try to find override user_function
+        func = php_gobject_get_user_method(zobject, "GtkWidget::get_preferred_width");
+        if (func) {
+            is_override = TRUE;
+        }
+        zend_execute_data *current_execute = EG(current_execute_data);
+        zend_execute_data *execute = NULL;
+        if (NULL!=current_execute) {
+            execute = current_execute->prev_execute_data;
+        }// else on est mode GTKML
+
+        if (func && execute && execute->func->common.function_name) {
+            g_print("... %s\n", current_execute->func->common.function_name->val);// TODO
+            g_print("Same object ? %d\n", zobject == execute->This.value.obj);// TODO
+            if (0==g_strcmp0(execute->func->common.function_name->val, func->common.function_name->val)) {
+                if (ZVAL_IS_PHP_GTK_WIDGET(&execute->This)) {
+                    is_override = FALSE;
+                }
+            }
+        }
+        //g_print("Call is not recusive\n");
+    } else {
+        //g_print("Call is recusive\n");
+    }
+
+    if (is_override) {
+        //g_print("  call override function\n");
+        recursive_widget =
+        g_list_append(recursive_widget, widget);
+
+        zval retval;
+        char *function_name = func->common.function_name->val;
+#if 1
+        zval zwidget; ZVAL_OBJ(&zwidget, zobject);
+        zval zminimum_width;
+        zval znatural_width;
+        ZVAL_NEW_REF(&zminimum_width, &zminimum_width);
+        ZVAL_NEW_REF(&znatural_width, &znatural_width);
+        int result = zend_call_method(&zwidget, NULL, NULL, function_name, strlen(function_name), &retval, 2, &zminimum_width, &znatural_width);
+        if (FAILURE != result) {
+            if (Z_TYPE(zminimum_width)==IS_REFERENCE) {
+                if (Z_TYPE(zminimum_width.value.ref->val)==IS_DOUBLE) {
+                    *minimum_width = zminimum_width.value.ref->val.value.dval;
+                    *natural_width = znatural_width.value.ref->val.value.dval;
+                } else if (Z_TYPE(zminimum_width.value.ref->val)==IS_LONG) {
+                    //TODO check define(strict_types=1)
+                    //zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
+                    *minimum_width = zminimum_width.value.ref->val.value.lval;
+                    *natural_width = znatural_width.value.ref->val.value.lval;
+                }
+            }
+        } else {
+            g_print("zend_call_method_ Failure\n");
+        }
+        zval_ptr_dtor(&zminimum_width);
+        zval_ptr_dtor(&znatural_width);
+
+#else
+        int result;
+        zend_fcall_info fci;
+        //zval retval;
+        zval zminimum; ZVAL_DOUBLE(&zminimum, *minimum_width);
+        zval znatural; ZVAL_DOUBLE(&znatural, *natural_width);
+        //zval zminimum_width;
+        //zval znatural_width;
+        //ZVAL_NEW_REF(&zminimum_width, &zminimum);
+        //ZVAL_NEW_REF(&znatural_width, &znatural);
+        zval params[2];
+            //ZVAL_COPY_VALUE(&params[0], &zminimum_width);// ?
+            //ZVAL_COPY_VALUE(&params[1], &znatural_width);// ?
+            ZVAL_COPY_VALUE(&params[0], &zminimum);// ?
+            ZVAL_COPY_VALUE(&params[1], &znatural);// ?
+
+        ///zend_call_method()
+        fci.size = sizeof(fci);
+        fci.object = zobject;//Z_OBJ_P(zwidget);
+        fci.retval = &retval;
+        fci.param_count = 2;
+        fci.params = params;
+        fci.no_separation = 0;
+            ZVAL_STRINGL(&fci.function_name, function_name, strlen(function_name));
+            result = zend_call_function(&fci, NULL);
+        zval_ptr_dtor(&fci.function_name);
+
+        if (FAILURE != result) {
+
+            double __minimum_width = 0;
+            double __natural_width = 0;
+            if (Z_TYPE(params[0])==IS_REFERENCE) {
+                if (Z_TYPE(params[0].value.ref->val)==IS_DOUBLE) {
+                    __minimum_width = params[0].value.ref->val.value.dval;
+                    __natural_width = params[1].value.ref->val.value.dval;
+                } else if (Z_TYPE(params[0].value.ref->val)==IS_LONG) {
+                    __minimum_width = params[0].value.ref->val.value.lval;
+                    __natural_width = params[1].value.ref->val.value.lval;
+                }
+            }
+            //ZVAL_DOUBLE(zminimum_width, __minimum_width);
+            //ZVAL_DOUBLE(znatural_width, __natural_width);
+            *minimum_width = __minimum_width;
+            *natural_width = __natural_width;
+        } else {
+            g_print("zend_call_method_ Failure\n");
+        }
+#endif
+
+        recursive_widget =
+        g_list_remove(recursive_widget, widget);
+    } else {
+        GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_button_klass);
+        klass->get_preferred_width(widget, minimum_width, natural_width);
+        //g_print(" %d; %d\n", *minimum_width, *natural_width);
+    }
+
+}
+
+static void
+php_gtk_button_class_init_override() {
+    GtkButtonClass *button_klass = g_type_class_peek(GTK_TYPE_BUTTON);
+
+    if (NULL==G_TYPE_FROM_CLASS(&php_gtk_button_klass)) {
+        memcpy(&php_gtk_button_klass, button_klass, sizeof(GtkButtonClass));
+        G_TYPE_FROM_CLASS(&php_gtk_button_klass) = GTK_TYPE_BUTTON;
+
+        // TODO: browse PHP class method...
+        GtkWidgetClass *widget_klass = GTK_WIDGET_CLASS(button_klass);
+        widget_klass->get_preferred_width = php_gtk_button_override_widget_get_preferred_width;
+    }
+
+}
 
 /*----------------------------------------------------------------------+
  | Zend-User API                                                        |
@@ -418,6 +575,7 @@ php_gtk_button_new_with_label(php_gtk_button*self, zend_string *label) {
     object->ptr = G_OBJECT(button);
     g_object_set_data(G_OBJECT(button), "zend_object", &object->std);
 
+    php_gtk_button_class_init_override();
 }
 
 
@@ -438,6 +596,7 @@ PHP_METHOD(gtk_button, __construct)
     php_gtk_button_new_with_label(self, label);
 
     zend_string_release(label);
+
 
 }
 /* }}} */

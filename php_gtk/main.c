@@ -27,6 +27,8 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+#include <gtk/gtk.h>
+
 #include "main.h"
 
 

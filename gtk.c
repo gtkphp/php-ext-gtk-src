@@ -22,13 +22,24 @@
 #include "config.h"
 #endif
 
+
 #include <php.h>
 #include <php_ini.h>
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+#include <gtk/gtk.h>
+
 /// include "php_gtkml.h"
 #include "php_gtk.h"
+
+/// include "php_glib.h"
+#include "php_cairo/cairo.h"
+#include "php_cairo/path.h"
+#include "php_cairo/matrix.h"
+#include "php_cairo/png.h"
+#include "php_cairo/surface.h"
+#include "php_cairo/image-surface.h"
 
 /// include "php_glib.h"
 #include "php_glib/hash-table.h"
@@ -51,6 +62,7 @@
 #include "php_gtk/window.h"
 #include "php_gtk/button.h"
 #include "php_gtk/main.h"
+
 
 
 
@@ -261,6 +273,12 @@ PHP_MINIT_FUNCTION(gtk)
 
     //                  PHP_GLIB_MINIT_FUNCTION(&ce);
     //                  PHP_CAIRO_MINIT_FUNCTION(&ce);
+                        PHP_CAIRO_T_MINIT_FUNCTION(&ce, NULL);
+                        PHP_CAIRO_PATH_T_MINIT_FUNCTION(&ce, NULL);
+                        PHP_CAIRO_MATRIX_MINIT_FUNCTION(&ce, NULL);
+                        PHP_CAIRO_SURFACE_T_MINIT_FUNCTION(&ce, NULL);
+                        PHP_CAIRO_IMAGE_SURFACE_T_MINIT_FUNCTION(NULL, NULL);
+                        PHP_CAIRO_PNG_T_MINIT_FUNCTION(NULL, NULL);
     //                  PHP_PANGO_MINIT_FUNCTION(&ce);
                         PHP_GLIB_HASH_TABLE_MINIT_FUNCTION(&ce, NULL);
                         PHP_GLIB_LIST_MINIT_FUNCTION(&ce, NULL);
@@ -288,6 +306,7 @@ PHP_MINIT_FUNCTION(gtk)
 
 
 
+
 /* {{{ PHP_MSHUTDOWN_FUNCTION
  */
 PHP_MSHUTDOWN_FUNCTION(gtk)
@@ -295,6 +314,13 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
 	/* uncomment this line if you have INI entries
 	UNREGISTER_INI_ENTRIES();
 	*/
+
+    PHP_CAIRO_T_MSHUTDOWN_FUNCTION();
+    PHP_CAIRO_PATH_T_MSHUTDOWN_FUNCTION();
+    PHP_CAIRO_MATRIX_MSHUTDOWN_FUNCTION();
+    PHP_CAIRO_SURFACE_T_MSHUTDOWN_FUNCTION();
+    PHP_CAIRO_IMAGE_SURFACE_T_MSHUTDOWN_FUNCTION();
+    PHP_CAIRO_PNG_T_MSHUTDOWN_FUNCTION();
 
     PHP_GLIB_LIST_MSHUTDOWN_FUNCTION();
     PHP_GLIB_HASH_TABLE_MSHUTDOWN_FUNCTION();
@@ -339,6 +365,14 @@ PHP_RINIT_FUNCTION(gtk)
  */
 PHP_RSHUTDOWN_FUNCTION(gtk)
 {
+
+    PHP_CAIRO_T_RSHUTDOWN_FUNCTION();
+    PHP_CAIRO_PATH_T_RSHUTDOWN_FUNCTION();
+    PHP_CAIRO_MATRIX_RSHUTDOWN_FUNCTION();
+    PHP_CAIRO_SURFACE_T_RSHUTDOWN_FUNCTION();
+    PHP_CAIRO_IMAGE_SURFACE_T_RSHUTDOWN_FUNCTION();
+    PHP_CAIRO_PNG_T_RSHUTDOWN_FUNCTION();
+
     PHP_GLIB_HASH_TABLE_RSHUTDOWN_FUNCTION();
     PHP_GLIB_LIST_RSHUTDOWN_FUNCTION();
     PHP_GLIB_ERROR_RSHUTDOWN_FUNCTION();
@@ -380,6 +414,13 @@ PHP_MINFO_FUNCTION(gtk)
  */
 const zend_function_entry gtk_functions[] = {
     PHP_FE(confirm_gtk_compiled,	NULL)		     /* For testing, remove later. */
+    PHP_CAIRO_T_FE()
+    PHP_CAIRO_PATH_T_FE()
+    PHP_CAIRO_MATRIX_FE()
+    PHP_CAIRO_SURFACE_T_FE()
+    PHP_CAIRO_IMAGE_SURFACE_T_FE()
+    PHP_CAIRO_PNG_T_FE()
+
     PHP_GLIB_LIST_FE()
     PHP_GLIB_HASH_TABLE_FE()
     PHP_GLIB_ERROR_FE()
@@ -418,6 +459,7 @@ zend_module_entry gtk_module_entry = {
 	STANDARD_MODULE_PROPERTIES
 };
 /*}}} */
+
 
 
 #ifdef COMPILE_DL_GTK

@@ -121,12 +121,21 @@ if test "$PHP_GTK" != "no"; then
 
   PHP_SUBST(GTK_SHARED_LIBADD)
 
+  cairo_sources="php_cairo/cairo.c \
+                 php_cairo/path-data.c \
+                 php_cairo/path.c \
+                 php_cairo/matrix.c \
+                 php_cairo/png.c \
+                 php_cairo/image-surface.c \
+                 php_cairo/surface.c "
+
+  doc_sources="php_doc/parser.c \
+               php_doc/comment.c "
+
   glib_sources="php_glib/list.c \
                 php_glib/quark.c \
                 php_glib/error.c \
                 php_glib/hash-table.c"
-
-dnl g_sources="php_g/g-hash-table.c"
 
   gobject_sources="php_gobject/object.c \
                    php_gobject/signal.c"
@@ -143,7 +152,9 @@ dnl g_sources="php_g/g-hash-table.c"
 
   sources="gtk.c"
 
-  PHP_NEW_EXTENSION(gtk, gtk.c $glib_sources $gobject_sources $gdk_sources $gtk_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+  PHP_NEW_EXTENSION(gtk, gtk.c $cairo_sources $doc_sources $glib_sources $gobject_sources $gdk_sources $gtk_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+  PHP_ADD_BUILD_DIR($ext_builddir/php_doc, 1)
+  PHP_ADD_BUILD_DIR($ext_builddir/php_cairo, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_glib, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_gobject, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_gdk, 1)

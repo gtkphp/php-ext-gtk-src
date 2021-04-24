@@ -73,11 +73,12 @@ struct _php_gobject_object {
     zend_object std;
 };
 
+
 php_gobject_object *php_gobject_object_connect(php_gobject_object *list, zval *data);
-
 php_gobject_object *php_gobject_object_new(GObject *object);
-zend_class_entry *php_gobject_object_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
 
+zend_class_entry *php_gobject_object_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
+zend_function    *php_gobject_get_user_method(zend_object *zobject, char *name);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_g_object_connect, 0, 0, 4)
     ZEND_ARG_INFO(0, object)
@@ -94,7 +95,7 @@ ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_object_ref);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_g_object_unref, 0, 0, 1)
-    ZEND_ARG_INFO(0, object)
+    ZEND_ARG_INFO(1, object)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_object_unref);
 

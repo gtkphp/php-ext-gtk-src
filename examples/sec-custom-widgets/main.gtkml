@@ -1,0 +1,16 @@
+<application id="net.php.gtk"
+    xmlns:my="http://gtk.php.net/examples/sec-custom-widgets/my.dtd">
+    <window title="Custom Widget example" height="400" width="200" style="border-width:6;">
+        <?script
+            function on_button_quit($buttonQuit, $user_data):void {
+                $_GLOBAL['window']->hide();
+            }
+        ?>
+        <box>
+            <my:widget />
+            <buttonbox pack="SHRINK">
+                <button label="Quit" clicked="on_button_quit()"/>
+            </buttonbox>
+        </box>
+    </window>
+</application>

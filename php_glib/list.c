@@ -372,7 +372,7 @@ php_glib_list_create_object(zend_class_entry *class_type)
     intern->next = NULL;
     intern->prev = NULL;
 
-    intern->ptr = NULL;// new GList ?
+    intern->ptr = g_list_alloc();
     intern->properties = NULL;
 
     intern->std.handlers = &php_glib_list_handlers;
@@ -572,14 +572,15 @@ php_glib_list_append(php_glib_list *list, zval *data) {
 
     zend_object *new_std = php_glib_list_create_object(php_glib_list_class_entry);
     php_glib_list *new_list = ZOBJ_TO_PHP_GLIB_LIST(new_std);
-    new_list->ptr = g_list_alloc();
-    ZVAL_COPY(&new_list->data, data);
+
+    ZVAL_COPY(&new_list->data, data);//remove
     switch (Z_TYPE_P(data)) {
     case IS_STRING:
     break;
     case IS_OBJECT:
         if (instanceof_function(data->value.obj->ce, php_gobject_object_class_entry)) {
             value = ZVAL_GET_PHP_GOBJECT_OBJECT(data);
+            g_object_ref(value->ptr);
             new_list->ptr->data = value->ptr;
         }
     break;
@@ -949,6 +950,7 @@ php_glib_list_free_full(php_glib_list *list, zval *free_func) {
     int param_count = 1;
     zval retval;
     zval params[1];
+    //zval **params;
 
     if (list==NULL) {
         return;
@@ -963,19 +965,24 @@ php_glib_list_free_full(php_glib_list *list, zval *free_func) {
         tmp = last->prev;
 
         ZVAL_COPY(&params[0], &last->data);
-
+#if 1
+        result = call_user_function_ex(NULL, NULL, free_func, &retval, param_count, params, 0, NULL);
+#else
         result = call_user_function(NULL, NULL, free_func, &retval, param_count, params);
+#endif
         if (result==FAILURE) {
             php_printf("Unexpected 333 : php_glib_list_free_full\n");
         }
+
+        zval_ptr_dtor(&params[0]);
 
         zend_object_release(&last->std);
 
         if (tmp)
             tmp->next = NULL;
+
         last = tmp;
     }
-
 
 }
 
@@ -1130,6 +1137,8 @@ php_glib_list_new(GList *list) {
     for(it=list; it; it=it->next) {
         zlist = php_glib_list_create_object(php_glib_list_class_entry);
         plist = ZOBJ_TO_PHP_GLIB_LIST(zlist);
+        if (plist->ptr) g_list_free_1(plist->ptr);
+
         plist->ptr = it;
 
         if (prev) {
@@ -1393,6 +1402,7 @@ PHP_FUNCTION(g_list_free)
 
 }/* }}} */
 
+/* void free_func(zval *data); */
 /* {{{ proto void g_list_free_full(GList list, callback free_func) */
 PHP_FUNCTION(g_list_free_full)
 {
@@ -1824,11 +1834,11 @@ static char *php_glib_list_dump_zobj(zend_object *z_object, int tab){
         g_free(tmp_data);
         g_free(tmp_next);
     } else if (G_IS_OBJECT(ptr->ptr)) {
-        str = g_strdup_printf("\e[2;34m%s\e[0;m(\e[2;35m%d\e[0;m)\e[2;31m#%d\e[0;m{ %s}",
+        str = g_strdup_printf("\e[2;34m%s\e[0;m(\e[2;35m%d\e[0;m)\e[2;31m#%d\e[0;m{ ref_count: %d}",
                               g_type_name_from_instance((GTypeInstance*)ptr->ptr),
                               z_object->gc.refcount,
                               z_object->handle,
-                              "...");
+                              ptr->ptr->ref_count);
     } else {// for next, prev
         str = g_strdup_printf("\e[2;34m%s\e[0;m(\e[2;35m%d\e[0;m)\e[2;31m#%d\e[0;m{ %s}",
                               z_object->ce->name->val,

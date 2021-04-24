@@ -14,13 +14,15 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-$list = Null;
+/*$list = Null;
 $list = g_list_append($list, "value0");
 echo g_list_length($list), PHP_EOL;
 $list = g_list_append($list, "value1");
 echo g_list_length($list), PHP_EOL;
 $list = g_list_append($list, "value2");
 echo g_list_length($list), PHP_EOL;
+*/
+
 
 
 

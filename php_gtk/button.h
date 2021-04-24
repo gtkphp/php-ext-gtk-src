@@ -72,6 +72,9 @@ struct _php_gtk_button {
     // Keep blank
 };
 
+
+
+
 void php_gtk_button_new_with_label(php_gtk_button *self, zend_string *label);
 
 zend_class_entry *php_gtk_button_class_init(zend_class_entry *container_ce, zend_class_entry *ce);

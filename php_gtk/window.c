@@ -27,6 +27,9 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+#include <gtk/gtk.h>
+#include "php_gobject/object.h"
+
 #include "window.h"
 
 #include "php_gdk/pixbuf.h"
@@ -83,6 +86,7 @@ php_gtk_window_write_dimension(zval *object, zval *offset, zval *value)
 {
     void *cache = NULL;
     zval member;
+
     ZVAL_COPY(&member, offset);
     php_gtk_window_write_property(object, &member, value, &cache);
 }
@@ -409,6 +413,7 @@ php_gtk_window_class_init(zend_class_entry *container_ce, zend_class_entry *pare
 /*----------------------------------------------------------------------+
  | Zend-User API                                                        |
  +----------------------------------------------------------------------*/
+#include <gdk-pixbuf/gdk-pixbuf.h>
 void
 php_gtk_window_new(php_gtk_window *self, zend_long type) {
     php_gobject_object *object = PHP_GTK_WINDOW_TO_PHP_G_OBJECT(self);
@@ -429,8 +434,14 @@ php_gtk_window_new(php_gtk_window *self, zend_long type) {
     GList *icons = NULL;
     icons = g_list_append(icons, icon_32);
     icons = g_list_append(icons, icon_16);
+    g_print("%d\n", G_OBJECT(icon_16)->ref_count);//1
+    g_print("%d\n", G_OBJECT(icon_32)->ref_count);
     gtk_window_set_icon_list(GTK_WINDOW(window), icons);
-    g_list_free(icons);
+    g_print("%d\n", G_OBJECT(icon_16)->ref_count);//2
+    g_print("%d\n", G_OBJECT(icon_32)->ref_count);
+    g_list_free_full(icons, g_object_unref);
+    g_print("%d\n", G_OBJECT(icon_16)->ref_count);//1
+    g_print("%d\n", G_OBJECT(icon_32)->ref_count);
 #endif
 
     //gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/logo-6.png", NULL);
@@ -529,7 +540,7 @@ PHP_FUNCTION(gtk_window_set_icon)
     php_gdk_pixbuf *pixbuf = ZVAL_IS_PHP_GDK_PIXBUF(zpixbuf) ? ZVAL_GET_PHP_GDK_PIXBUF(zpixbuf) : NULL;
 
     gtk_window_set_icon(GTK_WINDOW(PHP_GTK_WINDOW_TO_PHP_G_OBJECT(window)->ptr),
-                        GDK_PIXBUF(pixbuf->parent_instance.ptr));
+                        GDK_PIXBUF(pixbuf->ptr));
 
 }/* }}} */
 
@@ -551,13 +562,13 @@ PHP_FUNCTION(gtk_window_get_icon_list)
         GdkPixbuf *pixbuf = it->data;
         if(!g_object_get_data(G_OBJECT(pixbuf), "zend_object")) {
             php_gdk_pixbuf *zpixbuf = php_gdk_pixbuf_create(pixbuf);
-            g_object_ref(zpixbuf->parent_instance.ptr);
-            g_object_set_data(G_OBJECT(pixbuf), "zend_object", &zpixbuf->parent_instance.std);
-            GC_REFCOUNT(&zpixbuf->parent_instance.std)--;//php_glib_list_new() ++
+            g_object_ref(zpixbuf->ptr);
+            g_object_set_data(G_OBJECT(pixbuf), "zend_object", &zpixbuf->std);
+            GC_REFCOUNT(&zpixbuf->std)--;//php_glib_list_new() ++
         }
     }
-    php_glib_list *zlist = php_glib_list_new(list);
 
+    php_glib_list *zlist = php_glib_list_new(list);
     RETURN_OBJ(&zlist->std);
 }/* }}} */
 

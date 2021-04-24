@@ -25,7 +25,6 @@
 #include "config.h"
 #endif
 
-#include <gtk/gtk.h>
 
 
 #define PHP_GTK_MAIN_FE() \

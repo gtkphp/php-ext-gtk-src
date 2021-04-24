@@ -133,7 +133,7 @@ php_gdk_pixbuf_cast_object(zval *readobj, zval *retval, int type)
     php_gdk_pixbuf *pixbuf = ZVAL_GET_PHP_GDK_PIXBUF(readobj);
     switch (type) {
     case _IS_BOOL:
-        if (NULL==pixbuf->parent_instance.ptr) {
+        if (NULL==pixbuf->ptr) {
             ZVAL_FALSE(retval);
         } else {
             ZVAL_TRUE(retval);
@@ -318,7 +318,7 @@ php_gdk_pixbuf_free_object(zend_object *object)
     php_gobject_object *gobject =  PHP_GOBJECT_OBJECT(intern);
     TRACE("php_gdk_pixbuf_free_object(\"%s\") / %d\n", intern->data.value.str->val, object->gc.refcount);
 
-    if (gobject->ptr) {
+    if (gobject->ptr && G_IS_OBJECT(gobject->ptr)) {
         g_clear_object(&gobject->ptr);
     }
 
@@ -456,7 +456,7 @@ php_gdk_pixbuf*
 php_gdk_pixbuf_create(GdkPixbuf *pixbuf) {
     zend_object *object = php_gdk_pixbuf_create_object(php_gdk_pixbuf_class_entry);
     php_gdk_pixbuf *intern = ZOBJ_TO_PHP_GDK_PIXBUF(object);
-    intern->parent_instance.ptr = pixbuf;
+    intern->ptr = pixbuf;
 
     return intern;
 }
@@ -475,7 +475,7 @@ php_gdk_pixbuf_new_from_file(zend_string *filename, zval *error) {
         return NULL;
     }
 
-    intern->parent_instance.ptr = pixbuf;
+    intern->ptr = pixbuf;
 
     return intern;
 }
@@ -527,6 +527,6 @@ PHP_FUNCTION(gdk_pixbuf_new_from_file)
         RETURN_NULL();
     }
 
-    RETURN_OBJ(&pixbuf->parent_instance.std);
+    RETURN_OBJ(&pixbuf->std);
 }/* }}} */
 

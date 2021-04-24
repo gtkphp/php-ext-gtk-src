@@ -27,6 +27,9 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+#include <gtk/gtk.h>
+#include "php_gobject/object.h"
+
 #include "container.h"
 #include "php_glib/list.h"
 
@@ -477,7 +480,9 @@ PHP_FUNCTION(gtk_container_get_children)
     }
 
     GList *children = gtk_container_get_children(GTK_CONTAINER(pcontainer->ptr));
+
     php_glib_list *list = php_glib_list_new(children);
 
     RETURN_OBJ(&list->std);
+
 }/* }}} */

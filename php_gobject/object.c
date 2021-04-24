@@ -29,6 +29,9 @@
 
 #include "object.h"
 
+#include "php_doc/tag.h";
+#include "php_doc/comment.h";
+
 extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
 
@@ -356,7 +359,7 @@ php_gobject_object_create_object(zend_class_entry *class_type)
     object_properties_init(&intern->std, class_type);
 
 
-    intern->ptr = NULL;//g_object_new(G_TYPE_OBJECT, NULL); //NULL;// new GObject ?
+    intern->ptr = g_object_new(G_TYPE_OBJECT, NULL); //NULL;// new GObject ?
     intern->properties = NULL;
 
     intern->std.handlers = &php_gobject_object_handlers;
@@ -433,6 +436,40 @@ php_gobject_object_class_init(zend_class_entry *container_ce, zend_class_entry *
 /*----------------------------------------------------------------------+
  | Zend-User utils                                                      |
  +----------------------------------------------------------------------*/
+zend_function*
+php_gobject_get_user_method(zend_object *zobject, char *name) {
+
+    php_doc_block *doc_comment;
+
+    zend_object *zobj = zobject;//&widget->parent_instance.std;
+    zend_class_entry *top = zobj->ce;
+    zend_class_entry *base = php_gobject_object_class_entry;
+    while (top) {
+        zend_function *func;
+        zend_string *key;
+        ZEND_HASH_FOREACH_STR_KEY_PTR(&top->function_table, key, func) {
+            if (func->type == ZEND_USER_FUNCTION) {
+                //g_print("%s\n", func->op_array.doc_comment->val);
+                //g_print("function %s - %s\n", key->val, func->common.function_name->val);
+                char *str = func->op_array.doc_comment->val;
+                doc_comment = php_doc_comment_create(str/*, &error*/);
+                php_doc_tag *tag = php_doc_comment_get_tag_by_name(doc_comment, "override");
+                if (tag && 0==g_strcmp0(tag->value, name)) {
+                    php_doc_comment_free(doc_comment);
+                    return func;
+                }
+                php_doc_comment_free(doc_comment);
+            }
+        } ZEND_HASH_FOREACH_END();
+
+        break;
+        top = top->parent;
+        if (top==base)
+            break;
+    }
+
+    return NULL;
+}
 
 
 /*----------------------------------------------------------------------+
@@ -519,13 +556,23 @@ PHP_FUNCTION(g_object_unref)
     zval *zobject = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zobject);
+        Z_PARAM_ZVAL_DEREF(zobject);
     ZEND_PARSE_PARAMETERS_END();
 
-    php_gobject_object *gobject = ZVAL_GET_PHP_GOBJECT_OBJECT(zobject);
+    php_gobject_object *object = ZVAL_GET_PHP_GOBJECT_OBJECT(zobject);
+    GObject *gobject = object->ptr;
 
-    g_object_unref(gobject->ptr);
-    //zend_object_release(&gobject->std);
+    //g_print("g_object_unref();    zval(%d){%d}\n", zobject->value.counted->gc.refcount, gobject->ref_count);
+    if (gobject && gobject->ref_count==1) {
+        object->ptr = NULL;
+    }
+    if (zobject->value.counted->gc.refcount<=2) {
+        //ZVAL_NULL(zobject);
+    }
+    g_object_unref(gobject);
+
+
+    //zend_object_release(&object->std);
 
 }/* }}} */
 

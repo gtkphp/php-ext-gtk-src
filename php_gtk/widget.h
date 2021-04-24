@@ -25,8 +25,6 @@
 #include "config.h"
 #endif
 
-#include <gtk/gtk.h>
-#include "php_gobject/object.h"
 
 #define PHP_GTK_WIDGET(ptr)           ((php_gtk_widget*)(ptr))
 #define PHP_GTK_WIDGET_CLASS          php_gtk_widget_class_entry
@@ -54,6 +52,7 @@
 extern zend_class_entry* php_gtk_widget_class_entry;
 
 #define PHP_GTK_WIDGET_FE() \
+    PHP_FE(gtk_widget_get_preferred_width, arginfo_gtk_widget_get_preferred_width) \
     PHP_FE(gtk_widget_show, arginfo_gtk_widget_show) \
     PHP_FE(gtk_widget_show_all, arginfo_gtk_widget_show_all)
 
@@ -74,10 +73,26 @@ struct _php_gtk_widget {
     // Keep blank
 };
 
+
 void php_gtk_widget_show_all(php_gtk_widget *list, zval *data);
 
 zend_class_entry *php_gtk_widget_class_init(zend_class_entry *container_ce, zend_class_entry *ce);
+// rename it by php_gobject_get_override_function_object
+zend_function    *php_gtk_get_override_function(zend_object *zobject, char *name);
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_widget___construct, 0, 0, 0)
+ZEND_END_ARG_INFO()
+PHP_METHOD(gtk_widget, __construct);
+
+// bug on user_function g_signal_connect
+//ZEND_ARG_OBJ_INFO(0, widget, GtkWidget, 0)
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_widget_get_preferred_width, 0, 0, 3)
+    ZEND_ARG_INFO(0, widget)
+    ZEND_ARG_INFO(1, minimum_width)
+    ZEND_ARG_INFO(1, natural_width)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(gtk_widget_get_preferred_width);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_widget_show, 0, 0, 1)
     ZEND_ARG_INFO(0, widget)
@@ -88,10 +103,6 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_widget_show_all, 0, 0, 1)
     ZEND_ARG_INFO(0, widget)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(gtk_widget_show_all);
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_widget___construct, 0, 0, 0)
-ZEND_END_ARG_INFO()
-PHP_METHOD(gtk_widget, __construct);
 
 
 #endif	/* PHP_GTK_WIDGET_H */
