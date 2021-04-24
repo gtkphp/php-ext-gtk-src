@@ -66,6 +66,9 @@
 #define PHP_GTK_WINDOW_RSHUTDOWN_FUNCTION() {\
 }
 
+extern zend_class_entry     *php_gtk_window_class_entry;
+
+
 typedef struct _php_gtk_window php_gtk_window;
 struct _php_gtk_window {
     // put here members

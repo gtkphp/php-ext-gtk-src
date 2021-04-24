@@ -27,6 +27,10 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+#include <gtk/gtk.h>
+
+#include "php_gobject/object.h"
+
 #include "widget.h"
 
 extern HashTable         classes;
@@ -302,7 +306,7 @@ php_gtk_widget_free_object(zend_object *object)
     TRACE("php_gtk_widget_free_object(\"%s\") / %d\n", intern->data.value.str->val, object->gc.refcount);
 
     if (gobject->ptr) {
-        g_free(gobject->ptr);
+        //g_free(gobject->ptr);
         gobject->ptr = NULL;
     }
 
@@ -345,6 +349,194 @@ php_gtk_widget_dtor_object(zend_object *obj) {
 
 }
 
+/// ######################################################################
+//GtkWidgetClass *l;
+GHashTable *gtk_widget_classes=NULL;
+
+GtkWidget my_widget;
+GtkWidgetClass my_widget_classes;
+
+//G_DEFINE_TYPE(MyCpu, my_cpu, GTK_TYPE_WIDGET)
+typedef struct _MyWidget {
+    GtkWidget widget;
+    GdkWindow *window;
+} MyWidget;
+
+typedef struct _MyWidgetClass {
+    GtkWidgetClass widget;
+} MyWidgetClass;
+
+static void     my_widget_init              (MyWidget      *self);
+static void     my_widget_class_init        (MyWidgetClass *klass);
+static gpointer my_widget_parent_class = NULL;
+static gint     MyWidget_private_offset;
+
+//_G_DEFINE_TYPE_EXTENDED_CLASS_INIT(MyWidget, my_widget)
+static void
+my_widget_class_intern_init (gpointer klass)
+{
+  my_widget_parent_class = g_type_class_peek_parent (klass);
+  if (MyWidget_private_offset != 0)
+    g_type_class_adjust_private_offset (klass, &MyWidget_private_offset);
+  my_widget_class_init ((MyWidgetClass*) klass);
+}
+
+static inline gpointer
+my_widget_get_instance_private (MyWidget *self)
+{
+  return (G_STRUCT_MEMBER_P (self, MyWidget_private_offset));
+}
+
+GType
+my_widget_get_type (const char *key)
+{
+    gpointer type_id = g_hash_table_lookup(gtk_widget_classes, key);
+    //gsize g_define_type_id__volatile = GPOINTER_TO_SIZE(type_id);
+    if (type_id!=NULL) {
+        g_print("Error: unexpected case\n");
+    }
+
+    gsize id = 0;
+
+  if (g_once_init_enter (&id))
+    {
+      GType g_define_type_id =
+        g_type_register_static_simple (GTK_TYPE_WIDGET,
+                                       g_intern_static_string (key),
+                                       sizeof (MyWidgetClass),
+                                       (GClassInitFunc)(void (*)(void)) my_widget_class_intern_init,
+                                       sizeof (MyWidget),
+                                       (GInstanceInitFunc)(void (*)(void)) my_widget_init,
+                                       (GTypeFlags) 0);
+        {
+          /* custom code follows */
+          /* following custom code */
+        }
+        g_once_init_leave (&id, g_define_type_id);
+    }
+
+    g_hash_table_insert(gtk_widget_classes, key, GSIZE_TO_POINTER(id));
+    return id;
+} /* closes type_name##_get_type() */
+
+static void
+my_widget_realize(GtkWidget *widget) {
+
+    MyWidget *priv = (MyWidget *)widget;
+    //MyCpuPrivate *priv = MY_CPU(widget)->priv;
+    GtkAllocation alloc;
+    GdkWindowAttr attrs;
+    guint attrs_mask;
+
+    gtk_widget_set_realized(widget, TRUE);
+
+    gtk_widget_get_allocation(widget, &alloc);
+
+    attrs.x           = alloc.x;
+    attrs.y           = alloc.y;
+    attrs.width       = alloc.width;
+    attrs.height      = alloc.height;
+    attrs.window_type = GDK_WINDOW_CHILD;
+    attrs.wclass      = GDK_INPUT_OUTPUT;
+    attrs.event_mask  = gtk_widget_get_events(widget) | GDK_EXPOSURE_MASK;
+
+    attrs_mask = GDK_WA_X | GDK_WA_Y;
+
+    priv->window = gdk_window_new(gtk_widget_get_parent_window(widget),
+                &attrs, attrs_mask);
+    gdk_window_set_user_data(priv->window, widget);
+    gtk_widget_set_window(widget, priv->window);
+
+    /*
+    widget->style = gtk_style_attach(gtk_widget_get_style( widget ),
+                              priv->window);
+    gtk_style_set_background(widget->style, priv->window, GTK_STATE_NORMAL);
+    */
+}
+static void
+my_widget_size_allocate(GtkWidget *widget,
+                 GtkAllocation *allocation) {
+
+   MyWidget *priv;
+
+   priv = (MyWidget*)widget;
+
+   gtk_widget_set_allocation(widget, allocation);
+
+   if (gtk_widget_get_realized(widget)) {
+      gdk_window_move_resize(priv->window, allocation->x, allocation->y,
+          80, 100);
+   }
+}
+static gboolean
+my_widget_draw(GtkWidget *widget, cairo_t *cr) {
+
+   MyWidget *priv = (MyWidget *)widget;
+   gint limit;
+   gint i;
+
+   //GtkWidgetClass*parent = (GtkWidgetClass*)my_widget_parent_class;
+   //parent->draw(widget, cr);
+
+   cairo_translate(cr, 0, 7);
+
+   //cairo_set_source_rgb(cr, 0, 0, 0);
+   //cairo_paint(cr);
+
+   limit = 20 -      50                / 5;
+
+   for (i = 1; i <= 20; i++) {
+
+      if (i > limit) {
+         cairo_set_source_rgb(cr, 0.6, 1.0, 0);
+      } else {
+         cairo_set_source_rgb(cr, 0.2, 0.4, 0);
+      }
+
+      cairo_rectangle(cr, 8,  i * 4, 30, 3);
+      cairo_rectangle(cr, 42, i * 4, 30, 3);
+      cairo_fill(cr);
+   }
+
+
+   return FALSE;
+}
+
+/* Initialization */
+static void my_widget_init(MyWidget *widget) {
+}
+
+static void my_widget_class_init(MyWidgetClass *klass) {
+
+   GObjectClass *g_class;
+   GtkWidgetClass *w_class;
+   GParamSpec *pspec;
+
+   g_class = G_OBJECT_CLASS(klass);
+   w_class = GTK_WIDGET_CLASS(klass);
+
+   /* Override widget class methods */
+   w_class->realize = my_widget_realize;
+   w_class->size_allocate = my_widget_size_allocate;
+   w_class->draw = my_widget_draw;
+
+   /* Install property */
+
+   //g_object_class_install_property(g_class, P_PERCENT, pspec);
+
+   /* Add private data */
+   //g_type_class_add_private(g_class, sizeof(MyCpuPrivate));
+}
+
+static GType
+php_gtk_widget_register()
+{
+    GType type = G_TYPE_INVALID;
+
+    return type;
+}
+
+/// ######################################################################
 
 /* {{{ php_gtk_widget_create_object */
 static zend_object*
@@ -360,6 +552,15 @@ php_gtk_widget_create_object(zend_class_entry *class_type)
     gobject->properties = NULL;
 
     gobject->std.handlers = &php_gtk_widget_handlers;
+
+    char *key = class_type->name->val;// use prefix 'php__' My\Ns\Widget
+    g_print("ce: %s\n", key);
+    GType type = g_type_from_name(key);
+    if (type==G_TYPE_INVALID) {
+        GType type = my_widget_get_type(key);
+        gobject->ptr = gtk_widget_new(type, NULL);
+    }
+
 
     TRACE("php_gtk_widget_create_object(%p) / %d\n", &gobject->std, gobject->std.gc.refcount);
     return &gobject->std;
@@ -417,7 +618,8 @@ php_gtk_widget_class_init(zend_class_entry *container_ce, zend_class_entry *pare
     INIT_CLASS_ENTRY((*container_ce), "GtkWidget", php_gtk_widget_methods);
     php_gtk_widget_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_gtk_widget_class_entry->create_object = php_gtk_widget_create_object;
-    //ce->serialize;
+    php_gtk_widget_class_entry->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
+
     /*
     zend_hash_init(&php_gtk_widget_prop_handlers, 0, NULL, php_gtk_widget_dtor_prop_handler, 1);
     php_gtk_widget_register_prop_handler(&php_gtk_widget_prop_handlers, "prev", sizeof("prev")-1, php_gtk_widget_read_prev, php_gtk_widget_write_prev);
@@ -433,8 +635,8 @@ php_gtk_widget_class_init(zend_class_entry *container_ce, zend_class_entry *pare
                     " */";
     php_gtk_widget_class_entry->type == ZEND_USER_CLASS;
     php_gtk_widget_class_entry->info.user.doc_comment = zend_string_init(comment, strlen(comment), 1);
-#endif
     php_gtk_widget_class_entry->info.user.doc_comment = NULL;
+#endif
 
 #if 0
     char *doc = "/**"
@@ -444,6 +646,7 @@ php_gtk_widget_class_init(zend_class_entry *container_ce, zend_class_entry *pare
     php_gtk_widget_class_entry->constructor->op_array.doc_comment  = zend_string_init(doc, strlen(doc), 1);
 #endif
 
+    gtk_widget_classes = g_hash_table_new(g_direct_hash, g_direct_hash);
 
     return php_gtk_widget_class_entry;
 }/*}}} */
@@ -484,6 +687,8 @@ PHP_METHOD(gtk_widget, __construct)
 
     zend_object *zobj = Z_OBJ_P(getThis());
     php_gtk_widget *self = ZOBJ_TO_PHP_GTK_WIDGET(zobj);
+    //php_gobject_object *obj = ZOBJ_TO_PHP_GOBJECT_OBJECT(zobj);
+    //obj->ptr = gtk_widget_new(GTK_TYPE_WIDGET, NULL);
 
 }
 /* }}} */

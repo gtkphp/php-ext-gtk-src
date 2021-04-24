@@ -25,8 +25,6 @@
 #include "config.h"
 #endif
 
-#include <gtk/gtk.h>
-#include "php_gobject/object.h"
 
 #define PHP_GTK_WIDGET(ptr)           ((php_gtk_widget*)(ptr))
 #define PHP_GTK_WIDGET_CLASS          php_gtk_widget_class_entry

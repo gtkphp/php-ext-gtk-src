@@ -27,9 +27,12 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
-#include "button.h"
+#include <gtk/gtk.h>
 
 #include "php_gobject/object.h"
+
+#include "button.h"
+
 
 extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
@@ -423,15 +426,26 @@ php_gtk_button_override_widget_get_preferred_width(GtkWidget *widget,
     zend_bool is_recursive = NULL!=
     g_list_find(recursive_widget, widget);
 
+    if (NULL==zobject) {
+       g_print(" UNLIKELY REACHED : %s\n");
+       GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_button_klass);
+       klass->get_preferred_width(widget, minimum_width, natural_width);
+    }
+
     if (!is_recursive) {
         // try to find override user_function
         func = php_gobject_get_user_method(zobject, "GtkWidget::get_preferred_width");
         if (func) {
             is_override = TRUE;
         }
-        zend_execute_data *execute = EG(current_execute_data)->prev_execute_data;
+        zend_execute_data *current_execute = EG(current_execute_data);
+        zend_execute_data *execute = NULL;
+        if (NULL!=current_execute) {
+            execute = current_execute->prev_execute_data;
+        }// else on est mode GTKML
+
         if (func && execute && execute->func->common.function_name) {
-            g_print("... %s\n", EG(current_execute_data)->func->common.function_name->val);// TODO
+            g_print("... %s\n", current_execute->func->common.function_name->val);// TODO
             g_print("Same object ? %d\n", zobject == execute->This.value.obj);// TODO
             if (0==g_strcmp0(execute->func->common.function_name->val, func->common.function_name->val)) {
                 if (ZVAL_IS_PHP_GTK_WIDGET(&execute->This)) {

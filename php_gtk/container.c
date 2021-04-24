@@ -27,6 +27,9 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+#include <gtk/gtk.h>
+#include "php_gobject/object.h"
+
 #include "container.h"
 #include "php_glib/list.h"
 

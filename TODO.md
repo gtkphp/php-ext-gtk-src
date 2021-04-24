@@ -6,21 +6,31 @@ By continuously improving the design of code, we make it easier and easier to wo
 ## Priority
 
 
+- **TODO**: php_gtk/widget.c : php_gtk_widget_register
+- **TODO**: add signal destroy on each widget to know if wee need to free widget in php_gtk_**_free_object
+- **TODO**: php_cairo/path.c : #if IS_IMPLEMENTED (cairo_glyph_path)
+
+- **TODO**: Implement php_cairo/cairo.c : let override GtkWidgetClass.draw
+- **TODO**: gtkml/ zend extension ? register_class('<element>', class_name);
+- **TODO**: gtkml/ parser remove double ws, implemente signals attr; end_element() => top of the tree
+
+- **TODO**: use ZEND_PARSE_PARAMETERS_START insteanof zend_parse
+            see PHP_FUNCTION(cairo_matrix_init)
 
 - **TODO**: implement => php_glib/hash-table.c and g_hash_table_iter
 - **TODO**:               php_gio/application.c (GApplication)
 - **TODO**:               php_gmodule/module.c  (GModule)
+- **TODO**:               php_gdk/window.c
+- **TODO**:               php_doc/scanner.c ( EXPORT_API fonction for php user?)
 - **TODO**: php_gobject/signal.c( each parametre type need to be implemented: GParam, GdkEvent)
 - **TODO**: php_glib/list => Implement unset($list[0]);
 - **TODO**:                  continue g_list_copy
-- **TODO**: php_doc create scanner and make test
 - **TODO**: improve hineritance( see php_gtk/button, php_gobject/object)
-- **TODO**: CairoMatrix => perfect hash for G properties
+- **TODO**: CairoMatrix => binarysearch(8 max) / perfect hash for G properties
 
 - **TODO**: Rename ext/gtk => ext/gtkml
 
 
-- **TODO**: In GError remove zval domain; zval code; zval message; and use ptr->domain|code|message
 - **TODO**: fix g_propagate_error
 - **TODO**: Fix g_propagate_prefixed_error, g_propagate_error
 >       $src = zval{php_glib_error} has it's own ptr set to null,

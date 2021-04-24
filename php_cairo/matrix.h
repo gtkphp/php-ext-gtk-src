@@ -102,7 +102,6 @@ ZEND_END_ARG_INFO()
 PHP_METHOD(cairo_matrix, __construct);
 
 
-
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_init, 0, 0, 7)
     ZEND_ARG_OBJ_INFO(0, matrix, cairo_matrix_t, 0)
     ZEND_ARG_TYPE_INFO(0, xx, IS_DOUBLE, 0)

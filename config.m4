@@ -121,7 +121,13 @@ if test "$PHP_GTK" != "no"; then
 
   PHP_SUBST(GTK_SHARED_LIBADD)
 
-  cairo_sources="php_cairo/matrix.c "
+  cairo_sources="php_cairo/cairo.c \
+                 php_cairo/path-data.c \
+                 php_cairo/path.c \
+                 php_cairo/matrix.c \
+                 php_cairo/png.c \
+                 php_cairo/image-surface.c \
+                 php_cairo/surface.c "
 
   doc_sources="php_doc/parser.c \
                php_doc/comment.c "

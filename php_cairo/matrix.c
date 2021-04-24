@@ -159,6 +159,56 @@ php_cairo_matrix_set_y0(php_cairo_matrix *matrix, zval *value) {
     }
 }
 
+// include "matrix-private.c"
+enum _php_cairo_matrix_properties {
+    PHP_CAIRO_MATRIX_XX = 1,
+    PHP_CAIRO_MATRIX_YX = 2,
+    PHP_CAIRO_MATRIX_XY = 3,
+    PHP_CAIRO_MATRIX_YY = 4,
+    PHP_CAIRO_MATRIX_X0 = 5,
+    PHP_CAIRO_MATRIX_Y0 = 6
+};
+typedef enum _php_cairo_matrix_properties php_cairo_matrix_properties;
+
+struct CommandOption {
+  const char *Option;
+  int OptionCode;
+  void  (*setter) (php_cairo_matrix *matrix, zval *value);
+  /* zval *(*getter) (php_cairo_matrix *matrix)*/
+};
+
+static const struct CommandOption wordlist[] = {
+    {"yx", PHP_CAIRO_MATRIX_YX, php_cairo_matrix_set_yx},
+    {"yy", PHP_CAIRO_MATRIX_YY, php_cairo_matrix_set_yy},
+    {"y0", PHP_CAIRO_MATRIX_Y0, php_cairo_matrix_set_y0},
+    {"xx", PHP_CAIRO_MATRIX_XX, php_cairo_matrix_set_xx},
+    {"xy", PHP_CAIRO_MATRIX_XY, php_cairo_matrix_set_xy},
+    {"x0", PHP_CAIRO_MATRIX_X0, php_cairo_matrix_set_x0}
+};
+
+const struct CommandOption*
+php_cairo_matrix_lookup (const char *str, size_t len)
+{
+  if (len == 2)
+    {
+      if (str[0]=='x')
+        {
+          if (str[1]=='x') return &wordlist[3];
+          if (str[1]=='y') return &wordlist[4];
+          if (str[1]=='0') return &wordlist[5];
+          return 0;
+        }
+      if (str[0]=='y')
+        {
+          if (str[1]=='x') return &wordlist[0];
+          if (str[1]=='y') return &wordlist[1];
+          if (str[1]=='0') return &wordlist[2];
+          return 0;
+        }
+    }
+  return 0;
+}
+
 /*----------------------------------------------------------------------+
  | Zend Handler                                                         |
  +----------------------------------------------------------------------*/
@@ -184,41 +234,17 @@ php_cairo_matrix_unset_dimension(zval *object, zval *offset) {
 static void
 php_cairo_matrix_write_dimension(zval *object, zval *offset, zval *value)
 {
-    void *cache = NULL;
-    zval member;
-    ZVAL_COPY(&member, offset);
-    //php_cairo_matrix_write_property(object, &member, value, &cache);
     if (IS_STRING==Z_TYPE_P(offset)) {
         zend_string *member_str = offset->value.str;
-        php_cairo_matrix *obj = ZVAL_GET_PHP_CAIRO_MATRIX(object);
-        if (zend_string_equals_literal(member_str, "xx")) {
-            php_cairo_matrix_set_xx(obj, value);
-            return;
-        }
-        if (zend_string_equals_literal(member_str, "yx")) {
-            php_cairo_matrix_set_yx(obj, value);
-            return;
-        }
 
-        if (zend_string_equals_literal(member_str, "xy")) {
-            php_cairo_matrix_set_xy(obj, value);
-            return;
-        }
-        if (zend_string_equals_literal(member_str, "yy")) {
-            php_cairo_matrix_set_yy(obj, value);
-            return;
-        }
-
-        if (zend_string_equals_literal(member_str, "x0")) {
-            php_cairo_matrix_set_x0(obj, value);
-            return;
-        }
-        if (zend_string_equals_literal(member_str, "y0")) {
-            php_cairo_matrix_set_y0(obj, value);
+        struct CommandOption *cmd = php_cairo_matrix_lookup(member_str->val, member_str->len);
+        if (cmd) {
+            php_cairo_matrix *intern = ZVAL_GET_PHP_CAIRO_MATRIX(object);
+            cmd->setter(intern, value);
             return;
         }
     } else {
-
+        // offset of type *** not allowed
     }
 }
 
@@ -244,6 +270,11 @@ php_cairo_matrix_read_dimension(zval *object, zval *offset, int type, zval *rv) 
         return rv;
     } else if (Z_TYPE_P(offset)==IS_STRING) {
         //return php_cairo_matrix_read_property(object, offset, type, &cache, rv);
+        /*CommandOption *cmd = php_cairo_matrix_lookup(offset->value.str->val, offset->value.str->len);
+        if (cmd) {
+            return cmd->getter(intern);
+        }*/
+
     } else {
         // error
     }
