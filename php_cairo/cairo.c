@@ -1245,15 +1245,9 @@ PHP_FUNCTION(cairo_set_line_width)
         Z_PARAM_ZVAL(zwidth)
     ZEND_PARSE_PARAMETERS_END();
 
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__width = zwidth;
-    php_cairo_t *__ret = php_cairo_set_line_width(, __cr, __width);
+    php_cairo_t *__cr = ZVAL_IS_PHP_CAIRO_T(zcr) ? ZVAL_GET_PHP_CAIRO_T(zcr) : NULL;
+    cairo_set_line_width(__cr->ptr, zwidth->value.dval);
 
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
 }/* }}} */
 
 /* {{{ proto mixed cairo_get_line_width(cairo_t cr) */
@@ -1738,14 +1732,9 @@ PHP_FUNCTION(cairo_stroke)
         Z_PARAM_ZVAL(zcr)
     ZEND_PARSE_PARAMETERS_END();
 
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_stroke(, __cr);
+    php_cairo_t *__cr = ZVAL_IS_PHP_CAIRO_T(zcr) ? ZVAL_GET_PHP_CAIRO_T(zcr) : NULL;
+    cairo_stroke(__cr->ptr);
 
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
 }/* }}} */
 
 /* {{{ proto void cairo_stroke_preserve(cairo_t cr) */

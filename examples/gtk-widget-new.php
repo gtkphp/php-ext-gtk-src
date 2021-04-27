@@ -16,53 +16,33 @@ class MyWidget extends \GtkWidget {
      * @override GtkWidget::draw
      */
     public function draw(cairo_t $cr):bool {
-        /*
+        //$allocation = new GdkRectangle();
         \gtk_widget_get_allocation($this, $allocation);
+
         $scaleX = $allocation->width / $this->_scale;
         $scaleY = $allocation->height / $this->_scale;
 
         // draw the foreground
-        cairo_set_source_rgb($cr, 0.0, 1.0, 0.0);
-        cairo_move_to($cr, 155.*$scale_x, 165.*$scale_y);
-        cairo_line_to($cr, 155.*$scale_x, 838.*$scale_y);
-        cairo_line_to($cr, 265.*$scale_x, 900.*$scale_y);
-        cairo_line_to($cr, 849.*$scale_x, 564.*$scale_y);
-        cairo_line_to($cr, 849.*$scale_x, 438.*$scale_y);
-        cairo_line_to($cr, 265.*$scale_x, 100.*$scale_y);
-        cairo_line_to($cr, 155.*$scale_x, 165.*$scale_y);
-        cairo_move_to($cr, 265.*$scale_x, 100.*$scale_y);
-        cairo_line_to($cr, 265.*$scale_x, 652.*$scale_y);
-        cairo_line_to($cr, 526.*$scale_x, 502.*$scale_y);
-        cairo_move_to($cr, 369.*$scale_x, 411.*$scale_y);
-        cairo_line_to($cr, 633.*$scale_x, 564.*$scale_y);
-        cairo_move_to($cr, 369.*$scale_x, 286.*$scale_y);
-        cairo_line_to($cr, 369.*$scale_x, 592.*$scale_y);
-        cairo_move_to($cr, 369.*$scale_x, 286.*$scale_y);
-        cairo_line_to($cr, 849.*$scale_x, 564.*$scale_y);
-        cairo_move_to($cr, 633.*$scale_x, 564.*$scale_y);
-        cairo_line_to($cr, 155.*$scale_x, 838.*$scale_y);
-        cairo_stroke($cr);
-        */
         cairo_set_source_rgb($cr, 1.0, 0.0, 0.0);
-        cairo_rectangle($cr, 5.0, 2.0, 70.0, 85.0);
-        cairo_fill($cr);
-
-        //cairo_translate(cr, 0, 7);
-        //cairo_set_source_rgb(cr, 0, 0, 0);
-        //cairo_paint(cr);
-        $limit = 20 -      50                / 5;
-        for ($i = 1; $i <= 20; $i++) {
-
-           if ($i > $limit) {
-              cairo_set_source_rgb($cr, 0.6, 1.0, 0);
-           } else {
-              cairo_set_source_rgb($cr, 0.2, 0.4, 0);
-           }
-
-           cairo_rectangle($cr, 8,  $i * 4, 30, 3);
-           cairo_rectangle($cr, 42, $i * 4, 30, 3);
-           cairo_fill($cr);
-        }
+        cairo_move_to($cr, 155.*$scaleX, 165.*$scaleY);
+        cairo_line_to($cr, 155.*$scaleX, 838.*$scaleY);
+        cairo_line_to($cr, 265.*$scaleX, 900.*$scaleY);
+        cairo_line_to($cr, 849.*$scaleX, 564.*$scaleY);
+        cairo_line_to($cr, 849.*$scaleX, 438.*$scaleY);
+        cairo_line_to($cr, 265.*$scaleX, 100.*$scaleY);
+        cairo_line_to($cr, 155.*$scaleX, 165.*$scaleY);
+        cairo_move_to($cr, 265.*$scaleX, 100.*$scaleY);
+        cairo_line_to($cr, 265.*$scaleX, 652.*$scaleY);
+        cairo_line_to($cr, 526.*$scaleX, 502.*$scaleY);
+        cairo_move_to($cr, 369.*$scaleX, 411.*$scaleY);
+        cairo_line_to($cr, 633.*$scaleX, 564.*$scaleY);
+        cairo_move_to($cr, 369.*$scaleX, 286.*$scaleY);
+        cairo_line_to($cr, 369.*$scaleX, 592.*$scaleY);
+        cairo_move_to($cr, 369.*$scaleX, 286.*$scaleY);
+        cairo_line_to($cr, 849.*$scaleX, 564.*$scaleY);
+        cairo_move_to($cr, 633.*$scaleX, 564.*$scaleY);
+        cairo_line_to($cr, 155.*$scaleX, 838.*$scaleY);
+        cairo_stroke($cr);
 
         return false;
     }
@@ -80,10 +60,7 @@ function my_destroy($object, $param, $user_data){
 
 
 $req = new GtkRequestedSize();
-var_dump($req);
-
 $r = new GtkRequisition();
-var_dump($r);
 
 $widget = new MyWidget();
 $container = new \GtkContainer();
@@ -93,7 +70,8 @@ $window = new \GtkWindow();
 \gtk_container_add($window, $widget);
 \gtk_widget_show_all($window);
 
-
+var_dump($req);
+var_dump($r);
 var_dump($widget);
 var_dump($container);
 var_dump($bin);
