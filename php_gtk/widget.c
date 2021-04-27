@@ -77,6 +77,7 @@ php_gtk_widget_unset_dimension(zval *object, zval *offset) {
     default:
         break;
     }
+
 }
 
 static void
@@ -452,6 +453,7 @@ my_widget_realize(GtkWidget *widget) {
                               priv->window);
     gtk_style_set_background(widget->style, priv->window, GTK_STATE_NORMAL);
     */
+
 }
 static void
 my_widget_size_allocate(GtkWidget *widget,
@@ -467,6 +469,7 @@ my_widget_size_allocate(GtkWidget *widget,
       gdk_window_move_resize(priv->window, allocation->x, allocation->y,
           80, 100);
    }
+
 }
 static gboolean
 my_widget_draw(GtkWidget *widget, cairo_t *cr) {
@@ -504,6 +507,147 @@ my_widget_draw(GtkWidget *widget, cairo_t *cr) {
 
 /* Initialization */
 static void my_widget_init(MyWidget *widget) {
+}
+
+static GtkWidgetClass php_gtk_widget_klass = {G_TYPE_INVALID};
+
+static void
+php_gtk_widget_override_get_preferred_width(GtkWidget *widget,
+                                            gint      *minimum_width,
+                                            gint      *natural_width) {
+    if (TRUE) {
+       GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_widget_klass);
+       klass->get_preferred_width(widget, minimum_width, natural_width);
+    }
+
+}
+#include "php_cairo/cairo.h"
+extern zend_class_entry *php_cairo_t_class_entry;
+static gboolean
+php_gtk_widget_override_draw(GtkWidget *widget,
+                             cairo_t *cr) {
+    static GList *recursive_widget = NULL;
+    zend_object *zobject = g_object_get_data(G_OBJECT(widget), "zend_object");
+
+    zend_function *func = NULL;
+    zend_bool is_override = FALSE;
+    zend_bool is_recursive = NULL!=
+    g_list_find(recursive_widget, widget);
+
+    if (NULL==zobject) {
+       g_print(" UNLIKELY REACHED\n");
+       GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_widget_klass);// <---------------------------
+       return klass->draw(widget, cr);
+    }
+
+    if (!is_recursive) {
+        // try to find override user_function
+        func = php_gobject_get_user_method(zobject, "GtkWidget::draw");//<-------------
+        if (func) {
+            is_override = TRUE;
+        }
+        zend_execute_data *current_execute = EG(current_execute_data);
+        zend_execute_data *execute = NULL;
+        if (NULL!=current_execute) {
+            execute = current_execute->prev_execute_data;
+        }// else on est mode GTKML
+
+        if (func && execute && execute->func->common.function_name) {
+            g_print("... %s\n", current_execute->func->common.function_name->val);// TODO
+            g_print("Same object ? %d\n", zobject == execute->This.value.obj);// TODO
+            if (0==g_strcmp0(execute->func->common.function_name->val, func->common.function_name->val)) {
+                if (ZVAL_IS_PHP_GTK_WIDGET(&execute->This)) {
+                    is_override = FALSE;
+                }
+            }
+        }
+        //g_print("Call is not recusive\n");
+    } else {
+        //g_print("Call is recusive\n");
+    }
+
+    zval retval; ZVAL_TRUE(&retval);
+    if (is_override) {
+        //g_print("  call override function\n");
+        recursive_widget =
+        g_list_append(recursive_widget, widget);
+
+        char *function_name = func->common.function_name->val;
+#if 0
+        zval zwidget; ZVAL_OBJ(&zwidget, zobject);
+        zval zcr;
+        zend_object *z_cr = zend_objects_new(php_cairo_t_class_entry);
+        php_cairo_t *php_cr = ZOBJ_TO_PHP_CAIRO_T(z_cr);
+        php_cr->ptr = cr;
+        ZVAL_OBJ(&zcr, z_cr);
+
+        int result = zend_call_method(&zwidget, NULL, NULL, function_name, strlen(function_name), &retval, 1, &zcr, NULL);
+        if (FAILURE != result) {
+
+        } else {
+            g_print("zend_call_method_ Failure\n");
+        }
+        php_cr->ptr = NULL;
+        zend_object_std_dtor(z_cr);
+        //zend_objects_destroy_object(z_cr);
+
+#else
+        int result;
+        zend_fcall_info fci;
+        php_cairo_t *php_cr = php_cairo_new();
+        zend_object *z_cr = &php_cr->std;
+        php_cr->ptr = cr;
+
+        zval params[1];
+            ZVAL_OBJ(&params[0], z_cr);
+
+        ///zend_call_method()
+        fci.size = sizeof(fci);
+        fci.object = zobject;//Z_OBJ_P(zwidget);
+        fci.retval = &retval;
+        fci.param_count = 1;
+        fci.params = params;
+        fci.no_separation = 0;
+            ZVAL_STRINGL(&fci.function_name, function_name, strlen(function_name));
+            result = zend_call_function(&fci, NULL);
+        zval_ptr_dtor(&fci.function_name);
+        if (FAILURE != result) {
+        } else {
+            g_print("zend_call_method_ Failure\n");
+        }
+
+        php_cr->ptr = NULL;
+        zend_object_release(z_cr);
+
+#endif
+
+        recursive_widget =
+        g_list_remove(recursive_widget, widget);
+    } else {
+        GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_widget_klass);
+        return klass->draw(widget, cr);
+    }
+
+    if (Z_TYPE(retval)==IS_TRUE) return TRUE;
+    if (Z_TYPE(retval)==IS_FALSE) return FALSE;
+
+    return TRUE;
+}
+//...
+
+static void
+php_gtk_widget_class_init_override(GType type) {
+    GtkWidgetClass *widget_klass = g_type_class_peek(type);
+
+    if (NULL==G_TYPE_FROM_CLASS(&php_gtk_widget_klass)) {
+        memcpy(&php_gtk_widget_klass, widget_klass, sizeof(GtkWidgetClass));
+        G_TYPE_FROM_CLASS(&php_gtk_widget_klass) = type;
+
+        // TODO: browse PHP class method...
+        widget_klass->get_preferred_width = php_gtk_widget_override_get_preferred_width;
+        widget_klass->draw = php_gtk_widget_override_draw;
+        //...
+    }
 }
 
 static void my_widget_class_init(MyWidgetClass *klass) {
@@ -559,6 +703,9 @@ php_gtk_widget_create_object(zend_class_entry *class_type)
     if (type==G_TYPE_INVALID) {
         GType type = my_widget_get_type(key);
         gobject->ptr = gtk_widget_new(type, NULL);
+        php_gtk_widget_class_init_override(type);
+        g_object_set_data(G_OBJECT(gobject->ptr), "zend_object", &gobject->std);
+
     }
 
 
@@ -689,6 +836,7 @@ PHP_METHOD(gtk_widget, __construct)
     php_gtk_widget *self = ZOBJ_TO_PHP_GTK_WIDGET(zobj);
     //php_gobject_object *obj = ZOBJ_TO_PHP_GOBJECT_OBJECT(zobj);
     //obj->ptr = gtk_widget_new(GTK_TYPE_WIDGET, NULL);
+
 
 }
 /* }}} */

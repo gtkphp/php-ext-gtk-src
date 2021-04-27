@@ -127,6 +127,7 @@ struct _php_cairo_t {
 
     zend_object std;
 };
+php_cairo_t *php_cairo_new(void);
 
 php_cairo_t *php_cairo_create(zval *target);
 php_cairo_t *php_cairo_reference(php_cairo_t *cr);
