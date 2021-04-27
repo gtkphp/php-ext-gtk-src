@@ -82,6 +82,9 @@ function my_destroy($object, $param, $user_data){
 $req = new GtkRequestedSize();
 var_dump($req);
 
+$r = new GtkRequisition();
+var_dump($r);
+
 $widget = new MyWidget();
 $container = new \GtkContainer();
 $bin = new \GtkBin();
