@@ -144,6 +144,7 @@ if test "$PHP_GTK" != "no"; then
                php_gdk/rectangle.c "
 
   gtk_sources="php_gtk/widget.c \
+               php_gtk/requisition.c \
                php_gtk/requested-size.c \
                php_gtk/container.c \
                php_gtk/bin.c \

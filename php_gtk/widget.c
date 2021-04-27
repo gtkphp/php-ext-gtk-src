@@ -767,13 +767,51 @@ php_gtk_widget_class_init(zend_class_entry *container_ce, zend_class_entry *pare
     php_gtk_widget_class_entry->create_object = php_gtk_widget_create_object;
     php_gtk_widget_class_entry->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
 
-    /*
-    zend_hash_init(&php_gtk_widget_prop_handlers, 0, NULL, php_gtk_widget_dtor_prop_handler, 1);
-    php_gtk_widget_register_prop_handler(&php_gtk_widget_prop_handlers, "prev", sizeof("prev")-1, php_gtk_widget_read_prev, php_gtk_widget_write_prev);
-    php_gtk_widget_register_prop_handler(&php_gtk_widget_prop_handlers, "data", sizeof("data")-1, php_gtk_widget_read_data, php_gtk_widget_write_data);
-    php_gtk_widget_register_prop_handler(&php_gtk_widget_prop_handlers, "next", sizeof("next")-1, php_gtk_widget_read_next, php_gtk_widget_write_next);
-    zend_hash_add_ptr(&classes, ce->name, &php_gtk_widget_prop_handlers);
-    */
+    zend_register_long_constant("GTK_WIDGET_HELP_TOOLTIP", sizeof("GTK_WIDGET_HELP_TOOLTIP")-1,
+        GTK_WIDGET_HELP_TOOLTIP, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_WIDGET_HELP_WHATS_THIS", sizeof("GTK_WIDGET_HELP_WHATS_THIS")-1,
+        GTK_WIDGET_HELP_WHATS_THIS, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+
+    zend_register_long_constant("GTK_TEXT_DIR_NONE", sizeof("GTK_TEXT_DIR_NONE")-1,
+        GTK_TEXT_DIR_NONE, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_TEXT_DIR_LTR", sizeof("GTK_TEXT_DIR_LTR")-1,
+        GTK_TEXT_DIR_LTR, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_TEXT_DIR_RTL", sizeof("GTK_TEXT_DIR_RTL")-1,
+        GTK_TEXT_DIR_RTL, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+
+    zend_register_long_constant("GTK_STATE_NORMAL", sizeof("GTK_STATE_NORMAL")-1,
+        GTK_STATE_NORMAL, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_STATE_ACTIVE", sizeof("GTK_STATE_ACTIVE")-1,
+        GTK_STATE_ACTIVE, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_STATE_PRELIGHT", sizeof("GTK_STATE_PRELIGHT")-1,
+        GTK_STATE_PRELIGHT, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_STATE_SELECTED", sizeof("GTK_STATE_SELECTED")-1,
+        GTK_STATE_SELECTED, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_STATE_INSENSITIVE", sizeof("GTK_STATE_INSENSITIVE")-1,
+        GTK_STATE_INSENSITIVE, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_STATE_INCONSISTENT", sizeof("GTK_STATE_INCONSISTENT")-1,
+        GTK_STATE_INCONSISTENT, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_STATE_FOCUSED", sizeof("GTK_STATE_FOCUSED")-1,
+        GTK_STATE_FOCUSED, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+
+    zend_register_long_constant("GTK_SIZE_REQUEST_HEIGHT_FOR_WIDTH", sizeof("GTK_SIZE_REQUEST_HEIGHT_FOR_WIDTH")-1,
+        GTK_SIZE_REQUEST_HEIGHT_FOR_WIDTH, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_SIZE_REQUEST_WIDTH_FOR_HEIGHT", sizeof("GTK_SIZE_REQUEST_WIDTH_FOR_HEIGHT")-1,
+        GTK_SIZE_REQUEST_WIDTH_FOR_HEIGHT, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_SIZE_REQUEST_CONSTANT_SIZE", sizeof("GTK_SIZE_REQUEST_CONSTANT_SIZE")-1,
+        GTK_SIZE_REQUEST_CONSTANT_SIZE, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+
+    zend_register_long_constant("GTK_ALIGN_FILL", sizeof("GTK_ALIGN_FILL")-1,
+        GTK_ALIGN_FILL, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_ALIGN_START", sizeof("GTK_ALIGN_START")-1,
+        GTK_ALIGN_START, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_ALIGN_END", sizeof("GTK_ALIGN_END")-1,
+        GTK_ALIGN_END, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_ALIGN_CENTER", sizeof("GTK_ALIGN_CENTER")-1,
+        GTK_ALIGN_CENTER, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("GTK_ALIGN_BASELINE", sizeof("GTK_ALIGN_BASELINE")-1,
+        GTK_ALIGN_BASELINE, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+
 
 #if 0
     char *comment = "/**"

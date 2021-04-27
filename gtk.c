@@ -57,6 +57,7 @@
 
 /// include "php_gtk.h"
 #include "php_gtk/widget.h"
+#include "php_gtk/requisition.h"
 #include "php_gtk/requested-size.h"
 #include "php_gtk/container.h"
 #include "php_gtk/bin.h"
@@ -293,6 +294,7 @@ PHP_MINIT_FUNCTION(gtk)
 
     gtk_widget_ce     = PHP_GTK_WIDGET_MINIT_FUNCTION(&ce, gobject_object_ce);
                         PHP_GTK_REQUESTED_SIZE_MINIT_FUNCTION(&ce, NULL);
+                        PHP_GTK_REQUISITION_MINIT_FUNCTION(&ce, NULL);
     gtk_container_ce  = PHP_GTK_CONTAINER_MINIT_FUNCTION(&ce, gtk_widget_ce);
     gtk_bin_ce        = PHP_GTK_BIN_MINIT_FUNCTION(&ce, gtk_container_ce);
     gtk_box_ce        = PHP_GTK_BOX_MINIT_FUNCTION(&ce, gtk_container_ce);
@@ -342,6 +344,7 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
 
     PHP_GTK_WIDGET_MSHUTDOWN_FUNCTION();
     PHP_GTK_REQUESTED_SIZE_MSHUTDOWN_FUNCTION();
+    PHP_GTK_REQUISITION_MSHUTDOWN_FUNCTION();
     PHP_GTK_CONTAINER_MSHUTDOWN_FUNCTION();
     PHP_GTK_BIN_MSHUTDOWN_FUNCTION();
     PHP_GTK_WINDOW_MSHUTDOWN_FUNCTION();
@@ -395,6 +398,7 @@ PHP_RSHUTDOWN_FUNCTION(gtk)
 
     PHP_GTK_WIDGET_RSHUTDOWN_FUNCTION();
     PHP_GTK_REQUESTED_SIZE_RSHUTDOWN_FUNCTION();
+    PHP_GTK_REQUISITION_RSHUTDOWN_FUNCTION();
     PHP_GTK_CONTAINER_RSHUTDOWN_FUNCTION();
     PHP_GTK_BIN_RSHUTDOWN_FUNCTION();
     PHP_GTK_BOX_RSHUTDOWN_FUNCTION();
@@ -444,6 +448,7 @@ const zend_function_entry gtk_functions[] = {
     PHP_GDK_RECTANGLE_FE()
 
     PHP_GTK_WIDGET_FE()
+    PHP_GTK_REQUISITION_FE()
     PHP_GTK_CONTAINER_FE()
     PHP_GTK_BIN_FE()
     PHP_GTK_BOX_FE()
