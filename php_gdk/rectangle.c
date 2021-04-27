@@ -533,6 +533,18 @@ php_gdk_rectangle_class_init(zend_class_entry *container_ce, zend_class_entry *p
 /*----------------------------------------------------------------------+
  | Zend-User API                                                        |
  +----------------------------------------------------------------------*/
+php_gdk_rectangle *php_gdk_rectangle_new(void)
+{
+    zend_object *zobj = php_gdk_rectangle_create_object(php_gdk_rectangle_class_entry);
+    php_gdk_rectangle *intern = ZOBJ_TO_PHP_GDK_RECTANGLE(zobj);
+    intern->ptr = emalloc(sizeof(GdkRectangle));
+    intern->ptr->x = 0;
+    intern->ptr->y = 0;
+    intern->ptr->width = 0;
+    intern->ptr->height = 0;
+
+    return intern;
+}
 
 
 
@@ -554,6 +566,10 @@ PHP_METHOD(gdk_rectangle, __construct)
     php_gdk_rectangle *self = ZOBJ_TO_PHP_GDK_RECTANGLE(zobj);
 
     self->ptr = emalloc(sizeof(GdkRectangle));
+    self->ptr->x = 0;
+    self->ptr->y = 0;
+    self->ptr->width = 0;
+    self->ptr->height = 0;
 
 }
 /* }}} */

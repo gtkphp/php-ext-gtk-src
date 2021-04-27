@@ -58,6 +58,8 @@
 #define PHP_GDK_RECTANGLE_RSHUTDOWN_FUNCTION() {\
 }
 
+extern zend_class_entry *php_gdk_rectangle_class_entry;
+
 typedef struct _php_gdk_rectangle php_gdk_rectangle;
 struct _php_gdk_rectangle {
     /*
@@ -71,6 +73,8 @@ struct _php_gdk_rectangle {
     zend_object std;
 };
 
+
+php_gdk_rectangle *php_gdk_rectangle_new(void);
 
 zend_class_entry *php_gdk_rectangle_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
 
