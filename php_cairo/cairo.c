@@ -311,10 +311,16 @@ php_cairo_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_
 /*----------------------------------------------------------------------+
  | Zend-User utils                                                      |
  +----------------------------------------------------------------------*/
+php_cairo_t *
+php_cairo_new() {
+    zend_object *zobj = php_cairo_t_create_object(php_cairo_t_class_entry);
+    return ZOBJ_TO_PHP_CAIRO_T(zobj);
+}
 
 /*----------------------------------------------------------------------+
  | Zend-User API                                                        |
  +----------------------------------------------------------------------*/
+
 php_cairo_t *
 php_cairo_create(zval *target) {
     // TODO: implementation

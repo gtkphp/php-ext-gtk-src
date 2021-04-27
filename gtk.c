@@ -53,9 +53,11 @@
 
 /// include "php_gdk.h"
 #include "php_gdk/pixbuf.h"
+#include "php_gdk/rectangle.h"
 
 /// include "php_gtk.h"
 #include "php_gtk/widget.h"
+#include "php_gtk/requested-size.h"
 #include "php_gtk/container.h"
 #include "php_gtk/bin.h"
 #include "php_gtk/box.h"
@@ -262,6 +264,7 @@ PHP_MINIT_FUNCTION(gtk)
     //zend_class_entry *g_list_ce;
     zend_class_entry *gobject_object_ce;
     zend_class_entry *gdk_pixbuf_ce;
+    zend_class_entry *gdk_rectangle_ce;
     zend_class_entry *gtk_widget_ce;
     zend_class_entry *gtk_container_ce;
     zend_class_entry *gtk_bin_ce;
@@ -286,7 +289,10 @@ PHP_MINIT_FUNCTION(gtk)
     gobject_object_ce = PHP_GOBJECT_OBJECT_MINIT_FUNCTION(&ce, NULL);
                         PHP_GOBJECT_SIGNAL_MINIT_FUNCTION(&ce, NULL);
     gdk_pixbuf_ce     = PHP_GDK_PIXBUF_MINIT_FUNCTION(&ce, gobject_object_ce);
+    gdk_rectangle_ce  = PHP_GDK_RECTANGLE_MINIT_FUNCTION(&ce, NULL);
+
     gtk_widget_ce     = PHP_GTK_WIDGET_MINIT_FUNCTION(&ce, gobject_object_ce);
+                        PHP_GTK_REQUESTED_SIZE_MINIT_FUNCTION(&ce, NULL);
     gtk_container_ce  = PHP_GTK_CONTAINER_MINIT_FUNCTION(&ce, gtk_widget_ce);
     gtk_bin_ce        = PHP_GTK_BIN_MINIT_FUNCTION(&ce, gtk_container_ce);
     gtk_box_ce        = PHP_GTK_BOX_MINIT_FUNCTION(&ce, gtk_container_ce);
@@ -331,8 +337,11 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
     PHP_GOBJECT_SIGNAL_MSHUTDOWN_FUNCTION();
 
     PHP_GDK_PIXBUF_MSHUTDOWN_FUNCTION();
+    PHP_GDK_RECTANGLE_MSHUTDOWN_FUNCTION();
+
 
     PHP_GTK_WIDGET_MSHUTDOWN_FUNCTION();
+    PHP_GTK_REQUESTED_SIZE_MSHUTDOWN_FUNCTION();
     PHP_GTK_CONTAINER_MSHUTDOWN_FUNCTION();
     PHP_GTK_BIN_MSHUTDOWN_FUNCTION();
     PHP_GTK_WINDOW_MSHUTDOWN_FUNCTION();
@@ -382,8 +391,10 @@ PHP_RSHUTDOWN_FUNCTION(gtk)
     PHP_GOBJECT_SIGNAL_RSHUTDOWN_FUNCTION();
 
     PHP_GDK_PIXBUF_RSHUTDOWN_FUNCTION();
+    PHP_GDK_RECTANGLE_RSHUTDOWN_FUNCTION();
 
     PHP_GTK_WIDGET_RSHUTDOWN_FUNCTION();
+    PHP_GTK_REQUESTED_SIZE_RSHUTDOWN_FUNCTION();
     PHP_GTK_CONTAINER_RSHUTDOWN_FUNCTION();
     PHP_GTK_BIN_RSHUTDOWN_FUNCTION();
     PHP_GTK_BOX_RSHUTDOWN_FUNCTION();
@@ -430,6 +441,7 @@ const zend_function_entry gtk_functions[] = {
     PHP_GOBJECT_SIGNAL_FE()
 
     PHP_GDK_PIXBUF_FE()
+    PHP_GDK_RECTANGLE_FE()
 
     PHP_GTK_WIDGET_FE()
     PHP_GTK_CONTAINER_FE()

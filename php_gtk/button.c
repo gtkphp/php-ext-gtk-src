@@ -411,6 +411,7 @@ php_gtk_button_class_init(zend_class_entry *container_ce, zend_class_entry *pare
  | Zend-User utils                                                      |
  +----------------------------------------------------------------------*/
 
+
 //static php_gtk_button_class php_gtk_button_virtuals;
 static GtkButtonClass php_gtk_button_klass = {G_TYPE_INVALID};
 
@@ -428,13 +429,13 @@ php_gtk_button_override_widget_get_preferred_width(GtkWidget *widget,
 
     if (NULL==zobject) {
        g_print(" UNLIKELY REACHED : %s\n");
-       GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_button_klass);
+       GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_button_klass);// <---------------------------
        klass->get_preferred_width(widget, minimum_width, natural_width);
     }
 
     if (!is_recursive) {
         // try to find override user_function
-        func = php_gobject_get_user_method(zobject, "GtkWidget::get_preferred_width");
+        func = php_gobject_get_user_method(zobject, "GtkWidget::get_preferred_width");//<-------------
         if (func) {
             is_override = TRUE;
         }
@@ -469,7 +470,7 @@ php_gtk_button_override_widget_get_preferred_width(GtkWidget *widget,
         zval zwidget; ZVAL_OBJ(&zwidget, zobject);
         zval zminimum_width;
         zval znatural_width;
-        ZVAL_NEW_REF(&zminimum_width, &zminimum_width);
+        ZVAL_NEW_REF(&zminimum_width, &zminimum_width);//<------------------------------------------------------
         ZVAL_NEW_REF(&znatural_width, &znatural_width);
         int result = zend_call_method(&zwidget, NULL, NULL, function_name, strlen(function_name), &retval, 2, &zminimum_width, &znatural_width);
         if (FAILURE != result) {
@@ -549,17 +550,26 @@ php_gtk_button_override_widget_get_preferred_width(GtkWidget *widget,
 
 }
 
+
 static void
 php_gtk_button_class_init_override() {
     GtkButtonClass *button_klass = g_type_class_peek(GTK_TYPE_BUTTON);
+    GtkBinClass *bin_klass = &button_klass->parent_class;
+    GtkContainerClass *container_klass = &bin_klass->parent_class;
+    GtkWidgetClass *widget_klass = &container_klass->parent_class;
+    GObjectClass *object_klass = &widget_klass->parent_class;
 
     if (NULL==G_TYPE_FROM_CLASS(&php_gtk_button_klass)) {
         memcpy(&php_gtk_button_klass, button_klass, sizeof(GtkButtonClass));
         G_TYPE_FROM_CLASS(&php_gtk_button_klass) = GTK_TYPE_BUTTON;
 
-        // TODO: browse PHP class method...
-        GtkWidgetClass *widget_klass = GTK_WIDGET_CLASS(button_klass);
+        // override GObjectClass
+        // override GtkWidgetClass
         widget_klass->get_preferred_width = php_gtk_button_override_widget_get_preferred_width;
+        // override GtkContainerClass
+        // override GtkBinClass
+        // override GtkButtonClass
+        //button_klass->clicked = php_gtk_button_override_clicked;
     }
 
 }
