@@ -51,7 +51,7 @@
     } while (0)
 
 #define PHP_GTK_BOX_FE() \
-    PHP_FE(gtk_box_new, arginfo_gtk_box_new)
+    PHP_GTK_FE(gtk_box_new, arginfo_gtk_box_new)
 
 #define PHP_GTK_BOX_MINIT_FUNCTION(container_ce, parent_ce) \
     php_gtk_box_class_init(container_ce, parent_ce)

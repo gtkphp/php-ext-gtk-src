@@ -32,6 +32,7 @@
 #include <ext/standard/info.h>
 
 #include <glib.h>
+#include "php_gtk.h"
 /*#include <glib-object.h>
 #include <gtk/gtk.h>
 #include <gmodule.h>
@@ -663,10 +664,8 @@ static const zend_function_entry php_glib_hash_table_methods[] = {
 /*{{{ juste pour var_dump(zval) ou zval est un php_glib_hash_table->php_glib_object */
 zend_class_entry*
 php_glib_hash_table_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
-    TRACE();
    php_glib_hash_table_get_handlers();
-   //INIT_NS_CLASS_ENTRY((*ce), "Vendor\\ExtName", "GHashTable", php_glib_hash_table_methods);
-   INIT_CLASS_ENTRY((*container_ce), "GHashTable", php_glib_hash_table_methods);
+   PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "GHashTable", php_glib_hash_table_methods);
    php_glib_hash_table_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
    php_glib_hash_table_class_entry->create_object = php_glib_hash_table_create_object;
    /*

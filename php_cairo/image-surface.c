@@ -28,6 +28,7 @@
 #include <ext/standard/info.h>
 
 #include <cairo/cairo.h>
+#include "php_gtk.h"
 
 #include "surface.h"
 #include "image-surface.h"

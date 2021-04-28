@@ -27,6 +27,8 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+#include <glib-object.h>
+#include "php_gtk.h"
 #include "object.h"
 
 #include "php_doc/tag.h";
@@ -417,8 +419,7 @@ php_gobject_object_get_handlers()
 zend_class_entry*
 php_gobject_object_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_gobject_object_get_handlers();
-    //INIT_NS_CLASS_ENTRY((*ce), "Gnome\\G", "Object", php_gobject_object_methods);
-    INIT_CLASS_ENTRY((*container_ce), "GObject", php_gobject_object_methods);
+    PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "GObject", php_gobject_object_methods);
     php_gobject_object_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_gobject_object_class_entry->create_object = php_gobject_object_create_object;
     //ce->serialize;

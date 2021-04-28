@@ -51,7 +51,7 @@
     } while (0)
 
 #define PHP_GTK_BIN_FE() \
-    PHP_FE(gtk_bin_add, arginfo_gtk_bin_add)
+    PHP_GTK_FE(gtk_bin_add, arginfo_gtk_bin_add)
 
 #define PHP_GTK_BIN_MINIT_FUNCTION(container_ce, parent_ce) \
     php_gtk_bin_class_init(container_ce, parent_ce)

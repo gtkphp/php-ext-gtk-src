@@ -428,7 +428,7 @@ PHP_MINFO_FUNCTION(gtk)
  * Every user visible function must have an entry in gtk_functions[].
  */
 const zend_function_entry gtk_functions[] = {
-    PHP_FE(confirm_gtk_compiled,	NULL)		     /* For testing, remove later. */
+    PHP_GTK_FE(confirm_gtk_compiled,	NULL)		     /* For testing, remove later. */
     PHP_CAIRO_T_FE()
     PHP_CAIRO_PATH_T_FE()
     PHP_CAIRO_MATRIX_FE()

@@ -28,6 +28,7 @@
 #include <ext/standard/info.h>
 
 #include <gtk/gtk.h>
+#include "php_gtk.h"
 
 #include "requisition.h"
 
@@ -437,8 +438,7 @@ php_gtk_requisition_get_handlers()
 zend_class_entry*
 php_gtk_requisition_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_gtk_requisition_get_handlers();
-    //INIT_NS_CLASS_ENTRY((*ce), "Gnome\\G", "List", php_gtk_requisition_methods);
-    INIT_CLASS_ENTRY((*container_ce), "GtkRequisition", php_gtk_requisition_methods);
+    PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "GtkRequisition", php_gtk_requisition_methods);
     php_gtk_requisition_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_gtk_requisition_class_entry->create_object = php_gtk_requisition_create_object;
     //ce->serialize;

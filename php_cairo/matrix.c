@@ -29,6 +29,9 @@
 //#include <zend_globals_macros.h>
 #include <ext/standard/info.h>
 
+#include <cairo/cairo.h>
+#include "php_gtk.h"
+
 #include "matrix.h"
 
 extern HashTable         classes;
@@ -598,8 +601,7 @@ static void php_my_register_property(HashTable *prop_handler, char *name, size_t
 zend_class_entry*
 php_cairo_matrix_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_cairo_matrix_get_handlers();
-    //INIT_NS_CLASS_ENTRY((*ce), "Gnome\\G", "List", php_cairo_matrix_methods);
-    INIT_CLASS_ENTRY((*container_ce), "cairo_matrix_t", php_cairo_matrix_methods);// Keep CairoMatrix for cairo-gobject
+    PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "cairo_matrix_t", php_cairo_matrix_methods);// Keep CairoMatrix for cairo-gobject
     php_cairo_matrix_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_cairo_matrix_class_entry->create_object = php_cairo_matrix_create_object;
     //ce->serialize;

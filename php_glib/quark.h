@@ -25,14 +25,13 @@
 #include "config.h"
 #endif
 
-#include <glib.h>
 
 #define PHP_GLIB_QUARK_FE() \
-    PHP_FE(g_quark_from_string,                arginfo_g_quark_from_string) \
+    PHP_GTK_FE(g_quark_from_string,                arginfo_g_quark_from_string) \
     PHP_FALIAS(g_quark_from_static_string,     g_quark_from_string, arginfo_g_quark_from_string) \
-    PHP_FE(g_quark_to_string,                  arginfo_g_quark_to_string) \
-    PHP_FE(g_quark_try_string,                 arginfo_g_quark_try_string) \
-    PHP_FE(g_intern_string,                    arginfo_g_intern_string) \
+    PHP_GTK_FE(g_quark_to_string,                  arginfo_g_quark_to_string) \
+    PHP_GTK_FE(g_quark_try_string,                 arginfo_g_quark_try_string) \
+    PHP_GTK_FE(g_intern_string,                    arginfo_g_intern_string) \
     PHP_FALIAS(g_intern_static_string,         g_intern_string, arginfo_g_intern_string) \
 
 

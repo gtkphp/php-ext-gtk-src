@@ -28,6 +28,7 @@
 #include <ext/standard/info.h>
 
 #include <gdk/gdk.h>
+#include "php_gtk.h"
 
 #include "rectangle.h"
 
@@ -506,12 +507,12 @@ php_gdk_rectangle_get_handlers()
  | PHP_MINIT                                                            |
  +----------------------------------------------------------------------*/
 
+
 /*{{{ php_gdk_rectangle_class_init */
 zend_class_entry*
 php_gdk_rectangle_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_gdk_rectangle_get_handlers();
-    //INIT_NS_CLASS_ENTRY((*ce), "Gnome\\G", "List", php_gdk_rectangle_methods);
-    INIT_CLASS_ENTRY((*container_ce), "GdkRectangle", php_gdk_rectangle_methods);
+    PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "GdkRectangle", php_gdk_rectangle_methods);
     php_gdk_rectangle_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_gdk_rectangle_class_entry->create_object = php_gdk_rectangle_create_object;
     //ce->serialize;

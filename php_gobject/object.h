@@ -25,7 +25,6 @@
 #include "config.h"
 #endif
 
-#include <glib-object.h>
 
 #define PHP_GOBJECT_OBJECT(ptr)           ((php_gobject_object*)(ptr))
 #define PHP_GOBJECT_OBJECT_CLASS          php_gobject_object_class_entry
@@ -51,9 +50,9 @@
 extern zend_class_entry *php_gobject_object_class_entry;
 
 #define PHP_GOBJECT_OBJECT_FE() \
-    PHP_FE(g_object_connect, arginfo_g_object_connect) \
-    PHP_FE(g_object_ref, arginfo_g_object_ref) \
-    PHP_FE(g_object_unref, arginfo_g_object_unref) \
+    PHP_GTK_FE(g_object_connect, arginfo_g_object_connect) \
+    PHP_GTK_FE(g_object_ref, arginfo_g_object_ref) \
+    PHP_GTK_FE(g_object_unref, arginfo_g_object_unref) \
 
 
 #define PHP_GOBJECT_OBJECT_MINIT_FUNCTION(container_ce, parent_ce) \

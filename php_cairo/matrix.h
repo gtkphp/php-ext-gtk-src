@@ -25,7 +25,6 @@
 #include "config.h"
 #endif
 
-#include <cairo/cairo.h>
 
 
 #define PHP_CAIRO_MATRIX(ptr)           ((php_cairo_matrix*)(ptr))
@@ -51,18 +50,18 @@
 
 
 #define PHP_CAIRO_MATRIX_FE() \
-    PHP_FE(cairo_matrix_init,               arginfo_cairo_matrix_init) \
-    PHP_FE(cairo_matrix_init_identity,      arginfo_cairo_matrix_init_identity) \
-    PHP_FE(cairo_matrix_init_translate,     arginfo_cairo_matrix_init_translate) \
-    PHP_FE(cairo_matrix_init_scale,         arginfo_cairo_matrix_init_scale) \
-    PHP_FE(cairo_matrix_init_rotate,        arginfo_cairo_matrix_init_rotate) \
-    PHP_FE(cairo_matrix_translate,          arginfo_cairo_matrix_translate) \
-    PHP_FE(cairo_matrix_scale,              arginfo_cairo_matrix_scale) \
-    PHP_FE(cairo_matrix_rotate,             arginfo_cairo_matrix_rotate) \
-    PHP_FE(cairo_matrix_invert,             arginfo_cairo_matrix_invert) \
-    PHP_FE(cairo_matrix_multiply,           arginfo_cairo_matrix_multiply) \
-    PHP_FE(cairo_matrix_transform_distance, arginfo_cairo_matrix_transform_distance) \
-    PHP_FE(cairo_matrix_transform_point,    arginfo_cairo_matrix_transform_point) \
+    PHP_GTK_FE(cairo_matrix_init,               arginfo_cairo_matrix_init) \
+    PHP_GTK_FE(cairo_matrix_init_identity,      arginfo_cairo_matrix_init_identity) \
+    PHP_GTK_FE(cairo_matrix_init_translate,     arginfo_cairo_matrix_init_translate) \
+    PHP_GTK_FE(cairo_matrix_init_scale,         arginfo_cairo_matrix_init_scale) \
+    PHP_GTK_FE(cairo_matrix_init_rotate,        arginfo_cairo_matrix_init_rotate) \
+    PHP_GTK_FE(cairo_matrix_translate,          arginfo_cairo_matrix_translate) \
+    PHP_GTK_FE(cairo_matrix_scale,              arginfo_cairo_matrix_scale) \
+    PHP_GTK_FE(cairo_matrix_rotate,             arginfo_cairo_matrix_rotate) \
+    PHP_GTK_FE(cairo_matrix_invert,             arginfo_cairo_matrix_invert) \
+    PHP_GTK_FE(cairo_matrix_multiply,           arginfo_cairo_matrix_multiply) \
+    PHP_GTK_FE(cairo_matrix_transform_distance, arginfo_cairo_matrix_transform_distance) \
+    PHP_GTK_FE(cairo_matrix_transform_point,    arginfo_cairo_matrix_transform_point) \
 
 
 #define PHP_CAIRO_MATRIX_MINIT_FUNCTION(container_ce, parent_ce) \

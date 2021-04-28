@@ -28,6 +28,7 @@
 #include <ext/standard/info.h>
 
 #include <cairo/cairo.h>
+#include "php_gtk.h"
 
 #include "php_cairo/cairo.h"
 #include "path-data.h"
@@ -278,7 +279,7 @@ php_cairo_path_data_t_get_handlers()
 zend_class_entry*
 php_cairo_path_data_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_cairo_path_data_t_get_handlers();
-    INIT_CLASS_ENTRY((*container_ce), "cairo_path_data_t", php_cairo_path_data_t_methods);
+    PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "cairo_path_data_t", php_cairo_path_data_t_methods);
     php_cairo_path_data_t_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_cairo_path_data_t_class_entry->create_object = php_cairo_path_data_t_create_object;
 

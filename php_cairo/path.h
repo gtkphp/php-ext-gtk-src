@@ -50,27 +50,27 @@
     } while (0)
 
 #define PHP_CAIRO_PATH_T_FE() \
-    PHP_FE(cairo_copy_path,         arginfo_cairo_copy_path) \
-    PHP_FE(cairo_copy_path_flat,    arginfo_cairo_copy_path_flat) \
-    PHP_FE(cairo_path_destroy,      arginfo_cairo_path_destroy) \
-    PHP_FE(cairo_append_path,       arginfo_cairo_append_path) \
-    PHP_FE(cairo_has_current_point, arginfo_cairo_has_current_point) \
-    PHP_FE(cairo_get_current_point, arginfo_cairo_get_current_point) \
-    PHP_FE(cairo_new_path,          arginfo_cairo_new_path) \
-    PHP_FE(cairo_new_sub_path,      arginfo_cairo_new_sub_path) \
-    PHP_FE(cairo_close_path,        arginfo_cairo_close_path) \
-    PHP_FE(cairo_arc,               arginfo_cairo_arc) \
-    PHP_FE(cairo_arc_negative,      arginfo_cairo_arc_negative) \
-    PHP_FE(cairo_curve_to,          arginfo_cairo_curve_to) \
-    PHP_FE(cairo_line_to,           arginfo_cairo_line_to) \
-    PHP_FE(cairo_move_to,           arginfo_cairo_move_to) \
-    PHP_FE(cairo_rectangle,         arginfo_cairo_rectangle) \
-    PHP_FE(cairo_glyph_path,        arginfo_cairo_glyph_path) \
-    PHP_FE(cairo_text_path,         arginfo_cairo_text_path) \
-    PHP_FE(cairo_rel_curve_to,      arginfo_cairo_rel_curve_to) \
-    PHP_FE(cairo_rel_line_to,       arginfo_cairo_rel_line_to) \
-    PHP_FE(cairo_rel_move_to,       arginfo_cairo_rel_move_to) \
-    PHP_FE(cairo_path_extents,      arginfo_cairo_path_extents) \
+    PHP_GTK_FE(cairo_copy_path,         arginfo_cairo_copy_path) \
+    PHP_GTK_FE(cairo_copy_path_flat,    arginfo_cairo_copy_path_flat) \
+    PHP_GTK_FE(cairo_path_destroy,      arginfo_cairo_path_destroy) \
+    PHP_GTK_FE(cairo_append_path,       arginfo_cairo_append_path) \
+    PHP_GTK_FE(cairo_has_current_point, arginfo_cairo_has_current_point) \
+    PHP_GTK_FE(cairo_get_current_point, arginfo_cairo_get_current_point) \
+    PHP_GTK_FE(cairo_new_path,          arginfo_cairo_new_path) \
+    PHP_GTK_FE(cairo_new_sub_path,      arginfo_cairo_new_sub_path) \
+    PHP_GTK_FE(cairo_close_path,        arginfo_cairo_close_path) \
+    PHP_GTK_FE(cairo_arc,               arginfo_cairo_arc) \
+    PHP_GTK_FE(cairo_arc_negative,      arginfo_cairo_arc_negative) \
+    PHP_GTK_FE(cairo_curve_to,          arginfo_cairo_curve_to) \
+    PHP_GTK_FE(cairo_line_to,           arginfo_cairo_line_to) \
+    PHP_GTK_FE(cairo_move_to,           arginfo_cairo_move_to) \
+    PHP_GTK_FE(cairo_rectangle,         arginfo_cairo_rectangle) \
+    PHP_GTK_FE(cairo_glyph_path,        arginfo_cairo_glyph_path) \
+    PHP_GTK_FE(cairo_text_path,         arginfo_cairo_text_path) \
+    PHP_GTK_FE(cairo_rel_curve_to,      arginfo_cairo_rel_curve_to) \
+    PHP_GTK_FE(cairo_rel_line_to,       arginfo_cairo_rel_line_to) \
+    PHP_GTK_FE(cairo_rel_move_to,       arginfo_cairo_rel_move_to) \
+    PHP_GTK_FE(cairo_path_extents,      arginfo_cairo_path_extents) \
 
 #define PHP_CAIRO_PATH_T_MINIT_FUNCTION(container_ce, parent_ce) \
     php_cairo_path_t_class_init(container_ce, parent_ce); \

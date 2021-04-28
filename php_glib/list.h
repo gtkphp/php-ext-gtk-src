@@ -25,7 +25,6 @@
 #include "config.h"
 #endif
 
-#include <glib.h>
 
 #define PHP_GLIB_LIST(ptr)           ((php_glib_list*)(ptr))
 #define PHP_GLIB_LIST_CLASS          php_glib_list_class_entry
@@ -49,38 +48,38 @@
     } while (0)
 
 #define PHP_GLIB_LIST_FE() \
-    PHP_FE(g_list_append,                  arginfo_g_list_append) \
-    PHP_FE(g_list_prepend,                 arginfo_g_list_prepend) \
-    PHP_FE(g_list_insert,                  arginfo_g_list_insert) \
-    PHP_FE(g_list_insert_before,           arginfo_g_list_insert_before) \
-    PHP_FE(g_list_insert_sorted,           arginfo_g_list_insert_sorted) \
-    PHP_FE(g_list_remove,                  arginfo_g_list_remove) \
-    PHP_FE(g_list_remove_link,             arginfo_g_list_remove_link) \
-    PHP_FE(g_list_delete_link,             arginfo_g_list_delete_link) \
-    PHP_FE(g_list_remove_all,              arginfo_g_list_remove_all) \
-    PHP_FE(g_list_free,                    arginfo_g_list_free) \
-    PHP_FE(g_list_free_full,               arginfo_g_list_free_full) \
-    PHP_FE(g_list_alloc,                   arginfo_g_list_alloc) \
-    PHP_FE(g_list_free_1,                  arginfo_g_list_free_1) \
-    PHP_FE(g_list_length,                  arginfo_g_list_length) \
-    PHP_FE(g_list_copy,                    arginfo_g_list_copy) \
-    PHP_FE(g_list_copy_deep,               arginfo_g_list_copy_deep) \
-    PHP_FE(g_list_reverse,                 arginfo_g_list_reverse) \
-    PHP_FE(g_list_sort,                    arginfo_g_list_sort) \
-    PHP_FE(g_list_insert_sorted_with_data, arginfo_g_list_insert_sorted_with_data) \
-    PHP_FE(g_list_sort_with_data,          arginfo_g_list_sort_with_data) \
-    PHP_FE(g_list_concat,                  arginfo_g_list_concat) \
-    PHP_FE(g_list_foreach,                 arginfo_g_list_foreach) \
-    PHP_FE(g_list_first,                   arginfo_g_list_first) \
-    PHP_FE(g_list_last,                    arginfo_g_list_last) \
-    PHP_FE(g_list_nth,                     arginfo_g_list_nth) \
-    PHP_FE(g_list_nth_data,                arginfo_g_list_nth_data) \
-    PHP_FE(g_list_nth_prev,                arginfo_g_list_nth_prev) \
-    PHP_FE(g_list_find,                    arginfo_g_list_find) \
-    PHP_FE(g_list_find_custom,             arginfo_g_list_find_custom) \
-    PHP_FE(g_list_position,                arginfo_g_list_position) \
-    PHP_FE(g_list_index,                   arginfo_g_list_index) \
-    PHP_FE(g_list_dump,                    arginfo_g_list_dump) \
+    PHP_GTK_FE(g_list_append,                  arginfo_g_list_append) \
+    PHP_GTK_FE(g_list_prepend,                 arginfo_g_list_prepend) \
+    PHP_GTK_FE(g_list_insert,                  arginfo_g_list_insert) \
+    PHP_GTK_FE(g_list_insert_before,           arginfo_g_list_insert_before) \
+    PHP_GTK_FE(g_list_insert_sorted,           arginfo_g_list_insert_sorted) \
+    PHP_GTK_FE(g_list_remove,                  arginfo_g_list_remove) \
+    PHP_GTK_FE(g_list_remove_link,             arginfo_g_list_remove_link) \
+    PHP_GTK_FE(g_list_delete_link,             arginfo_g_list_delete_link) \
+    PHP_GTK_FE(g_list_remove_all,              arginfo_g_list_remove_all) \
+    PHP_GTK_FE(g_list_free,                    arginfo_g_list_free) \
+    PHP_GTK_FE(g_list_free_full,               arginfo_g_list_free_full) \
+    PHP_GTK_FE(g_list_alloc,                   arginfo_g_list_alloc) \
+    PHP_GTK_FE(g_list_free_1,                  arginfo_g_list_free_1) \
+    PHP_GTK_FE(g_list_length,                  arginfo_g_list_length) \
+    PHP_GTK_FE(g_list_copy,                    arginfo_g_list_copy) \
+    PHP_GTK_FE(g_list_copy_deep,               arginfo_g_list_copy_deep) \
+    PHP_GTK_FE(g_list_reverse,                 arginfo_g_list_reverse) \
+    PHP_GTK_FE(g_list_sort,                    arginfo_g_list_sort) \
+    PHP_GTK_FE(g_list_insert_sorted_with_data, arginfo_g_list_insert_sorted_with_data) \
+    PHP_GTK_FE(g_list_sort_with_data,          arginfo_g_list_sort_with_data) \
+    PHP_GTK_FE(g_list_concat,                  arginfo_g_list_concat) \
+    PHP_GTK_FE(g_list_foreach,                 arginfo_g_list_foreach) \
+    PHP_GTK_FE(g_list_first,                   arginfo_g_list_first) \
+    PHP_GTK_FE(g_list_last,                    arginfo_g_list_last) \
+    PHP_GTK_FE(g_list_nth,                     arginfo_g_list_nth) \
+    PHP_GTK_FE(g_list_nth_data,                arginfo_g_list_nth_data) \
+    PHP_GTK_FE(g_list_nth_prev,                arginfo_g_list_nth_prev) \
+    PHP_GTK_FE(g_list_find,                    arginfo_g_list_find) \
+    PHP_GTK_FE(g_list_find_custom,             arginfo_g_list_find_custom) \
+    PHP_GTK_FE(g_list_position,                arginfo_g_list_position) \
+    PHP_GTK_FE(g_list_index,                   arginfo_g_list_index) \
+    PHP_GTK_FE(g_list_dump,                    arginfo_g_list_dump) \
 
 
 extern zend_class_entry *php_glib_list_class_entry;

@@ -28,6 +28,7 @@
 #include <ext/standard/info.h>
 
 #include <gtk/gtk.h>
+#include "php_gtk.h"
 #include "signal.h"
 #include "object.h"
 
@@ -308,8 +309,7 @@ php_gobject_signal_get_handlers()
 zend_class_entry*
 php_gobject_signal_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_gobject_signal_get_handlers();
-    //INIT_NS_CLASS_ENTRY((*ce), "Gnome\\G", "List", php_gobject_signal_methods);
-    INIT_CLASS_ENTRY((*container_ce), "GSignal", php_gobject_signal_methods);
+    PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "GSignal", php_gobject_signal_methods);
     container_ce->create_object = php_gobject_signal_create_object;
     //ce->serialize;
     php_gobject_signal_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
