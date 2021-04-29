@@ -451,29 +451,29 @@ php_cairo_matrix_read_property(zval *object, zval *member, int type, void **cach
     cairo_matrix_t *m = obj->ptr;
 
     if (zend_string_equals_literal(member_str, "xx")) {
-        ZVAL_DOUBLE(&zval_ret, m->xx)
+        ZVAL_DOUBLE(&zval_ret, m->xx);
         return &zval_ret;
     }
     if (zend_string_equals_literal(member_str, "yx")) {
-        ZVAL_DOUBLE(&zval_ret, m->yx)
+        ZVAL_DOUBLE(&zval_ret, m->yx);
         return &zval_ret;
     }
 
     if (zend_string_equals_literal(member_str, "xy")) {
-        ZVAL_DOUBLE(&zval_ret, m->xy)
+        ZVAL_DOUBLE(&zval_ret, m->xy);
         return &zval_ret;
     }
     if (zend_string_equals_literal(member_str, "yy")) {
-        ZVAL_DOUBLE(&zval_ret, m->yy)
+        ZVAL_DOUBLE(&zval_ret, m->yy);
         return &zval_ret;
     }
 
     if (zend_string_equals_literal(member_str, "x0")) {
-        ZVAL_DOUBLE(&zval_ret, m->x0)
+        ZVAL_DOUBLE(&zval_ret, m->x0);
         return &zval_ret;
     }
     if (zend_string_equals_literal(member_str, "y0")) {
-        ZVAL_DOUBLE(&zval_ret, m->y0)
+        ZVAL_DOUBLE(&zval_ret, m->y0);
         return &zval_ret;
     }
 

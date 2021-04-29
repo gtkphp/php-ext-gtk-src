@@ -35,6 +35,7 @@
 
 /// include "php_glib.h"
 #include "php_cairo/cairo.h"
+#include "php_cairo/rectangle.h"
 #include "php_cairo/path.h"
 #include "php_cairo/matrix.h"
 #include "php_cairo/png.h"
@@ -278,6 +279,7 @@ PHP_MINIT_FUNCTION(gtk)
     //                  PHP_GLIB_MINIT_FUNCTION(&ce);
     //                  PHP_CAIRO_MINIT_FUNCTION(&ce);
                         PHP_CAIRO_T_MINIT_FUNCTION(&ce, NULL);
+                        PHP_CAIRO_RECTANGLE_T_MINIT_FUNCTION(&ce, NULL);
                         PHP_CAIRO_PATH_T_MINIT_FUNCTION(&ce, NULL);
                         PHP_CAIRO_MATRIX_MINIT_FUNCTION(&ce, NULL);
                         PHP_CAIRO_SURFACE_T_MINIT_FUNCTION(&ce, NULL);
@@ -324,6 +326,7 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
 	*/
 
     PHP_CAIRO_T_MSHUTDOWN_FUNCTION();
+    PHP_CAIRO_RECTANGLE_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_PATH_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_MATRIX_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_SURFACE_T_MSHUTDOWN_FUNCTION();
@@ -379,6 +382,7 @@ PHP_RSHUTDOWN_FUNCTION(gtk)
 {
 
     PHP_CAIRO_T_RSHUTDOWN_FUNCTION();
+    PHP_CAIRO_RECTANGLE_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_PATH_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_MATRIX_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_SURFACE_T_RSHUTDOWN_FUNCTION();
@@ -430,6 +434,7 @@ PHP_MINFO_FUNCTION(gtk)
 const zend_function_entry gtk_functions[] = {
     PHP_GTK_FE(confirm_gtk_compiled,	NULL)		     /* For testing, remove later. */
     PHP_CAIRO_T_FE()
+    PHP_CAIRO_RECTANGLE_T_FE()
     PHP_CAIRO_PATH_T_FE()
     PHP_CAIRO_MATRIX_FE()
     PHP_CAIRO_SURFACE_T_FE()

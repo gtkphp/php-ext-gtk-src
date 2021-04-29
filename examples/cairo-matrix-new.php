@@ -10,6 +10,19 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
+
+$rect = new cairo_rectangle_t(/*0.0, 0.0, 0.0, 0.0*/);
+$rect->x = 10.0;
+$rect->y = 20.0;
+$rect->width = 110.0;
+$rect->height = 90.0;
+var_dump($rect);
+//print_r((array)$rect);
+//print_r($rect);
+eval('$b = GdkRectangle::__set_state(' . var_export($a, true) . ');');
+var_dump($b);
+
+/*
 $surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 250, 80);
 $cr = cairo_create ($surface);
 
@@ -22,7 +35,7 @@ cairo_set_source_rgb ($cr, 0, 0, 0);
 cairo_fill ($cr);
 
 $status = cairo_surface_write_to_png($surface, "/home/dev/Projects/gtkphp/hello.png");
-
+*/
 
 exit();
 
@@ -99,6 +112,7 @@ var_dump($surface);
 var_dump($cr);
 */
 
+/*
 $surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 250, 80);
 $cr = cairo_create ($surface);
 
@@ -106,6 +120,8 @@ $cr = cairo_create ($surface);
 cairo_rectangle ($cr, 0.0, 0.0, 21.0, 29.7);
 
 $path = cairo_copy_path ($cr);
+*/
+
 
 /*
 for ($i=0; $i < $path->num_data; $i += $path->data[i]->header->length) {
@@ -118,7 +134,7 @@ for ($i=0; $i < $path->num_data; $i += $path->data[i]->header->length) {
 }
 */
 
-
+/*
 var_dump($path->data[0]->header);
 var_dump($path->data[0]->header->type);
 var_dump($path->data[1]->point->x);
@@ -129,13 +145,17 @@ var_dump($cr);
 
 $path_data = new cairo_path_data_t(CAIRO_PATH_MOVE_TO);
 var_dump($path_data);
+*/
+
 /*
 $path_data = new cairo_path_data_t(3.14, 1.62);
 $path_data->x = 3.32;
 var_dump($path_data);
 */
 
+/*
 $path = cairo_copy_path_flat($cr);
 var_dump($path);
+*/
 
 

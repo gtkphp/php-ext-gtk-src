@@ -60,6 +60,11 @@ extern zend_module_entry gtk_module_entry;
 #endif
 
 
+/*
+ZEND_VERSION "3.2.0"
+ZEND_ENGINE_3
+*/
+
 
 /*
   	Declare any global variables you may need between the BEGIN
