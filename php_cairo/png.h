@@ -27,10 +27,10 @@
 
 
 #define PHP_CAIRO_PNG_T_FE() \
-    PHP_FE(cairo_image_surface_create_from_png,        arginfo_cairo_image_surface_create_from_png) \
-    PHP_FE(cairo_image_surface_create_from_png_stream, arginfo_cairo_image_surface_create_from_png_stream) \
-    PHP_FE(cairo_surface_write_to_png,                 arginfo_cairo_surface_write_to_png) \
-    PHP_FE(cairo_surface_write_to_png_stream,          arginfo_cairo_surface_write_to_png_stream) \
+    PHP_GTK_FE(cairo_image_surface_create_from_png,        arginfo_cairo_image_surface_create_from_png) \
+    PHP_GTK_FE(cairo_image_surface_create_from_png_stream, arginfo_cairo_image_surface_create_from_png_stream) \
+    PHP_GTK_FE(cairo_surface_write_to_png,                 arginfo_cairo_surface_write_to_png) \
+    PHP_GTK_FE(cairo_surface_write_to_png_stream,          arginfo_cairo_surface_write_to_png_stream) \
 
 #define PHP_CAIRO_PNG_T_MINIT_FUNCTION(container_ce, parent_ce)
 

@@ -28,6 +28,7 @@
 #include <ext/standard/info.h>
 
 #include <gtk/gtk.h>
+#include "php_gtk.h"
 
 #include "requested-size.h"
 

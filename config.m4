@@ -15,7 +15,11 @@ dnl Otherwise use enable:
 
 PHP_ARG_WITH(gtk, for gtk support,
 dnl Make sure that the comment is aligned:
-[  --with-gtk             Include gtk support])
+[  --with-gtk              Include gtk support])
+
+dnl --with-gui-gtk=3,Gnome
+
+dnl test PHP_GUI
 
 if test "$PHP_GTK" != "no"; then
   dnl Write more examples of tests here...
@@ -83,20 +87,81 @@ if test "$PHP_GTK" != "no"; then
   fi
 
   if test -x "$PKG_CONFIG"; then
-    dnl using pkg-config output
 
-    AC_MSG_CHECKING(for gtk+-3.0.pc)
+    dnl using pkg-config output
+    dnl --with-gtk=3,Gnome,shared
+    dnl --with-gtk=Gnome,shared
+    dnl --with-gtk=3,shared
+    dnl --with-gtk=3,Gnome
+    dnl --with-gtk=shared
+    dnl --with-gtk=Gnome
+    dnl --with-gtk=3
+    dnl --with-gtk
+    num_arg=0
+    num_sep="`echo $PHP_GTK | grep -o , | wc -l`"
+    param_1="`echo $PHP_GTK | cut -d, -f1`"
+    param_2="`echo $PHP_GTK | cut -d, -f2`"
+    param_3="`echo $PHP_GTK | cut -d, -f3`"
+    if test -z $param_1; then
+        AC_MSG_RESULT("Test if $param_1 is zero")
+        num_arg=0
+    else
+        AC_MSG_RESULT("$num_arg")
+        AC_MSG_RESULT("Test sum $num_sep+1")
+        num_arg=`expr $num_sep + 1`
+        AC_MSG_RESULT("$num_arg")
+    fi
+    AC_MSG_RESULT("not found $param_1;$param_2;$param_3; $num_arg")
+
+    gtk_version="3"
+    gtk_namespace=""
+    gtk_shared="shared"
+
+    case $num_arg in
+        0) AC_MSG_RESULT("Never reached: param_1=yes by default") ;;
+        1)
+            case $param_1 in
+                0) AC_MSG_ERROR(gtk+ version 0.0 is not supported) ;;
+                1) AC_MSG_ERROR(gtk+ version 1.0 is not supported) ;;
+                2) AC_MSG_ERROR(gtk+ version 2.0 is not supported) ;;
+                3) gtk_version="3" ;;
+                4) gtk_version="4" ;;
+                5) AC_MSG_ERROR(gtk+ version 5.0 is not supported) ;;
+                6) AC_MSG_ERROR(gtk+ version 6.0 is not supported) ;;
+                7) AC_MSG_ERROR(gtk+ version 7.0 is not supported) ;;
+                8) AC_MSG_ERROR(gtk+ version 8.0 is not supported) ;;
+                9) AC_MSG_ERROR(gtk+ version 9.0 is not supported) ;;
+                static) gtk_shared="static" ;;
+                shared) gtk_shared="shared" ;;
+                yes) ;;
+                no) ;;
+                *) gtk_namespace="$param_1" ;;
+            esac
+        ;;
+        2) AC_MSG_ERROR(TODO 2 parameter passed) ;;
+        3)
+            case $param_1 in
+                3) gtk_version="3" ;;
+                4) gtk_version="4" ;;
+                *) AC_MSG_ERROR(Invalide Gtk version $param_1) ;;
+            esac
+            case $param_3 in
+                static) gtk_shared="static" ;;
+                shared) gtk_shared="shared" ;;
+                *) AC_MSG_ERROR(Invalide build type for parameter 3 $param_3) ;;
+            esac
+            gtk_namespace="$param_2"
+        ;;
+        *) AC_MSG_ERROR(Invalide parameter count : $num_arg, max : 3) ;;
+    esac
+
+    AC_MSG_CHECKING("for gtk+-$gtk_version.0.pc")
     if test "$PHP_GTK" = "yes" -o "$PHP_GTK" = "/usr"; then
       PKNAME=gtk+-3.0
       AC_MSG_RESULT(using default path)
-    elif test -r $PHP_GTK/$PHP_LIBDIR/pkgconfig/gtk+-3.0.pc; then
-      PKNAME=$PHP_GTK/$PHP_LIBDIR/pkgconfig/gtk+-3.0.pc
-      AC_MSG_RESULT(using $PKNAME)
-    elif test -r $PHP_GTK/lib/pkgconfig/gtk+-3.0.pc; then
-      PKNAME=$PHP_GTK/lib/pkgconfig/gtk+-3.0.pc
-      AC_MSG_RESULT(using $PKNAME)
     else
-      AC_MSG_RESULT(not found)
+      PKNAME="gtk+-$gtk_version.0"
+      AC_MSG_RESULT("using  $PKNAME")
       AC_MSG_WARN(Could not find gtk+-3.0.pc. Try without $PHP_GTK or set PKG_CONFIG_PATH)
     fi
   fi
@@ -155,7 +220,9 @@ if test "$PHP_GTK" != "no"; then
 
   sources="gtk.c"
 
-  PHP_NEW_EXTENSION(gtk, gtk.c $cairo_sources $doc_sources $glib_sources $gobject_sources $gdk_sources $gtk_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+  ext_ns=$gtk_namespace
+
+  PHP_NEW_EXTENSION(gtk, gtk.c $cairo_sources $doc_sources $glib_sources $gobject_sources $gdk_sources $gtk_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DGTK_NS="$ext_ns")
   PHP_ADD_BUILD_DIR($ext_builddir/php_doc, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_cairo, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_glib, 1)

@@ -53,7 +53,7 @@
 extern zend_class_entry *php_gtk_button_class_entry;
 
 #define PHP_GTK_BUTTON_FE() \
-    PHP_FE(gtk_button_new_with_label, arginfo_gtk_button_new_with_label)
+    PHP_GTK_FE(gtk_button_new_with_label, arginfo_gtk_button_new_with_label)
 
 #define PHP_GTK_BUTTON_MINIT_FUNCTION(container_ce, parent_ce) \
     php_gtk_button_class_init(container_ce, parent_ce)

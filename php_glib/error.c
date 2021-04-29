@@ -27,6 +27,8 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+#include <glib.h>
+#include "php_gtk.h"
 #include "error.h"
 
 extern HashTable         classes;
@@ -270,8 +272,7 @@ php_glib_error_get_handlers()
 zend_class_entry*
 php_glib_error_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_glib_error_get_handlers();
-    //INIT_NS_CLASS_ENTRY((*ce), "Gnome\\G", "List", php_glib_error_methods);
-    INIT_CLASS_ENTRY((*container_ce), "GError", php_glib_error_methods);
+    PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "GError", php_glib_error_methods);
     //ce->serialize;
     php_glib_error_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_glib_error_class_entry->create_object = php_glib_error_create_object;

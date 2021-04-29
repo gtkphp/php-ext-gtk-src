@@ -28,6 +28,7 @@
 #include <ext/standard/info.h>
 
 #include <gtk/gtk.h>
+#include "php_gtk.h"
 #include "php_gobject/object.h"
 
 #include "window.h"
@@ -423,10 +424,12 @@ php_gtk_window_new(php_gtk_window *self, zend_long type) {
     g_object_set_data(G_OBJECT(window), "zend_object", &object->std);
 
     //zend_make_compiled_string_description(const char *name) /* {{{ */
+    /*
     const char *cur_filename = zend_get_executed_filename();
     gchar *file_name = g_path_get_basename (cur_filename);
     gtk_window_set_title(GTK_WINDOW(window), file_name);
     g_free(file_name);
+    */
 
 #if 0
     GdkPixbuf *icon_32 = gdk_pixbuf_new_from_file("/home/dev/Images/logo-6.png", NULL);

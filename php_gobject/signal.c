@@ -28,6 +28,7 @@
 #include <ext/standard/info.h>
 
 #include <gtk/gtk.h>
+#include "php_gtk.h"
 #include "signal.h"
 #include "object.h"
 
@@ -308,8 +309,7 @@ php_gobject_signal_get_handlers()
 zend_class_entry*
 php_gobject_signal_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_gobject_signal_get_handlers();
-    //INIT_NS_CLASS_ENTRY((*ce), "Gnome\\G", "List", php_gobject_signal_methods);
-    INIT_CLASS_ENTRY((*container_ce), "GSignal", php_gobject_signal_methods);
+    PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "GSignal", php_gobject_signal_methods);
     container_ce->create_object = php_gobject_signal_create_object;
     //ce->serialize;
     php_gobject_signal_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
@@ -331,47 +331,6 @@ php_gobject_signal_class_init(zend_class_entry *container_ce, zend_class_entry *
 /*----------------------------------------------------------------------+
  | Zend-User API                                                        |
  +----------------------------------------------------------------------*/
-
-zend_long
-php_gobject_signal_connect_data(zval *instance,
-                                zend_string *detailed_signal,
-                                zval *handler,// Callback
-                                zval *data, // Callback
-                                zval *destroy_data,//GClosureNotify
-                                zend_long connect_flags) {
-#if 0
-    g_print("connect: %s\n", detailed_signal->val);
-
-
-    php_gobject_object *ginstance = ZVAL_IS_PHP_GOBJECT_OBJECT(instance) ? ZVAL_GET_PHP_GOBJECT_OBJECT(instance) : NULL;
-    GObject *gobject = G_OBJECT(ginstance->ptr);
-
-    char *event = detailed_signal->val;
-    GSignalQuery query;
-
-    guint id = g_signal_lookup(event, G_TYPE_FROM_INSTANCE(gobject));
-    g_print("%s::%s\n", ginstance->std.ce->name->val, g_signal_name(id));
-    g_signal_query(id, &query);
-    g_print("  %s %s(", g_type_name(query.return_type), query.signal_name, query.n_params);
-
-    int x;
-    char glue[]="  ";
-    glue[0]='\0';
-    for (x=0; x<query.n_params; x++) {
-        g_print("%s%s", glue, g_type_name(query.param_types[x]));
-        glue[0]=',';
-    }
-    g_print(")\n");
-
-    my_data.num_args = 3;//query.n_params;
-
-    //g_signal_connect_data((gpointer)gobject, detailed_signal->val, my_callback, &my_data, NULL, (GConnectFlags) G_CONNECT_SWAPPED);
-    GClosure *closure = g_cclosure_new (G_CALLBACK (my_callback), &my_data, destroy_data);
-    g_signal_connect_closure((gpointer)gobject, detailed_signal->val, closure, TRUE);
-#endif
-    return 0;
-}
-
 
 typedef struct _CallbackHandler {
     zval handler;// user callback
@@ -486,6 +445,67 @@ php_gobject_signal_connect(zval *instance,
 
     return 0;
 
+}
+
+zend_long
+php_gobject_signal_connect_data(zval *instance,
+                                zend_string *detailed_signal,
+                                zval *handler,// Callback
+                                zval *data, // Callback
+                                zval *destroy_data,//GClosureNotify
+                                zend_long connect_flags) {
+#if 1
+    php_gobject_object *ginstance = ZVAL_IS_PHP_GOBJECT_OBJECT(instance) ? ZVAL_GET_PHP_GOBJECT_OBJECT(instance) : NULL;
+    GObject *gobject = G_OBJECT(ginstance->ptr);
+
+
+    guint id = g_signal_lookup(detailed_signal->val, G_TYPE_FROM_INSTANCE(gobject));
+    CallbackHandler *my_data = g_new(CallbackHandler, 1);
+    g_signal_query(id, &my_data->query);
+    ZVAL_COPY(&my_data->handler, handler);
+    ZVAL_COPY(&my_data->context, instance);
+    ZVAL_COPY(&my_data->data, data);
+    my_data->connect_flags = 0;
+    my_data->params = g_new(zval, my_data->query.n_params+2);
+
+    //g_signal_connect_data((gpointer)gobject, detailed_signal->val, my_callback, &my_data, NULL, (GConnectFlags) G_CONNECT_SWAPPED);
+    GClosure *closure = g_cclosure_new_swap (G_CALLBACK (my_callback), my_data, destroy_data);
+    g_signal_connect_closure((gpointer)gobject, detailed_signal->val, closure, TRUE);
+
+    return 0;
+
+#else
+
+    g_print("connect: %s\n", detailed_signal->val);
+
+
+    php_gobject_object *ginstance = ZVAL_IS_PHP_GOBJECT_OBJECT(instance) ? ZVAL_GET_PHP_GOBJECT_OBJECT(instance) : NULL;
+    GObject *gobject = G_OBJECT(ginstance->ptr);
+
+    char *event = detailed_signal->val;
+    GSignalQuery query;
+
+    guint id = g_signal_lookup(event, G_TYPE_FROM_INSTANCE(gobject));
+    g_print("%s::%s\n", ginstance->std.ce->name->val, g_signal_name(id));
+    g_signal_query(id, &query);
+    g_print("  %s %s(", g_type_name(query.return_type), query.signal_name, query.n_params);
+
+    int x;
+    char glue[]="  ";
+    glue[0]='\0';
+    for (x=0; x<query.n_params; x++) {
+        g_print("%s%s", glue, g_type_name(query.param_types[x]));
+        glue[0]=',';
+    }
+    g_print(")\n");
+
+    my_data.num_args = 3;//query.n_params;
+
+    //g_signal_connect_data((gpointer)gobject, detailed_signal->val, my_callback, &my_data, NULL, (GConnectFlags) G_CONNECT_SWAPPED);
+    GClosure *closure = g_cclosure_new (G_CALLBACK (my_callback), &my_data, destroy_data);
+    g_signal_connect_closure((gpointer)gobject, detailed_signal->val, closure, TRUE);
+#endif
+    return 0;
 }
 
 /*----------------------------------------------------------------------+

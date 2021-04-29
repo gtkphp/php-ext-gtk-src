@@ -45,6 +45,22 @@ extern zend_module_entry gtk_module_entry;
 
 
 
+#define GTK_NS_STRING(name) #name
+#define GTK_NS_QUOTE(name) GTK_NS_STRING(name)
+
+#define GTK_NS_EXPAND(VAL)  VAL ## 1
+#define GTK_NS_IS_EMPTY(name)  GTK_NS_EXPAND(name)
+
+#if defined(GTK_NS) && GTK_NS_IS_EMPTY(GTK_NS)!=1
+#define PHP_GTK_INIT_CLASS_ENTRY(ce, name, methods) INIT_NS_CLASS_ENTRY(ce, GTK_NS_QUOTE(GTK_NS), name, methods)
+#define PHP_GTK_FE(name, arg_info) ZEND_NS_FE(GTK_NS_QUOTE(GTK_NS), name, arg_info)
+#else
+#define PHP_GTK_FE(name, arg_info) ZEND_FE(name, arg_info)
+#define PHP_GTK_INIT_CLASS_ENTRY(ce, name, methods) INIT_CLASS_ENTRY(ce, name, methods)
+#endif
+
+
+
 /*
   	Declare any global variables you may need between the BEGIN
 	and END macros here:

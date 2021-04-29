@@ -25,8 +25,6 @@
 #include "config.h"
 #endif
 
-#include <gdk/gdk.h>
-#include "php_gobject/object.h"
 
 #define PHP_GDK_PIXBUF(ptr)           ((php_gdk_pixbuf*)(ptr))
 #define PHP_GDK_PIXBUF_CLASS          php_gdk_pixbuf_class_entry
@@ -54,7 +52,7 @@
 extern zend_class_entry* php_gdk_pixbuf_class_entry;
 
 #define PHP_GDK_PIXBUF_FE() \
-    PHP_FE(gdk_pixbuf_new_from_file, arginfo_gdk_pixbuf_new_from_file)
+    PHP_GTK_FE(gdk_pixbuf_new_from_file, arginfo_gdk_pixbuf_new_from_file)
 
 #define PHP_GDK_PIXBUF_MINIT_FUNCTION(container_ce, parent_ce) \
     php_gdk_pixbuf_class_init(container_ce, parent_ce)

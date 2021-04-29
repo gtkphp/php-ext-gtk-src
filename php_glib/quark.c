@@ -27,6 +27,8 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+#include <glib.h>
+#include "php_gtk.h"
 #include "quark.h"
 
 extern HashTable         classes;

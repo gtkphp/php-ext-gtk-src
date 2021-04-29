@@ -24,8 +24,8 @@
 #include <glib.h>
 
 #define PHP_GLIB_STR_FE() \
-    PHP_FE(g_str_hash,  arginfo_g_str_hash)   \
-    PHP_FE(g_str_equal, arginfo_g_str_equal)
+    PHP_GTK_FE(g_str_hash,  arginfo_g_str_hash)   \
+    PHP_GTK_FE(g_str_equal, arginfo_g_str_equal)
 
 
 
@@ -41,9 +41,9 @@
 
 
 #define PHP_GLIB_HASH_TABLE_FE() \
-    PHP_FE(g_hash_table_new,    arginfo_g_hash_table_new)   \
-    PHP_FE(g_hash_table_add,    arginfo_g_hash_table_add)   \
-    PHP_FE(g_hash_table_insert, arginfo_g_hash_table_insert)\
+    PHP_GTK_FE(g_hash_table_new,    arginfo_g_hash_table_new)   \
+    PHP_GTK_FE(g_hash_table_add,    arginfo_g_hash_table_add)   \
+    PHP_GTK_FE(g_hash_table_insert, arginfo_g_hash_table_insert)\
     PHP_GLIB_STR_FE()
 
 extern HashTable php_glib_hash_table_prop_handlers;

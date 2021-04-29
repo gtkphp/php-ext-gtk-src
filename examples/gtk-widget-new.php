@@ -54,13 +54,13 @@ function my_callback($object, $param, $user_data){
 function my_destroy($object, $param, $user_data){
 }
 
+function my_notify_title($object, $param, $user_data){
+    echo "my_notify_title\n";
+    var_dump($object, $param, $user_data);
+}
+
 \gtk_init($argc, $argv);
 
-
-
-
-$req = new GtkRequestedSize();
-$r = new GtkRequisition();
 
 $widget = new MyWidget();
 $container = new \GtkContainer();
@@ -70,13 +70,15 @@ $window = new \GtkWindow();
 \gtk_container_add($window, $widget);
 \gtk_widget_show_all($window);
 
-var_dump($req);
-var_dump($r);
-var_dump($widget);
+/*var_dump($widget);
 var_dump($container);
 var_dump($bin);
-var_dump($window);
+var_dump($window);*/
 
-\g_signal_connect($window, "destroy", "\gtk_main_quit", NULL);
+//g_signal_connect($window, "destroy", "\gtk_main_quit", NULL);
+
+\g_object_connect($window, "signal::destroy", "\gtk_main_quit", null
+                         , 'notify::title', "my_notify_title", 333
+                         , NULL);
 
 \gtk_main();

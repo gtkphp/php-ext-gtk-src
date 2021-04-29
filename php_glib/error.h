@@ -25,7 +25,6 @@
 #include "config.h"
 #endif
 
-#include <glib.h>
 
 #define PHP_GLIB_ERROR(ptr)           ((php_glib_error*)(ptr))
 #define PHP_GLIB_ERROR_CLASS          php_glib_error_class_entry
@@ -49,17 +48,17 @@
     } while (0)
 
 #define PHP_GLIB_ERROR_FE() \
-    PHP_FE(g_error_new,                arginfo_g_error_new) \
-    PHP_FE(g_error_new_literal,        arginfo_g_error_new_literal) \
-    PHP_FE(g_error_free,               arginfo_g_error_free) \
-    PHP_FE(g_error_copy,               arginfo_g_error_copy) \
-    PHP_FE(g_error_matches,            arginfo_g_error_matches) \
-    PHP_FE(g_set_error,                arginfo_g_set_error) \
-    PHP_FE(g_set_error_literal,        arginfo_g_set_error_literal) \
-    PHP_FE(g_propagate_error,          arginfo_g_propagate_error) \
-    PHP_FE(g_clear_error,              arginfo_g_clear_error) \
-    PHP_FE(g_prefix_error,             arginfo_g_prefix_error) \
-    PHP_FE(g_propagate_prefixed_error, arginfo_g_propagate_prefixed_error) \
+    PHP_GTK_FE(g_error_new,                arginfo_g_error_new) \
+    PHP_GTK_FE(g_error_new_literal,        arginfo_g_error_new_literal) \
+    PHP_GTK_FE(g_error_free,               arginfo_g_error_free) \
+    PHP_GTK_FE(g_error_copy,               arginfo_g_error_copy) \
+    PHP_GTK_FE(g_error_matches,            arginfo_g_error_matches) \
+    PHP_GTK_FE(g_set_error,                arginfo_g_set_error) \
+    PHP_GTK_FE(g_set_error_literal,        arginfo_g_set_error_literal) \
+    PHP_GTK_FE(g_propagate_error,          arginfo_g_propagate_error) \
+    PHP_GTK_FE(g_clear_error,              arginfo_g_clear_error) \
+    PHP_GTK_FE(g_prefix_error,             arginfo_g_prefix_error) \
+    PHP_GTK_FE(g_propagate_prefixed_error, arginfo_g_propagate_prefixed_error) \
 
 #define PHP_GLIB_ERROR_MINIT_FUNCTION(container_ce, parent_ce) \
     php_glib_error_class_init(container_ce, parent_ce)

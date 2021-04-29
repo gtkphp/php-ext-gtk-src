@@ -51,8 +51,8 @@
     } while (0)
 
 #define PHP_GTK_CONTAINER_FE() \
-    PHP_FE(gtk_container_add,          arginfo_gtk_container_add) \
-    PHP_FE(gtk_container_get_children, arginfo_gtk_container_get_children)
+    PHP_GTK_FE(gtk_container_add,          arginfo_gtk_container_add) \
+    PHP_GTK_FE(gtk_container_get_children, arginfo_gtk_container_get_children)
 
 
 #define PHP_GTK_CONTAINER_MINIT_FUNCTION(container_ce, parent_ce) \

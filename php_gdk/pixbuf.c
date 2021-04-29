@@ -28,9 +28,12 @@
 #include <ext/standard/info.h>
 
 
+#include <gdk/gdk.h>
+#include "php_gtk.h"
+#include "php_gobject/object.h"
+
 #include "pixbuf.h"
 
-#include <glib.h>
 #include "php_glib/error.h"
 
 extern HashTable         classes;
@@ -428,8 +431,7 @@ php_gdk_pixbuf_get_handlers()
 zend_class_entry*
 php_gdk_pixbuf_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_gdk_pixbuf_get_handlers();
-    //INIT_NS_CLASS_ENTRY((*ce), "Gnome\\G", "Object", php_gdk_pixbuf_methods);
-    INIT_CLASS_ENTRY((*container_ce), "GdkPixbuf", php_gdk_pixbuf_methods);
+    PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "GdkPixbuf", php_gdk_pixbuf_methods);
     php_gdk_pixbuf_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_gdk_pixbuf_class_entry->create_object = php_gdk_pixbuf_create_object;
     //ce->serialize;

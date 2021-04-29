@@ -28,9 +28,9 @@
 
 
 #define PHP_GTK_MAIN_FE() \
-    PHP_FE(gtk_init,      arginfo_gtk_init) \
-    PHP_FE(gtk_main,      arginfo_gtk_main) \
-    PHP_FE(gtk_main_quit, arginfo_gtk_main_quit)
+    PHP_GTK_FE(gtk_init,      arginfo_gtk_init) \
+    PHP_GTK_FE(gtk_main,      arginfo_gtk_main) \
+    PHP_GTK_FE(gtk_main_quit, arginfo_gtk_main_quit)
 
 #define PHP_GTK_MAIN_MINIT_FUNCTION(container_ce, parent_ce)
 

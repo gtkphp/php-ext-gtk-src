@@ -92,6 +92,17 @@ create config.nice
   - [ ] Find usage
 
 ```
+php-src/
+  + ext/
+    + gui/
+    + gui-ui/
+    + gui-gtk-2/
+    + gui-gtk-3/
+       + --with-gtk-3=Gnome,shared
+    + gui-gtk-4/
+
+  --enable-gui --with-gtk=yes|no|3,Gnome,static
+
   --with-glib=static
       --with-gobject=static
       --with-gio=static

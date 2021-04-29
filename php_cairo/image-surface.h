@@ -53,23 +53,23 @@
 #if IS_IMPLEMENTED
 
 #define PHP_CAIRO_IMAGE_SURFACE_T_FE() \
-    PHP_FE(cairo_format_stride_for_width,       arginfo_cairo_format_stride_for_width) \
-    PHP_FE(cairo_image_surface_create,          arginfo_cairo_image_surface_create) \
-    PHP_FE(cairo_image_surface_create_for_data, arginfo_cairo_image_surface_create_for_data) \
-    PHP_FE(cairo_image_surface_get_data,        arginfo_cairo_image_surface_get_data) \
-    PHP_FE(cairo_image_surface_get_format,      arginfo_cairo_image_surface_get_format) \
-    PHP_FE(cairo_image_surface_get_width,       arginfo_cairo_image_surface_get_width) \
-    PHP_FE(cairo_image_surface_get_height,      arginfo_cairo_image_surface_get_height) \
-    PHP_FE(cairo_image_surface_get_stride,      arginfo_cairo_image_surface_get_stride) \
+    PHP_GTK_FE(cairo_format_stride_for_width,       arginfo_cairo_format_stride_for_width) \
+    PHP_GTK_FE(cairo_image_surface_create,          arginfo_cairo_image_surface_create) \
+    PHP_GTK_FE(cairo_image_surface_create_for_data, arginfo_cairo_image_surface_create_for_data) \
+    PHP_GTK_FE(cairo_image_surface_get_data,        arginfo_cairo_image_surface_get_data) \
+    PHP_GTK_FE(cairo_image_surface_get_format,      arginfo_cairo_image_surface_get_format) \
+    PHP_GTK_FE(cairo_image_surface_get_width,       arginfo_cairo_image_surface_get_width) \
+    PHP_GTK_FE(cairo_image_surface_get_height,      arginfo_cairo_image_surface_get_height) \
+    PHP_GTK_FE(cairo_image_surface_get_stride,      arginfo_cairo_image_surface_get_stride) \
 
 #else
 
 #define PHP_CAIRO_IMAGE_SURFACE_T_FE() \
-    PHP_FE(cairo_image_surface_create,          arginfo_cairo_image_surface_create) \
-    PHP_FE(cairo_image_surface_get_format,      arginfo_cairo_image_surface_get_format) \
-    PHP_FE(cairo_image_surface_get_width,       arginfo_cairo_image_surface_get_width) \
-    PHP_FE(cairo_image_surface_get_height,      arginfo_cairo_image_surface_get_height) \
-    PHP_FE(cairo_image_surface_get_stride,      arginfo_cairo_image_surface_get_stride) \
+    PHP_GTK_FE(cairo_image_surface_create,          arginfo_cairo_image_surface_create) \
+    PHP_GTK_FE(cairo_image_surface_get_format,      arginfo_cairo_image_surface_get_format) \
+    PHP_GTK_FE(cairo_image_surface_get_width,       arginfo_cairo_image_surface_get_width) \
+    PHP_GTK_FE(cairo_image_surface_get_height,      arginfo_cairo_image_surface_get_height) \
+    PHP_GTK_FE(cairo_image_surface_get_stride,      arginfo_cairo_image_surface_get_stride) \
 
 #endif
 

@@ -25,7 +25,6 @@
 #include "config.h"
 #endif
 
-#include <glib-object.h>
 
 #define PHP_GOBJECT_SIGNAL(ptr)           ((php_gobject_signal*)(ptr))
 #define PHP_GOBJECT_SIGNAL_CLASS          php_gobject_signal_class_entry
@@ -49,8 +48,8 @@
     } while (0)
 
 #define PHP_GOBJECT_SIGNAL_FE() \
-    PHP_FE(g_signal_connect,                       arginfo_g_signal_connect) \
-    PHP_FE(g_signal_connect_data,                  arginfo_g_signal_connect_data)
+    PHP_GTK_FE(g_signal_connect,                       arginfo_g_signal_connect) \
+    PHP_GTK_FE(g_signal_connect_data,                  arginfo_g_signal_connect_data)
 
 
 #define PHP_GOBJECT_SIGNAL_MINIT_FUNCTION(container_ce, parent_ce) \

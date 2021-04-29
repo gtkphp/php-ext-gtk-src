@@ -28,6 +28,7 @@
 #include <ext/standard/info.h>
 
 #include <glib-object.h>
+#include "php_gtk.h"
 #include "php_gobject/object.h"
 #include "list.h"
 
@@ -430,8 +431,7 @@ php_glib_list_get_handlers()
 zend_class_entry*
 php_glib_list_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_glib_list_get_handlers();
-    //INIT_NS_CLASS_ENTRY((*ce), "Gnome\\G", "List", php_glib_list_methods);
-    INIT_CLASS_ENTRY((*container_ce), "GList", php_glib_list_methods);
+    PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "GList", php_glib_list_methods);
     php_glib_list_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_glib_list_class_entry->create_object = php_glib_list_create_object;
 
