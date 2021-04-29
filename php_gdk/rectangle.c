@@ -112,103 +112,38 @@ php_gdk_rectangle_free_object(zend_object *object)
 
 
 static void
-php_gdk_rectangle_getter_x(php_gdk_rectangle *intern, zval *rvalue) {
-    ZVAL_LONG(rvalue, intern->ptr->x);
-}
-
-static void
-php_gdk_rectangle_setter_x(php_gdk_rectangle *intern, zval *value) {
+php_gdk_rectangle_setter_zend_long (php_gdk_rectangle *intern, zval *value, char *name, zend_long *dest) {
     if (Z_TYPE_P(value)==IS_LONG)
-        intern->ptr->x = value->value.lval;
+        *dest = value->value.lval;
     else {
         zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
-        int allow_errors = -1;
-        zend_long lval;
-        if (!strict_types && Z_TYPE_P(value)==IS_STRING
-         && is_numeric_string(Z_STRVAL_P(value), Z_STRLEN_P(value), NULL, &lval, allow_errors) ) {
-            intern->ptr->x = lval;
-            return;
-        }
         zend_string *type = zend_zval_get_type(value);
-        zend_internal_type_error(1, "Cannot assign %s to property \\gdk_rectangle::$x of type int,", type->val);
-    }
-}
-
-
-
-
-static void
-php_gdk_rectangle_getter_y(php_gdk_rectangle *intern, zval *rvalue) {
-    ZVAL_LONG(rvalue, intern->ptr->y);
-}
-
-static void
-php_gdk_rectangle_setter_y(php_gdk_rectangle *intern, zval *value) {
-    if (Z_TYPE_P(value)==IS_LONG)
-        intern->ptr->y = value->value.lval;
-    else {
-        zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
-        int allow_errors = -1;
-        zend_long lval;
-        if (!strict_types && Z_TYPE_P(value)==IS_STRING
-         && is_numeric_string(Z_STRVAL_P(value), Z_STRLEN_P(value), NULL, &lval, allow_errors) ) {
-            intern->ptr->y = lval;
-            return;
+        if (strict_types) {
+            zend_internal_type_error(1, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\GdkRectangle::$%s of type float,", type->val, name);
+        } else {
+            int allow_errors = -1;
+            zend_long lval=0;
+            double dval=0;
+            if (Z_TYPE_P(value)==IS_STRING) {
+                zend_uchar z_type = is_numeric_string(Z_STRVAL_P(value), Z_STRLEN_P(value), &lval, &dval, allow_errors);
+                if (z_type==IS_LONG) {
+                    *dest = lval;
+                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to int(%d) convertion,", type->val, value->value.str->val, *dest);
+                    return;
+                } else if(z_type==IS_DOUBLE) {
+                    *dest = (int)dval;
+                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to int(%d) convertion,", type->val, value->value.str->val, *dest);
+                    return;
+                }
+            }
+            if (Z_TYPE_P(value)==IS_DOUBLE) {
+                //TODO: convert double to long
+                *dest = (int)value->value.dval;
+                zend_error(E_USER_WARNING, "Implicite float(%f) to int(%d) convertion,", value->value.dval, *dest);
+                return;
+            }
+            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\GdkRectangle::$%s of type int,", type->val, name);
         }
-        zend_string *type = zend_zval_get_type(value);
-        zend_internal_type_error(1, "Cannot assign %s to property \\gdk_rectangle::$y of type int,", type->val);
-    }
-}
-
-
-
-
-static void
-php_gdk_rectangle_getter_width(php_gdk_rectangle *intern, zval *rvalue) {
-    ZVAL_LONG(rvalue, intern->ptr->width);
-}
-
-static void
-php_gdk_rectangle_setter_width(php_gdk_rectangle *intern, zval *value) {
-    if (Z_TYPE_P(value)==IS_LONG)
-        intern->ptr->width = value->value.lval;
-    else {
-        zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
-        int allow_errors = -1;
-        zend_long lval;
-        if (!strict_types && Z_TYPE_P(value)==IS_STRING
-         && is_numeric_string(Z_STRVAL_P(value), Z_STRLEN_P(value), NULL, &lval, allow_errors) ) {
-            intern->ptr->width = lval;
-            return;
-        }
-        zend_string *type = zend_zval_get_type(value);
-        zend_internal_type_error(1, "Cannot assign %s to property \\gdk_rectangle::$width of type int,", type->val);
-    }
-}
-
-
-
-
-static void
-php_gdk_rectangle_getter_height(php_gdk_rectangle *intern, zval *rvalue) {
-    ZVAL_LONG(rvalue, intern->ptr->height);
-}
-
-static void
-php_gdk_rectangle_setter_height(php_gdk_rectangle *intern, zval *value) {
-    if (Z_TYPE_P(value)==IS_LONG)
-        intern->ptr->height = value->value.lval;
-    else {
-        zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
-        int allow_errors = -1;
-        zend_long lval;
-        if (!strict_types && Z_TYPE_P(value)==IS_STRING
-         && is_numeric_string(Z_STRVAL_P(value), Z_STRLEN_P(value), NULL, &lval, allow_errors) ) {
-            intern->ptr->height = lval;
-            return;
-        }
-        zend_string *type = zend_zval_get_type(value);
-        zend_internal_type_error(1, "Cannot assign %s to property \\gdk_rectangle::$height of type int,", type->val);
     }
 }
 
@@ -225,51 +160,35 @@ enum _php_gdk_rectangle_properties {
 struct PhpGdkRectangleProperty {
   const char *name;
   int code;
-  void (*getter) (php_gdk_rectangle *intern, zval *value);
-  void (*setter) (php_gdk_rectangle *intern, zval *rvalue);
+  void (*setter) (php_gdk_rectangle *intern, zval *rvalue, char *name, void *dest);
 };
 
 static const struct PhpGdkRectangleProperty php_gdk_rectangle_properties[] = {
-    {"x", PHP_GDK_RECTANGLE_X, php_gdk_rectangle_getter_x, php_gdk_rectangle_setter_x},
-    {"y", PHP_GDK_RECTANGLE_Y, php_gdk_rectangle_getter_y, php_gdk_rectangle_setter_y},
-    {"width", PHP_GDK_RECTANGLE_WIDTH, php_gdk_rectangle_getter_width, php_gdk_rectangle_setter_width},
-    {"height", PHP_GDK_RECTANGLE_HEIGHT, php_gdk_rectangle_getter_height, php_gdk_rectangle_setter_height}
+    {"x", PHP_GDK_RECTANGLE_X, php_gdk_rectangle_setter_zend_long },
+    {"y", PHP_GDK_RECTANGLE_Y, php_gdk_rectangle_setter_zend_long },
+    {"width", PHP_GDK_RECTANGLE_WIDTH, php_gdk_rectangle_setter_zend_long },
+    {"height", PHP_GDK_RECTANGLE_HEIGHT, php_gdk_rectangle_setter_zend_long }
 };
 
 const struct PhpGdkRectangleProperty*
 php_gdk_rectangle_properties_lookup (const char *str, size_t len)
 {
     if (len == 1) {
-        //case: "x", "y"
         if (str[0] == 'x') {
-            //case: "x"
             return &php_gdk_rectangle_properties[0];
         } else if (str[0] == 'y') {
-            //case: "y"
             return &php_gdk_rectangle_properties[1];
-        } else {
-            // NOTFOUND
         }
     } else if (len == 5) {
-        //case: "width"
         if (str[0] == 'w' && str[1] == 'i' && str[2] == 'd' && str[3] == 't'
          && str[4] == 'h') {
-            //case: "width"
             return &php_gdk_rectangle_properties[2];
-        } else {
-            // NOTFOUND
         }
     } else if (len == 6) {
-        //case: "height"
         if (str[0] == 'h' && str[1] == 'e' && str[2] == 'i' && str[3] == 'g'
          && str[4] == 'h' && str[5] == 't') {
-            //case: "height"
             return &php_gdk_rectangle_properties[3];
-        } else {
-            // NOTFOUND
         }
-    } else {
-        // NOTFOUND
     }
     return 0;
 }
@@ -284,7 +203,23 @@ php_gdk_rectangle_read_property(zval *object, zval *member, int type, void **cac
 
     struct PhpGdkRectangleProperty *cmd = php_gdk_rectangle_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
-        cmd->getter(intern, rv);
+        switch(cmd->code) {
+        case PHP_GDK_RECTANGLE_X:
+            ZVAL_DOUBLE(rv, intern->ptr->x);
+            break;
+        case PHP_GDK_RECTANGLE_Y:
+            ZVAL_DOUBLE(rv, intern->ptr->y);
+            break;
+        case PHP_GDK_RECTANGLE_WIDTH:
+            ZVAL_DOUBLE(rv, intern->ptr->width);
+            break;
+        case PHP_GDK_RECTANGLE_HEIGHT:
+            ZVAL_DOUBLE(rv, intern->ptr->height);
+            break;
+        default:
+            zend_internal_type_error(1, "Internal bug,");
+            break;
+        }
     } else {
         // property not found
     }
@@ -302,7 +237,23 @@ php_gdk_rectangle_write_property(zval *object, zval *member, zval *value, void *
 
     struct PhpGdkRectangleProperty *cmd = php_gdk_rectangle_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
-        cmd->setter(intern, value);
+        switch(cmd->code) {
+        case PHP_GDK_RECTANGLE_X:
+            cmd->setter(intern, value, member_str->val, &intern->ptr->x);
+            break;
+        case PHP_GDK_RECTANGLE_Y:
+            cmd->setter(intern, value, member_str->val, &intern->ptr->y);
+            break;
+        case PHP_GDK_RECTANGLE_WIDTH:
+            cmd->setter(intern, value, member_str->val, &intern->ptr->width);
+            break;
+        case PHP_GDK_RECTANGLE_HEIGHT:
+            cmd->setter(intern, value, member_str->val, &intern->ptr->height);
+            break;
+        default:
+            zend_internal_type_error(1, "Internal bug,");
+            break;
+        }
     } else {
         // property not found
     }
@@ -507,7 +458,6 @@ php_gdk_rectangle_get_handlers()
  | PHP_MINIT                                                            |
  +----------------------------------------------------------------------*/
 
-
 /*{{{ php_gdk_rectangle_class_init */
 zend_class_entry*
 php_gdk_rectangle_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
@@ -547,8 +497,6 @@ php_gdk_rectangle *php_gdk_rectangle_new(void)
     return intern;
 }
 
-
-
 /*----------------------------------------------------------------------+
  | PHP_METHOD                                                           |
  +----------------------------------------------------------------------*/
@@ -567,10 +515,6 @@ PHP_METHOD(gdk_rectangle, __construct)
     php_gdk_rectangle *self = ZOBJ_TO_PHP_GDK_RECTANGLE(zobj);
 
     self->ptr = emalloc(sizeof(GdkRectangle));
-    self->ptr->x = 0;
-    self->ptr->y = 0;
-    self->ptr->width = 0;
-    self->ptr->height = 0;
 
 }
 /* }}} */

@@ -518,19 +518,90 @@ PHP_METHOD(g_object, __construct)
 | PHP_FUNCTION                                                         |
 +----------------------------------------------------------------------*/
 
+typedef enum _ConnectSignal {            // flag = AFTER|SWAPPE|OBJECT
+    CONNECT_SIGNAL,                      // 0x00
+    CONNECT_OBJECT_SIGNAL,               // 0x01
+    CONNECT_SIGNAL_AFTER,                // 0x02 = 0x00 | 0x02
+    CONNECT_OBJECT_SIGNAL_AFTER,         // 0x03 = 0x00 | 0x02 | 0x01
+
+    CONNECT_SWAPPED_SIGNAL,              // 0x04
+    CONNECT_SWAPPED_OBJECT_SIGNAL,       // 0x05
+    CONNECT_SWAPPED_SIGNAL_AFTER,        // 0x06 = 0x04 | 0x02
+    CONNECT_SWAPPED_OBJECT_SIGNAL_AFTER, // 0x07 = 0x04 | 0x02 | 0x01
+    CONNECT_UNKNOW,
+} ConnectSignal;
+#define CONNECT_OBJECT_MASK 0x01
+#define CONNECT_AFTER_MASK 0x02
+#define CONNECT_SWAPPED_MASK 0x04
+
+typedef struct _SignalEntry {
+    char *modifier;
+    ConnectSignal signal;
+} SignalEntry;
+
+static SignalEntry php_gobject_object_signals[] = {
+    {"notify",                      CONNECT_SIGNAL},
+    {"signal",                      CONNECT_SIGNAL},
+    {"object-signal",               CONNECT_OBJECT_SIGNAL},
+    {"swapped-signal",              CONNECT_SWAPPED_SIGNAL},
+    {"swapped-object-signal",       CONNECT_SWAPPED_OBJECT_SIGNAL},
+    {"signal-after",                CONNECT_SIGNAL_AFTER},
+    {"object-signal-after",         CONNECT_OBJECT_SIGNAL_AFTER},
+    {"swapped-signal-after",        CONNECT_SWAPPED_SIGNAL_AFTER},
+    {"swapped-object-signal-after", CONNECT_SWAPPED_OBJECT_SIGNAL_AFTER},
+    {NULL}
+};
+
+
+static ConnectSignal php_gobject_object_connect_signal_lookup(char *modifier, size_t detail_len) {
+    SignalEntry *entry;
+    int i;
+
+    if (NULL==*modifier) {
+        return CONNECT_SIGNAL;
+    }
+
+    for(i = 0; NULL!=php_gobject_object_signals[i].modifier; i++) {
+        entry = &php_gobject_object_signals[i];
+        if (g_str_equal(entry->modifier, modifier)) {
+            return entry->signal;
+        }
+    }
+    g_print("ConnectSignal not found for detail: '%s'\n", modifier);
+
+    return CONNECT_UNKNOW;
+}
+static int normalize_signal_detail(char *signal_detail, char **modifier, char **signal) {
+    gchar *pos = g_strrstr(signal_detail, "::");
+    if (NULL!=pos) {
+        //g_utf8_strncpy(signal, signal_detail, pos-signal_detail);
+        //g_utf8_strncpy(detail, pos+2, -1);
+        *modifier = g_strndup(signal_detail, pos-signal_detail);
+        *signal = g_strdup(pos+2);
+    } else {
+        *modifier = NULL;
+        //g_utf8_strncpy(detail, signal_detail, -1);
+        *signal = g_strdup(signal_detail);
+    }
+    for (pos=*modifier ; *pos; pos++) if('_'==*pos) *pos = '-'; else *pos = tolower(*pos);
+    for (pos=*signal ; *pos; pos++) if('_'==*pos) *pos = '-'; else  *pos = tolower(*pos);
+
+    return 0;
+}
+
 /* {{{ proto GObject g_object_connect(GObject list, mixed data) */
 PHP_FUNCTION(g_object_connect)
 {
     int argc;
     char *detail;
-    zval *object = NULL;
     size_t detail_len;
+    zval *zobject = NULL;
     zval *args = NULL;
     zval *zcallable;
     zval *zuser_data;
 
     ZEND_PARSE_PARAMETERS_START(4, -1)
-        Z_PARAM_ZVAL(object);
+        Z_PARAM_ZVAL(zobject);
         Z_PARAM_STRING(detail, detail_len);
         Z_PARAM_ZVAL(zcallable);
         Z_PARAM_ZVAL(zuser_data);
@@ -545,9 +616,68 @@ PHP_FUNCTION(g_object_connect)
         //num_event = (argc-1-arg_missing)/3;
     }
 
-    php_gobject_object *gobject = ZVAL_GET_PHP_GOBJECT_OBJECT(object);
+    php_gobject_object *gobject = ZVAL_GET_PHP_GOBJECT_OBJECT(zobject);
+    char *modifier;
+    char *signal;
+    ConnectSignal flags;
 
-    ///@see: /home/dev/Projects/php-ubuntu/ext/gtkml/php_gobject/object.c
+    normalize_signal_detail(detail, &modifier, &signal);
+    flags = php_gobject_object_connect_signal_lookup(modifier, -1);
+
+
+    if(flags&CONNECT_OBJECT_MASK) {
+        /*
+        zval *zdestroy_data = NULL;
+        zend_string *detailed_signal = zend_string_init(signal, strlen(signal), 0);
+        zend_long connect_flags = flags>>1;
+        zend_long ret = php_g_signal_connect_object(zobject, detailed_signal, zcallable, zuser_data, zdestroy_data, connect_flags);
+        zend_string_release(detailed_signal);
+        */
+    } else {
+        g_print("%s = [%s,%s]\n", detail, modifier, signal);
+        zval *zdestroy_data = NULL;
+        zend_string *detailed_signal = zend_string_init(signal, strlen(signal), 0);
+        zend_long connect_flags = flags>>1;
+        zend_long ret = php_gobject_signal_connect_data(zobject, detailed_signal, zcallable, zuser_data, zdestroy_data, connect_flags);
+        zend_string_release(detailed_signal);
+    }
+    g_free(modifier);
+    g_free(signal);
+
+    for(i=0; i<num_event; i++) {
+        zval *zval_detail = &args[i*3];
+        detail = zval_detail->value.str->val;
+        detail_len = zval_detail->value.str->len;
+        assert(zval_get_type(zval_detail)==IS_STRING);
+
+        ZVAL_COPY(zcallable, &args[i*3+1]);
+        ZVAL_COPY(zuser_data, &args[i*3+2]);// free it in
+
+        normalize_signal_detail(detail, &modifier, &signal);
+        flags = php_gobject_object_connect_signal_lookup(modifier, -1);
+
+        if(flags&CONNECT_OBJECT_MASK) {
+            /*
+            zval *zdestroy_data = NULL;
+            zend_string *detailed_signal = zend_string_init(signal, strlen(signal), 0);
+            zend_long connect_flags = flags>>1;
+            zend_long ret = php_g_signal_connect_object(zobject, detailed_signal, zcallable, zuser_data, zdestroy_data, connect_flags);
+            zend_string_release(detailed_signal);
+            */
+        } else {
+            zval *zdestroy_data = NULL;
+            //zend_string *detailed_signal = zend_string_init(signal, strlen(signal), 0);
+            zend_string *detailed_signal = zend_string_init("notify", sizeof("notify")-1, 0);
+            zend_long connect_flags = flags>>1;
+            g_print("%s = [%s,%s]\n", detail, modifier, signal);
+            zend_long ret = php_gobject_signal_connect_data(zobject, detailed_signal, zcallable, zuser_data, zdestroy_data, connect_flags);
+            zend_string_release(detailed_signal);
+        }
+        g_free(modifier);
+        g_free(signal);
+
+    }
+
 
 }/* }}} */
 
