@@ -11,7 +11,8 @@ ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
 
-$rect = new cairo_rectangle_t(/*0.0, 0.0, 0.0, 0.0*/);
+/*
+$rect = new cairo_rectangle_t();//0.0, 0.0, 0.0, 0.0
 $rect->x = 10.0;
 $rect->y = 20.0;
 $rect->width = 110.0;
@@ -19,13 +20,15 @@ $rect->height = 90.0;
 var_dump($rect);
 //print_r((array)$rect);
 //print_r($rect);
-eval('$b = GdkRectangle::__set_state(' . var_export($a, true) . ');');
-var_dump($b);
 
-/*
+//$r = GdkRectangle::__set_state((array)$rect);
+//var_dump($b);
+*/
+
+
+/* */
 $surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 250, 80);
 $cr = cairo_create ($surface);
-
 
 cairo_move_to ($cr, 10.0, 10.0);
 
@@ -35,9 +38,16 @@ cairo_set_source_rgb ($cr, 0, 0, 0);
 cairo_fill ($cr);
 
 $status = cairo_surface_write_to_png($surface, "/home/dev/Projects/gtkphp/hello.png");
+
+echo cairo_status_to_string($status);
+
+/*
+cairo_reference($cr);
+
+cairo_surface_destroy($surface);
+cairo_destroy($cr);
 */
 
-exit();
 
 
 /*

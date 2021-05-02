@@ -480,7 +480,7 @@ php_gtk_window_new(php_gtk_window *self, zend_long type) {
     context = gtk_widget_get_style_context(window);
     gtk_style_context_add_class(context,"my");
 
-    //gtk_window_set_interactive_debugging (TRUE);
+    gtk_window_set_interactive_debugging (TRUE);
 #endif
 }
 

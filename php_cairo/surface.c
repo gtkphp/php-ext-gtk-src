@@ -86,10 +86,12 @@ static void
 php_cairo_surface_t_free_object(zend_object *object)
 {
     php_cairo_surface_t *intern = ZOBJ_TO_PHP_CAIRO_SURFACE_T(object);
-    TRACE("php_cairo_surface_t_free_object(\e[1;31m\"%s\"\e[0;m) / %d\n", intern->data.value.str->val, object->gc.refcount);
+    //printf("php_cairo_surface_t_free_object() / %d\n", object->gc.refcount);
 
     if (intern->ptr) {
+        printf("php_cairo_surface_t_free_object() / %d\n", cairo_surface_get_reference_count(intern->ptr));
         cairo_surface_destroy(intern->ptr);
+        intern->ptr = NULL;
     }
 
     zend_object_std_dtor(&intern->std);
@@ -612,6 +614,7 @@ PHP_FUNCTION(cairo_surface_reference)
         GC_REFCOUNT(&__ret->std)++;
     RETURN_OBJ(&__ret->std);
 }/* }}} */
+#endif
 
 /* {{{ proto void cairo_surface_destroy(cairo_surface_t surface) */
 PHP_FUNCTION(cairo_surface_destroy)
@@ -619,17 +622,18 @@ PHP_FUNCTION(cairo_surface_destroy)
     zval *zsurface = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zsurface)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zsurface, php_cairo_surface_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
-    php_cairo_surface_t * *__surface = zsurface;
-    php_cairo_surface_t *__ret = php_cairo_surface_destroy(, __surface);
+    php_cairo_surface_t *php_surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
+    cairo_surface_t *surface = php_surface==NULL ? NULL : php_surface->ptr;
 
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
+    cairo_surface_destroy(surface);
+    php_surface->ptr = NULL;
+
 }/* }}} */
 
+#if 0
 /* {{{ proto mixed cairo_surface_status(cairo_surface_t surface) */
 PHP_FUNCTION(cairo_surface_status)
 {
@@ -935,6 +939,7 @@ PHP_FUNCTION(cairo_surface_get_type)
         GC_REFCOUNT(&__ret->std)++;
     RETURN_OBJ(&__ret->std);
 }/* }}} */
+#endif
 
 /* {{{ proto mixed cairo_surface_get_reference_count(cairo_surface_t surface) */
 PHP_FUNCTION(cairo_surface_get_reference_count)
@@ -942,17 +947,18 @@ PHP_FUNCTION(cairo_surface_get_reference_count)
     zval *zsurface = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zsurface)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zsurface, php_cairo_surface_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
-    php_cairo_surface_t * *__surface = zsurface;
-    php_cairo_surface_t *__ret = php_cairo_surface_get_reference_count(, __surface);
+    php_cairo_surface_t *php_surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
+    cairo_surface_t *surface = php_surface==NULL ? NULL : php_surface->ptr;
 
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
+    unsigned int ref = cairo_surface_get_reference_count(surface);
+
+    RETURN_LONG(ref);
 }/* }}} */
 
+#if 0
 /* {{{ proto mixed cairo_surface_set_user_data(cairo_surface_t surface, mixed key, void user_data, mixed destroy) */
 PHP_FUNCTION(cairo_surface_set_user_data)
 {

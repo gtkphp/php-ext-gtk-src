@@ -104,10 +104,10 @@ PHP_FUNCTION(cairo_image_surface_create)
     zval *zwidth = NULL;
     zval *zheight = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_ZVAL(zformat)
-        Z_PARAM_ZVAL(zwidth)
-        Z_PARAM_ZVAL(zheight)
+    ZEND_PARSE_PARAMETERS_START(3, 3);
+        Z_PARAM_ZVAL(zformat);
+        Z_PARAM_ZVAL(zwidth);
+        Z_PARAM_ZVAL(zheight);
     ZEND_PARSE_PARAMETERS_END();
 
     zend_long __format = zformat->value.lval;

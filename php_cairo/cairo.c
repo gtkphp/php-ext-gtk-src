@@ -92,6 +92,7 @@ php_cairo_t_free_object(zend_object *object)
     TRACE("php_cairo_t_free_object(\e[1;31m\"%s\"\e[0;m) / %d\n", intern->data.value.str->val, object->gc.refcount);
 
     if (intern->ptr) {
+        printf("php_cairo_t_free_object() / %d\n", cairo_get_reference_count(intern->ptr));
         cairo_destroy(intern->ptr);
     }
 
@@ -646,39 +647,66 @@ PHP_METHOD(cairo_t, __construct)
 /*----------------------------------------------------------------------+
 | PHP_FUNCTION                                                         |
 +----------------------------------------------------------------------*/
-#include "surface.h"
+
 /* {{{ proto cairo_t cairo_create(mixed target) */
 PHP_FUNCTION(cairo_create)
 {
-    zval *ztarget = NULL;
 
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(ztarget, php_cairo_surface_t_class_entry, 1, 0)
+    zval *ztarget;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1);
+        Z_PARAM_OBJECT_OF_CLASS_EX(ztarget, php_cairo_surface_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
-    php_cairo_surface_t *__target = ZVAL_IS_PHP_CAIRO_SURFACE_T(ztarget) ? ZVAL_GET_PHP_CAIRO_SURFACE_T(ztarget) : NULL;
-    cairo_t *cr = cairo_create(__target->ptr);
-    zend_object *zcairo = php_cairo_t_create_object(php_cairo_t_class_entry);
-    php_cairo_t *cairo = ZOBJ_TO_PHP_CAIRO_T(zcairo);
-    cairo->ptr = cr;
+    php_cairo_surface_t *php_target = ZVAL_IS_PHP_CAIRO_SURFACE_T(ztarget)? ZVAL_GET_PHP_CAIRO_SURFACE_T(ztarget): NULL;
+    cairo_surface_t *target = php_target==NULL ? NULL : php_target->ptr;
 
-    if(zcairo)
-        RETURN_OBJ(zcairo);
-    RETURN_NULL();
+    cairo_t *ret = cairo_create(target);
+    cairo_status_t status = cairo_status (ret);
+    if (CAIRO_STATUS_SUCCESS==status) {
+        zend_object *z_ret = php_cairo_t_create_object(php_cairo_t_class_entry);
+        php_cairo_t *php_ret = ZOBJ_TO_PHP_CAIRO_T(z_ret);
+        php_ret->ptr = ret;
+        RETURN_OBJ(z_ret);
+    } else {
+        const char *msg = cairo_status_to_string (status);
+        zend_error(E_USER_ERROR, "%s", msg);
+        RETURN_NULL();
+    }
+
 }/* }}} */
+
 
 /* {{{ proto cairo_t cairo_reference(cairo_t cr) */
 PHP_FUNCTION(cairo_reference)
 {
-    zval *zcr = NULL;
+    zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
     ZEND_PARSE_PARAMETERS_END();
 
-    //php_cairo_t *__ret = php_cairo_reference(, __cr);
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    cairo_t *cr = php_cr==NULL ? NULL : php_cr->ptr;
+    if (NULL==cr) {
+        g_print("Internal Error: cairo_reference\n");
+        return;
+    }
 
-    RETURN_NULL();
+    cairo_t *ret = cairo_reference(cr);
+    cairo_status_t status = cairo_status (ret);
+    if (CAIRO_STATUS_SUCCESS==status) {
+        zend_object *z_ret = php_cairo_t_create_object(php_cairo_t_class_entry);
+        php_cairo_t *php_ret = ZOBJ_TO_PHP_CAIRO_T(z_ret);
+        php_ret->ptr = ret;
+        RETURN_OBJ(z_ret);
+    } else {
+        const char *msg = cairo_status_to_string (status);
+        zend_error(E_USER_ERROR, "%s", msg);
+        RETURN_NULL();
+    }
+
+
 }/* }}} */
 
 /* {{{ proto void cairo_destroy(cairo_t cr) */
@@ -687,54 +715,60 @@ PHP_FUNCTION(cairo_destroy)
     zval *zcr = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_destroy(, __cr);
 
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    cairo_t *cr = php_cr==NULL ? NULL : php_cr->ptr;
+    if (NULL==cr) {
+        g_print("Internal Error: cairo_destroy\n");
+        return;
+    }
+
+    cairo_destroy(cr);
+    php_cr->ptr = NULL;
+
 }/* }}} */
 
 /* {{{ proto mixed cairo_status(cairo_t cr) */
 PHP_FUNCTION(cairo_status)
 {
-    zval *zcr = NULL;
+    zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
     ZEND_PARSE_PARAMETERS_END();
 
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_status(, __cr);
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    cairo_t *cr = php_cr==NULL ? NULL : php_cr->ptr;
+    if (NULL==cr) {
+        g_print("Internal Error: cairo_status\n");
+        return;
+    }
 
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
+    cairo_status_t ret = cairo_status(cr);
+    RETURN_LONG(ret);
+
 }/* }}} */
 
 /* {{{ proto void cairo_save(cairo_t cr) */
 PHP_FUNCTION(cairo_save)
 {
-    zval *zcr = NULL;
+    zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
     ZEND_PARSE_PARAMETERS_END();
 
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_save(, __cr);
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    cairo_t *cr = php_cr==NULL ? NULL : php_cr->ptr;
+    if (NULL==cr) {
+        g_print("Internal Error: cairo_save\n");
+        return;
+    }
 
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
+    cairo_save(cr);
+
 }/* }}} */
 
 /* {{{ proto void cairo_restore(cairo_t cr) */
@@ -1855,17 +1889,16 @@ PHP_FUNCTION(cairo_get_reference_count)
     zval *zcr = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_reference_count(, __cr);
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    cairo_t *cr = php_cr==NULL ? NULL : php_cr->ptr;
 
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
+    unsigned int ref = cairo_get_reference_count(cr);
+
+    RETURN_LONG(ref);
+
 }/* }}} */
 
 /* {{{ proto mixed cairo_set_user_data(cairo_t cr, mixed key, void user_data, mixed destroy) */

@@ -187,6 +187,7 @@ if test "$PHP_GTK" != "no"; then
   PHP_SUBST(GTK_SHARED_LIBADD)
 
   cairo_sources="php_cairo/cairo.c \
+                 php_cairo/status.c \
                  php_cairo/rectangle.c \
                  php_cairo/path-data.c \
                  php_cairo/path.c \

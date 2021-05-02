@@ -74,7 +74,6 @@
     PHP_GTK_FE(cairo_surface_set_fallback_resolution, arginfo_cairo_surface_set_fallback_resolution) \
     PHP_GTK_FE(cairo_surface_get_fallback_resolution, arginfo_cairo_surface_get_fallback_resolution) \
     PHP_GTK_FE(cairo_surface_get_type,                arginfo_cairo_surface_get_type) \
-    PHP_GTK_FE(cairo_surface_get_reference_count,     arginfo_cairo_surface_get_reference_count) \
     PHP_GTK_FE(cairo_surface_set_user_data,           arginfo_cairo_surface_set_user_data) \
     PHP_GTK_FE(cairo_surface_get_user_data,           arginfo_cairo_surface_get_user_data) \
     PHP_GTK_FE(cairo_surface_copy_page,               arginfo_cairo_surface_copy_page) \
@@ -89,7 +88,9 @@
 
 #else
 
-#define PHP_CAIRO_SURFACE_T_FE()
+#define PHP_CAIRO_SURFACE_T_FE() \
+    PHP_GTK_FE(cairo_surface_destroy,                 arginfo_cairo_surface_destroy) \
+    PHP_GTK_FE(cairo_surface_get_reference_count,     arginfo_cairo_surface_get_reference_count) \
 
 #endif
 
@@ -206,12 +207,14 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_surface_reference, 0, 0, 1)
     ZEND_ARG_INFO(0, surface)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_surface_reference);
+#endif
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_surface_destroy, 0, 0, 1)
-    ZEND_ARG_INFO(0, surface)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, surface, cairo_surface_t, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_surface_destroy);
 
+#if 0
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_surface_status, 0, 0, 1)
     ZEND_ARG_INFO(0, surface)
 ZEND_END_ARG_INFO()
@@ -303,12 +306,15 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_surface_get_type, 0, 0, 1)
     ZEND_ARG_INFO(0, surface)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_surface_get_type);
+#endif
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_surface_get_reference_count, 0, 0, 1)
-    ZEND_ARG_INFO(0, surface)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, surface, cairo_surface_t, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_surface_get_reference_count);
 
+
+#if 0
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_surface_set_user_data, 0, 0, 4)
     ZEND_ARG_INFO(0, surface)
     ZEND_ARG_INFO(0, key)

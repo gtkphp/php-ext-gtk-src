@@ -537,8 +537,9 @@ php_gtk_widget_override_draw(GtkWidget *widget,
     g_list_find(recursive_widget, widget);
 
     if (NULL==zobject) {
-       g_print(" UNLIKELY REACHED\n");
-       GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_widget_klass);// <---------------------------
+       g_print(" UNLIKELY REACHED 1\n");
+       //GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_widget_klass);// <---------------------------
+       GtkWidgetClass *klass = GTK_WIDGET_GET_CLASS(widget);
        return klass->draw(widget, cr);
     }
 

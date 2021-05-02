@@ -25,7 +25,7 @@
 #include "config.h"
 #endif
 
-#include <cairo/cairo.h>
+
 
 #define PHP_CAIRO_T(ptr)           ((php_cairo_t*)(ptr))
 #define PHP_CAIRO_T_CLASS          php_cairo_t_class_entry
@@ -208,7 +208,7 @@ ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_reference);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_destroy, 0, ZEND_SEND_BY_VAL, 1)
-    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, cr)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_destroy);
 
@@ -531,7 +531,7 @@ ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_show_page);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_get_reference_count, 0, ZEND_SEND_BY_VAL, 1)
-    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, cr)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_get_reference_count);
 
