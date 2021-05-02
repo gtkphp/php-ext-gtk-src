@@ -27,9 +27,8 @@
 
 
 #define PHP_CAIRO_STATUS_T_FE() \
-    PHP_GTK_FE(cairo_status_to_string,         arginfo_cairo_status_to_string) \
-    PHP_GTK_FE(cairo_debug_reset_static_data,  arginfo_cairo_debug_reset_static_data) \
-
+    PHP_GTK_FE(cairo_status_to_string, arginfo_cairo_status_to_string) \
+    PHP_GTK_FE(cairo_debug_reset_static_data, arginfo_cairo_debug_reset_static_data) \
 
 #define PHP_CAIRO_STATUS_T_MINIT_FUNCTION(container_ce, parent_ce) \
     php_cairo_status_t_class_init(container_ce, parent_ce)
@@ -39,10 +38,6 @@
 
 #define PHP_CAIRO_STATUS_T_RSHUTDOWN_FUNCTION() {\
 }
-
-
-zend_class_entry *php_cairo_status_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
-
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_status_to_string, 0, ZEND_SEND_BY_VAL, 1)
     ZEND_ARG_INFO(ZEND_SEND_BY_VAL, status)
@@ -58,10 +53,10 @@ PHP_FUNCTION(cairo_debug_reset_static_data);
 #endif	/* PHP_CAIRO_STATUS_T_H */
 
 /*
- * Local variables:
- * tab-width: 4
- * c-basic-offset: 4
- * End:
- * vim600: noet sw=4 ts=4 fdm=marker
- * vim<600: noet sw=4 ts=4
- */
+* Local variables:
+* tab-width: 4
+* c-basic-offset: 4
+* End:
+* vim600: noet sw=4 ts=4 fdm=marker
+* vim<600: noet sw=4 ts=4
+*/
