@@ -23,6 +23,10 @@
 #endif
 
 
+
+
+
+
 #include <php.h>
 #include <php_ini.h>
 #include <zend_interfaces.h>
@@ -35,7 +39,10 @@
 
 /// include "php_glib.h"
 #include "php_cairo/cairo.h"
+#include "php_cairo/status.h"
 #include "php_cairo/rectangle.h"
+#include "php_cairo/path-data-type.h"
+#include "php_cairo/path-data.h"
 #include "php_cairo/path.h"
 #include "php_cairo/matrix.h"
 #include "php_cairo/png.h"
@@ -92,7 +99,106 @@ PHP_INI_END()
 /* Remove the following function when you have successfully modified config.m4
    so that your module can be compiled into PHP, it exists only for testing
    purposes. */
+static cairo_status_t
+get_glyph (cairo_t *cr, const char *utf8, cairo_glyph_t *glyph)
+{
+    cairo_glyph_t *text_to_glyphs;
+    cairo_status_t status;
+    int i;
 
+    text_to_glyphs = glyph;
+    i = 1;
+    status = cairo_scaled_font_text_to_glyphs (cairo_get_scaled_font (cr),
+                           0, 0,
+                           utf8, -1,
+                           &text_to_glyphs, &i,
+                           NULL, NULL,
+                           0);
+    if (status != CAIRO_STATUS_SUCCESS) {
+        g_print("Une typo est survenu\n");
+        return cairo_status (cr);
+        //return cairo_test_status_from_status (cairo_test_get_context (cr), status);
+    }
+
+    if (text_to_glyphs != glyph) {
+        *glyph = text_to_glyphs[0];
+        cairo_glyph_free (text_to_glyphs);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+PHP_FUNCTION(confirm_gtk_compiled)
+{
+    cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 200, 200);
+    cairo_t *cr = cairo_create(surface);
+    int width = 100;
+    int height = 100;
+#define TEXT_SIZE 12
+#define NUM_GLYPHS 1
+//#define NUM_GLYPHS 65535
+
+        cairo_glyph_t *glyphs = malloc(NUM_GLYPHS * sizeof(cairo_glyph_t));
+        const char *characters[] = { /* try to exercise different widths of index */
+        "m", /* Latin letter m, index=0x50 */
+        /* "μ", Greek letter mu, index=0x349 */
+        NULL,
+        }, **utf8;
+        int i, j;
+        cairo_status_t status;
+
+        /* Paint white background. */
+        cairo_set_source_rgb (cr, 1.0, 1.0, 1.0);
+        cairo_paint (cr);
+        cairo_set_source_rgb (cr, 0.0, 0.0, 1.0);
+
+        cairo_select_font_face (cr, "Sans",
+                    CAIRO_FONT_SLANT_NORMAL,
+                    CAIRO_FONT_WEIGHT_NORMAL);
+        cairo_set_font_size (cr, TEXT_SIZE);
+
+        for (utf8 = characters; *utf8 != NULL; utf8++) {
+            status = get_glyph (cr, *utf8, &glyphs[0]);
+            if (status) {
+                g_print("Une typo est survenu 2\n");
+                return;
+            }
+
+            if (glyphs[0].index) {
+                glyphs[0].x = 1.0;
+                glyphs[0].y = height - 1;
+                for (i=1; i < NUM_GLYPHS; i++)
+                    glyphs[i] = glyphs[0];
+
+                cairo_show_glyphs (cr, glyphs, NUM_GLYPHS);
+            }
+        }
+
+        /* we can pack ~21k 1-byte glyphs into a single XRenderCompositeGlyphs8 */
+        status = get_glyph (cr, "m", &glyphs[0]);
+        if (status) {
+            g_print("Une typo est survenu 3\n");
+            return;
+        }
+        for (i=1; i < NUM_GLYPHS; i++)
+            glyphs[i] = glyphs[0];
+        /* so check expanding the current 1-byte request for 2-byte glyphs */
+        status = get_glyph (cr, "μ", &glyphs[i]);
+        if (status) {
+            g_print("Une typo est survenu 4\n");
+            return;
+        }
+        for (j=i+1; j < NUM_GLYPHS; j++)
+            glyphs[j] = glyphs[i];
+
+        cairo_show_glyphs (cr, glyphs, NUM_GLYPHS);
+
+        cairo_surface_write_to_png(surface, "/home/dev/Projects/gtkphp/hello.png");
+
+        free(glyphs);
+}
+
+#if 0
 static void
 print_g_list(GList *list) {
     GList *it;
@@ -226,7 +332,7 @@ PHP_FUNCTION(confirm_gtk_compiled)
 	RETURN_STR(strg);
 }
 /* }}} */
-
+#endif
 
 
 /* The previous line is meant for vim and emacs, so it can correctly fold and
@@ -279,9 +385,12 @@ PHP_MINIT_FUNCTION(gtk)
     //                  PHP_GLIB_MINIT_FUNCTION(&ce);
     //                  PHP_CAIRO_MINIT_FUNCTION(&ce);
                         PHP_CAIRO_T_MINIT_FUNCTION(&ce, NULL);
+                        PHP_CAIRO_STATUS_T_MINIT_FUNCTION(NULL, NULL);
                         PHP_CAIRO_RECTANGLE_T_MINIT_FUNCTION(&ce, NULL);
+                        PHP_CAIRO_PATH_DATA_TYPE_T_MINIT_FUNCTION(&ce, NULL);
+                        PHP_CAIRO_PATH_DATA_T_MINIT_FUNCTION(&ce, NULL);
                         PHP_CAIRO_PATH_T_MINIT_FUNCTION(&ce, NULL);
-                        PHP_CAIRO_MATRIX_MINIT_FUNCTION(&ce, NULL);
+                        PHP_CAIRO_MATRIX_T_MINIT_FUNCTION(&ce, NULL);
                         PHP_CAIRO_SURFACE_T_MINIT_FUNCTION(&ce, NULL);
                         PHP_CAIRO_IMAGE_SURFACE_T_MINIT_FUNCTION(NULL, NULL);
                         PHP_CAIRO_PNG_T_MINIT_FUNCTION(NULL, NULL);
@@ -326,9 +435,12 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
 	*/
 
     PHP_CAIRO_T_MSHUTDOWN_FUNCTION();
+    PHP_CAIRO_STATUS_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_RECTANGLE_T_MSHUTDOWN_FUNCTION();
+    PHP_CAIRO_PATH_DATA_TYPE_T_MSHUTDOWN_FUNCTION();
+    PHP_CAIRO_PATH_DATA_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_PATH_T_MSHUTDOWN_FUNCTION();
-    PHP_CAIRO_MATRIX_MSHUTDOWN_FUNCTION();
+    PHP_CAIRO_MATRIX_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_SURFACE_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_IMAGE_SURFACE_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_PNG_T_MSHUTDOWN_FUNCTION();
@@ -382,9 +494,12 @@ PHP_RSHUTDOWN_FUNCTION(gtk)
 {
 
     PHP_CAIRO_T_RSHUTDOWN_FUNCTION();
+    PHP_CAIRO_STATUS_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_RECTANGLE_T_RSHUTDOWN_FUNCTION();
+    PHP_CAIRO_PATH_DATA_TYPE_T_RSHUTDOWN_FUNCTION();
+    PHP_CAIRO_PATH_DATA_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_PATH_T_RSHUTDOWN_FUNCTION();
-    PHP_CAIRO_MATRIX_RSHUTDOWN_FUNCTION();
+    PHP_CAIRO_MATRIX_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_SURFACE_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_IMAGE_SURFACE_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_PNG_T_RSHUTDOWN_FUNCTION();
@@ -434,9 +549,12 @@ PHP_MINFO_FUNCTION(gtk)
 const zend_function_entry gtk_functions[] = {
     PHP_GTK_FE(confirm_gtk_compiled,	NULL)		     /* For testing, remove later. */
     PHP_CAIRO_T_FE()
+    PHP_CAIRO_STATUS_T_FE()
     PHP_CAIRO_RECTANGLE_T_FE()
+    PHP_CAIRO_PATH_DATA_TYPE_T_FE()
+    PHP_CAIRO_PATH_DATA_T_FE()
     PHP_CAIRO_PATH_T_FE()
-    PHP_CAIRO_MATRIX_FE()
+    PHP_CAIRO_MATRIX_T_FE()
     PHP_CAIRO_SURFACE_T_FE()
     PHP_CAIRO_IMAGE_SURFACE_T_FE()
     PHP_CAIRO_PNG_T_FE()

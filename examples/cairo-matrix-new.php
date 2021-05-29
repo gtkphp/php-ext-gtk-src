@@ -11,21 +11,33 @@ ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
 
-$rect = new cairo_rectangle_t(/*0.0, 0.0, 0.0, 0.0*/);
-$rect->x = 10.0;
-$rect->y = 20.0;
-$rect->width = 110.0;
-$rect->height = 90.0;
-var_dump($rect);
-//print_r((array)$rect);
-//print_r($rect);
-eval('$b = GdkRectangle::__set_state(' . var_export($a, true) . ');');
-var_dump($b);
+
+
+$a = new cairo_matrix_t();
+
+$xx = &$a->xx;
+
+$matrix = new cairo_matrix_t();
+$a = new cairo_matrix_t();
+$b = new cairo_matrix_t();
+$xx = &$a->xx;
+
+cairo_matrix_init_identity($a);
+var_dump($a);
+cairo_matrix_scale($a, 2.0, 2.0);
+var_dump($a);
+cairo_matrix_init_identity($b);
+cairo_matrix_multiply($matrix, $a, $b);
+
+$matrix->xx += 0.5;
+$matrix->x0 = 5;
+var_dump($matrix);
+
+
 
 /*
 $surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 250, 80);
 $cr = cairo_create ($surface);
-
 
 cairo_move_to ($cr, 10.0, 10.0);
 
@@ -35,9 +47,16 @@ cairo_set_source_rgb ($cr, 0, 0, 0);
 cairo_fill ($cr);
 
 $status = cairo_surface_write_to_png($surface, "/home/dev/Projects/gtkphp/hello.png");
+
+echo cairo_status_to_string($status);
+
+cairo_reference($cr);
+
+cairo_surface_destroy($surface);
+cairo_destroy($cr);
+
 */
 
-exit();
 
 
 /*
@@ -68,94 +87,3 @@ cairo_matrix_init($matrix, "3.14kg", 0.0, 0.0, 0.0, 0.0, 0.0);
 
 var_dump($matrix);
 */
-
-
-
-/*
-
-$surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 250, 80);
-$cr = cairo_create ($surface);
-
-cairo_move_to ($cr, 64.0, 25.6);
-cairo_rel_line_to ($cr, 51.2, 51.2);
-cairo_rel_line_to ($cr, -51.2, 51.2);
-cairo_rel_line_to ($cr, -51.2, -51.2);
-cairo_close_path ($cr);
-
-cairo_set_line_width ($cr, 10.0);
-cairo_set_source_rgb ($cr, 0, 0, 1);
-cairo_fill_preserve ($cr);
-cairo_set_source_rgb ($cr, 0, 0, 0);
-cairo_stroke ($cr);
-
-
-$status = cairo_surface_write_to_png($surface, "tutprog_hello.png");
-
-
-*/
-
-/*
-//$surface = new cairo_surface_t();
-$surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 250, 80);
-$cr = cairo_create ($surface);
-
-cairo_move_to ($cr, 64.0, 25.6);
-cairo_rectangle ($cr, 0.0, 0.0, 21.0, 29.7);
-
-cairo_set_source_rgb ($cr, 1.0, 0.0, 1.0);
-cairo_fill ($cr);
-
-$status = cairo_surface_write_to_png($surface, "/home/dev/Projects/gtkphp/hello.png");
-
-var_dump($status);
-var_dump($surface);
-var_dump($cr);
-*/
-
-/*
-$surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 250, 80);
-$cr = cairo_create ($surface);
-
-//cairo_move_to ($cr, 64.0, 25.6);
-cairo_rectangle ($cr, 0.0, 0.0, 21.0, 29.7);
-
-$path = cairo_copy_path ($cr);
-*/
-
-
-/*
-for ($i=0; $i < $path->num_data; $i += $path->data[i]->header->length) {
-    switch (path->data[$i]->header->type) {
-    case CAIRO_PATH_MOVE_TO:
-        g_print("CAIRO_PATH_MOVE_TO\n");
-        //do_move_to_things ($path->data[$i+1]->point->x, $path->data[$i+1]->point->y);
-        break;
-    }
-}
-*/
-
-/*
-var_dump($path->data[0]->header);
-var_dump($path->data[0]->header->type);
-var_dump($path->data[1]->point->x);
-var_dump($path);
-
-var_dump($surface);
-var_dump($cr);
-
-$path_data = new cairo_path_data_t(CAIRO_PATH_MOVE_TO);
-var_dump($path_data);
-*/
-
-/*
-$path_data = new cairo_path_data_t(3.14, 1.62);
-$path_data->x = 3.32;
-var_dump($path_data);
-*/
-
-/*
-$path = cairo_copy_path_flat($cr);
-var_dump($path);
-*/
-
-

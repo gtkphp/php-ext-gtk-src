@@ -186,14 +186,27 @@ if test "$PHP_GTK" != "no"; then
 
   PHP_SUBST(GTK_SHARED_LIBADD)
 
-  cairo_sources="php_cairo/cairo.c \
+  cairo_sources_tmp="php_cairo/cairo.c \
+                 php_cairo/status.c \
                  php_cairo/rectangle.c \
+                 php_cairo/path-data-type.c \
                  php_cairo/path-data.c \
                  php_cairo/path.c \
                  php_cairo/matrix.c \
                  php_cairo/png.c \
                  php_cairo/image-surface.c \
                  php_cairo/surface.c "
+
+  cairo_sources="php_cairo/cairo.c \
+               php_cairo/status.c \
+               php_cairo/matrix.c \
+               php_cairo/rectangle.c \
+               php_cairo/path-data-type.c \
+               php_cairo/path-data.c \
+               php_cairo/path.c \
+               php_cairo/png.c \
+               php_cairo/image-surface.c \
+               php_cairo/surface.c "
 
   doc_sources="php_doc/parser.c \
                php_doc/comment.c "

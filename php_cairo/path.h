@@ -18,14 +18,12 @@
 
 /* $Id$ */
 
-#ifndef PHP_CAIRO_PATH_T_H
-#define PHP_CAIRO_PATH_T_H
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include "php_cairo/path-data.h"
+#ifndef PHP_CAIRO_PATH_T_H
+#define PHP_CAIRO_PATH_T_H
 
 
 #define PHP_CAIRO_PATH_T(ptr)           ((php_cairo_path_t*)(ptr))
@@ -38,7 +36,7 @@
 #define ZVAL_IS_PHP_CAIRO_PATH_T(val)   ((val)!=NULL && Z_TYPE_P(val)==IS_OBJECT && ZOBJ_IS_PHP_CAIRO_PATH_T((val)->value.obj))
 #define ZVAL_GET_PHP_CAIRO_PATH_T(val)  (((val)==NULL || ZVAL_IS_NULL(val)) ? NULL : ZOBJ_TO_PHP_CAIRO_PATH_T((val)->value.obj))
 
-#define ZVAL_SET_PHP_CAIRO_PATH_T(z, o) do {  \
+#define ZVAL_SET_PHP_CAIRO_PATH_T(z, o) do {        \
         if (o==NULL) {                              \
             ZVAL_NULL(z);                           \
         } else {                                    \
@@ -48,6 +46,24 @@
             GC_REFCOUNT(&o->std)++;                 \
         }                                           \
     } while (0)
+
+
+#define PHP_CAIRO_PATH_T_COPY(intern, dest) \
+    dest = PHP_CAIRO_PATH_T_PTR(intern);
+
+#define PHP_CAIRO_PATH_T_SET(dest, src)
+
+
+
+#define PHP_CAIRO_PATH_T_PTR(intern)       php_cairo_path_t_get_ptr(intern)
+
+#define DECL_PHP_CAIRO_PATH_T(name) \
+    cairo_path_t __##name; \
+    cairo_path_t *name = &__##name; \
+    PHP_CAIRO_PATH_T_COPY(php_##name, name);
+
+
+
 
 #define PHP_CAIRO_PATH_T_FE() \
     PHP_GTK_FE(cairo_copy_path,         arginfo_cairo_copy_path) \
@@ -73,8 +89,7 @@
     PHP_GTK_FE(cairo_path_extents,      arginfo_cairo_path_extents) \
 
 #define PHP_CAIRO_PATH_T_MINIT_FUNCTION(container_ce, parent_ce) \
-    php_cairo_path_t_class_init(container_ce, parent_ce); \
-    php_cairo_path_data_t_class_init(container_ce, NULL)
+    php_cairo_path_t_class_init(container_ce, parent_ce)
 
 #define PHP_CAIRO_PATH_T_MSHUTDOWN_FUNCTION() { \
 }
@@ -82,20 +97,27 @@
 #define PHP_CAIRO_PATH_T_RSHUTDOWN_FUNCTION() {\
 }
 
+extern zend_class_entry     *php_cairo_path_t_class_entry;
+
+
 typedef struct _php_cairo_path_t php_cairo_path_t;
 struct _php_cairo_path_t {
-    /*
-    zval *status;
-    zval *data;
-    zend_long num_data;
-    */
-    cairo_path_t *ptr;
+    zval status;// of zval *
+    zval data;// of zval *
+    zval num_data;// of zend_long
 
     zend_object std;
 };
 
+zend_class_entry*
+php_cairo_path_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
 
-zend_class_entry *php_cairo_path_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
+php_cairo_path_t*
+php_cairo_path_t_new(cairo_path_t *path);
+cairo_path_t *
+php_cairo_path_t_get_ptr(php_cairo_path_t *php_path);
+void
+php_cairo_path_t_update_num_data(php_cairo_path_t *intern);
 
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_path_t___construct, 0, 0, 0)
@@ -130,8 +152,8 @@ PHP_FUNCTION(cairo_has_current_point);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_get_current_point, 0, ZEND_SEND_BY_VAL, 3)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_INFO(ZEND_SEND_BY_REF, x)
-    ZEND_ARG_INFO(ZEND_SEND_BY_REF, y)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, x, IS_DOUBLE, 1)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, y, IS_DOUBLE, 1)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_get_current_point);
 
@@ -206,7 +228,7 @@ PHP_FUNCTION(cairo_rectangle);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_glyph_path, 0, ZEND_SEND_BY_VAL, 3)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, glyphs, php_cairo_glyph_t, 0)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, glyphs, cairo_glyph_t, 0)
     ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, num_glyphs, IS_LONG, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_glyph_path);
@@ -244,15 +266,17 @@ PHP_FUNCTION(cairo_rel_move_to);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_path_extents, 0, ZEND_SEND_BY_VAL, 5)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, x1, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, y1, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, x2, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, y2, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, x1, IS_DOUBLE, 1)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, y1, IS_DOUBLE, 1)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, x2, IS_DOUBLE, 1)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, y2, IS_DOUBLE, 1)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_path_extents);
 
 
 #endif	/* PHP_CAIRO_PATH_T_H */
+
+
 
 /*
  * Local variables:

@@ -447,7 +447,8 @@ php_gtk_window_new(php_gtk_window *self, zend_long type) {
     g_print("%d\n", G_OBJECT(icon_32)->ref_count);
 #endif
 
-    //gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/logo-6.png", NULL);
+    gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/my.png", NULL);
+    //gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/flex.png", NULL);
     //gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/php-icon.png", NULL);
     /*
     gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/vigne/vigne-transparent.png", NULL);
@@ -480,7 +481,7 @@ php_gtk_window_new(php_gtk_window *self, zend_long type) {
     context = gtk_widget_get_style_context(window);
     gtk_style_context_add_class(context,"my");
 
-    //gtk_window_set_interactive_debugging (TRUE);
+    gtk_window_set_interactive_debugging (TRUE);
 #endif
 }
 

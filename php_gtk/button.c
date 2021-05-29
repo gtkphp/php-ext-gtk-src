@@ -428,9 +428,13 @@ php_gtk_button_override_widget_get_preferred_width(GtkWidget *widget,
     g_list_find(recursive_widget, widget);
 
     if (NULL==zobject) {
-       g_print(" UNLIKELY REACHED : %s\n");
-       GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_button_klass);// <---------------------------
-       klass->get_preferred_width(widget, minimum_width, natural_width);
+       g_print(" UNLIKELY REACHED : 2\n");
+       //GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_button_klass);// <---------------------------
+       //GtkWidgetClass *klass = GTK_WIDGET_GET_CLASS(widget);
+       //klass->get_preferred_width(widget, minimum_width, natural_width);
+       *minimum_width = 20;
+       *natural_width = 20;
+       return;
     }
 
     if (!is_recursive) {
@@ -585,7 +589,8 @@ php_gtk_button_new_with_label(php_gtk_button*self, zend_string *label) {
     object->ptr = G_OBJECT(button);
     g_object_set_data(G_OBJECT(button), "zend_object", &object->std);
 
-    php_gtk_button_class_init_override();
+    // See Widget ! create new class type ( php_GtkButton)
+    //php_gtk_button_class_init_override();
 }
 
 

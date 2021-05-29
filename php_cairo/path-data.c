@@ -18,6 +18,7 @@
 
 /* $Id$ */
 
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -28,23 +29,32 @@
 #include <ext/standard/info.h>
 
 #include <cairo/cairo.h>
-#include "php_gtk.h"
 
-#include "php_cairo/cairo.h"
-#include "path-data.h"
+#include "php_gtk.h"
+#include "php_cairo/path-data.h"
+
 
 extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
 
-zend_class_entry     *php_cairo_path_data_t_class_entry;
+
+zend_class_entry     *php_cairo_path_data_t_class_entry;// union
 zend_object_handlers  php_cairo_path_data_t_handlers;
 
+extern zend_class_entry *zend_standard_class_def;
+
+enum _php_cairo_path_data_t_properties {
+    PHP_CAIRO_PATH_DATA_T_HEADER = 1,
+    PHP_CAIRO_PATH_DATA_T_POINT = 2
+};
+//typedef enum php_cairo_path_data_t_properties php_cairo_path_data_t_properties;
 
 /*----------------------------------------------------------------------+
-| Internal                                                             |
-+----------------------------------------------------------------------*/
+ | Internal                                                             |
+ +----------------------------------------------------------------------*/
 
-static const zend_function_entry php_cairo_path_data_t_methods[] = {
+static const zend_function_entry
+php_cairo_path_data_t_methods[] = {
     PHP_ME(cairo_path_data_t, __construct, arginfo_cairo_path_data_t___construct, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
@@ -52,7 +62,6 @@ static const zend_function_entry php_cairo_path_data_t_methods[] = {
 /*----------------------------------------------------------------------+
  | Zend Handler                                                         |
  +----------------------------------------------------------------------*/
-
 
 /* {{{ php_cairo_path_data_t_create_object */
 static zend_object*
@@ -63,8 +72,10 @@ php_cairo_path_data_t_create_object(zend_class_entry *class_type)
     zend_object_std_init(&intern->std, class_type);
     object_properties_init(&intern->std, class_type);
 
-    intern->ptr = NULL;
-    intern->is_owner = 0;
+    intern->union_type = 0;//PHP_CAIRO_PATH_DATA_T_UNKNOWN
+    ZVAL_NULL(&intern->header);
+    ZVAL_NULL(&intern->point);
+
 
     intern->std.handlers = &php_cairo_path_data_t_handlers;
 
@@ -79,58 +90,130 @@ php_cairo_path_data_t_dtor_object(zend_object *obj) {
 
 }
 
-/* {{{ php_cairo_path_t_free_object */
+/* {{{ php_cairo_path_data_t_free_object */
 static void
 php_cairo_path_data_t_free_object(zend_object *object)
 {
     php_cairo_path_data_t *intern = ZOBJ_TO_PHP_CAIRO_PATH_DATA_T(object);
 
-    if (intern->ptr!=NULL && intern->is_owner==1) {
-        efree(intern->ptr);
-        intern->ptr = NULL;
-        intern->is_owner = 0;
+    switch (intern->union_type) {
+    case PHP_CAIRO_PATH_DATA_T_HEADER:
+        zval_ptr_dtor(&intern->header);
+        break;
+    case PHP_CAIRO_PATH_DATA_T_POINT:
+        zval_ptr_dtor(&intern->point);
+        break;
+    default:
+        break;
     }
 
     zend_object_std_dtor(&intern->std);
-    //efree(intern);
 }
-/* }}} php_cairo_path_t_free_object */
+/* }}} php_cairo_path_data_t_free_object */
 
 
-/* {{{ gtk_read_property */
+
+
+/** TODO: implement all the types */
+/** rename it by : php_gtkml_setter_[double|long|string] */
+static void
+php_cairo_path_data_t_setter_anonymous_0(php_cairo_path_data_t *intern, zval *value, char *name, zval *dest) {
+    switch (intern->union_type) {
+        case PHP_CAIRO_PATH_DATA_T_HEADER:
+            zval_delref_p(&intern->header);
+            break;
+        case PHP_CAIRO_PATH_DATA_T_POINT:
+            zval_delref_p(&intern->point);
+            break;
+    }
+    ZVAL_COPY(dest, value);//"@anonymous#0"
+}
+
+
+
+
+/** TODO: implement all the types */
+/** rename it by : php_gtkml_setter_[double|long|string] */
+static void
+php_cairo_path_data_t_setter_anonymous_1(php_cairo_path_data_t *intern, zval *value, char *name, zval *dest) {
+    switch (intern->union_type) {
+        case PHP_CAIRO_PATH_DATA_T_HEADER:
+            zval_delref_p(&intern->header);
+            break;
+        case PHP_CAIRO_PATH_DATA_T_POINT:
+            zval_delref_p(&intern->point);
+            break;
+    }
+    ZVAL_COPY(dest, value);//"@anonymous#1"
+}
+
+
+
+
+struct PhpCairoPathDataTProperty {
+  const char *name;
+  int code;
+  void (*setter) (php_cairo_path_data_t *intern, zval *rvalue, char *name, zval *dest);
+};
+
+static const struct PhpCairoPathDataTProperty php_cairo_path_data_t_properties[] = {
+    {"header", PHP_CAIRO_PATH_DATA_T_HEADER, php_cairo_path_data_t_setter_anonymous_0},
+    {"point", PHP_CAIRO_PATH_DATA_T_POINT, php_cairo_path_data_t_setter_anonymous_1}
+};
+
+
+const struct PhpCairoPathDataTProperty*
+php_cairo_path_data_t_properties_lookup (const char *str, size_t len)
+{
+    if (len == 6) {
+        if (str[0] == 'h' && str[1] == 'e' && str[2] == 'a' && str[3] == 'd'
+         && str[4] == 'e' && str[5] == 'r') {
+            return &php_cairo_path_data_t_properties[0];
+        }
+    } else if (len == 5) {
+        if (str[0] == 'p' && str[1] == 'o' && str[2] == 'i' && str[3] == 'n'
+         && str[4] == 't') {
+            return &php_cairo_path_data_t_properties[1];
+        }
+    }
+    return 0;
+}
+
+/* {{{ php_cairo_path_data_t_read_property */
 static zval*
 php_cairo_path_data_t_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
 {
-    php_cairo_path_data_t *obj = ZVAL_GET_PHP_CAIRO_PATH_DATA_T(object);
-    zend_string *member_str = zval_get_string(member);
-    char *str = member_str->val;
-    zval *retval;
-    //php_printf("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    php_cairo_path_data_t *intern = ZVAL_GET_PHP_CAIRO_PATH_DATA_T(object);
+    zend_string *member_str = member->value.str;
 
-    if (member_str->len==1 && str[0]=='x') {
-        ZVAL_DOUBLE(rv, obj->ptr->point.x);
-        return rv;
+    const struct PhpCairoPathDataTProperty *cmd = php_cairo_path_data_t_properties_lookup(member_str->val, member_str->len);
+    if (cmd) {
+        switch(cmd->code) {
+        case PHP_CAIRO_PATH_DATA_T_HEADER:
+            if(PHP_CAIRO_PATH_DATA_T_HEADER==intern->union_type) {
+                ZVAL_COPY(rv, &intern->header);
+                return rv;
+            } else {
+                g_print("Type error : Expecting '%s' but you try to acces to '%s'\n",php_cairo_path_data_t_properties[intern->union_type-1].name, php_cairo_path_data_t_properties[PHP_CAIRO_PATH_DATA_T_HEADER-1].name);
+            }
+            break;
+        case PHP_CAIRO_PATH_DATA_T_POINT:
+            if(PHP_CAIRO_PATH_DATA_T_POINT==intern->union_type) {
+                ZVAL_COPY(rv, &intern->point);
+                return rv;
+            } else {
+                g_print("Type error : Expecting '%s' but you try to acces to '%s'\n",php_cairo_path_data_t_properties[intern->union_type-1].name, php_cairo_path_data_t_properties[PHP_CAIRO_PATH_DATA_T_POINT-1].name);
+            }
+            break;
+        default:
+            zend_internal_type_error(1, "Internal bug,");
+            break;
+        }
+    } else {
+        // property not found
     }
-    if (member_str->len==1 && str[0]=='y') {
-        ZVAL_DOUBLE(rv, obj->ptr->point.y);
-        return rv;
-    }
 
-    if (member_str->len==4 && str[0]=='t' && str[1]=='y' && str[2]=='p' && str[3]=='e') {
-        ZVAL_LONG(rv, obj->ptr->header.type);
-        return rv;
-    }
-    if (member_str->len==6 && str[0]=='l' && str[1]=='e' && str[2]=='n' && str[3]=='g' && str[4]=='t' && str[5]=='h') {
-        ZVAL_LONG(rv, obj->ptr->header.length);
-        return rv;
-    }
-
-
-    zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    retval = std_hnd->read_property(object, member, type, cache_slot, rv);
-
-    zend_string_release(member_str);
-    return retval;
+    return rv;
 }
 /* }}} */
 
@@ -138,102 +221,87 @@ php_cairo_path_data_t_read_property(zval *object, zval *member, int type, void *
 static void
 php_cairo_path_data_t_write_property(zval *object, zval *member, zval *value, void **cache_slot)
 {
-    php_cairo_path_data_t *obj = ZVAL_GET_PHP_CAIRO_PATH_DATA_T(object);
-    zend_string *member_str = zval_get_string(member);
-    char *str = member_str->val;
-    //php_printf("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    php_cairo_path_data_t *intern = ZVAL_GET_PHP_CAIRO_PATH_DATA_T(object);
+    zend_string *member_str = member->value.str;
 
-
-    if (member_str->len==1 && str[0]=='x') {
-        if (Z_TYPE_P(value)==IS_DOUBLE) {
-            obj->ptr->point.x = value->value.dval;
-        } else {
-            g_print("float expected\n");
+    // union
+    const struct PhpCairoPathDataTProperty *cmd = php_cairo_path_data_t_properties_lookup(member_str->val, member_str->len);
+    if (cmd) {
+        switch(cmd->code) {
+        case PHP_CAIRO_PATH_DATA_T_HEADER:
+            cmd->setter(intern, value, member_str->val, &intern->header);
+            intern->union_type = PHP_CAIRO_PATH_DATA_T_HEADER;
+        break;
+        case PHP_CAIRO_PATH_DATA_T_POINT:
+            cmd->setter(intern, value, member_str->val, &intern->point);
+            intern->union_type = PHP_CAIRO_PATH_DATA_T_POINT;
+        break;
         }
-        return;
+    } else {
+        // property not found
     }
-    if (member_str->len==1 && str[0]=='y') {
-        if (Z_TYPE_P(value)==IS_DOUBLE) {
-            obj->ptr->point.x = value->value.dval;
-        } else {
-            g_print("float expected\n");
-        }
-        return;
-    }
-
-    if (member_str->len==4 && str[0]=='t' && str[1]=='y' && str[2]=='p' && str[3]=='e') {
-        if (Z_TYPE_P(value)==IS_LONG) {
-            obj->ptr->header.type = value->value.lval;
-        } else {
-            g_print("int expected\n");
-        }
-        return;
-    }
-    if (member_str->len==6 && str[0]=='l' && str[1]=='e' && str[2]=='n' && str[3]=='g' && str[4]=='t' && str[5]=='h') {
-        if (Z_TYPE_P(value)==IS_LONG) {
-            obj->ptr->header.length = value->value.lval;
-        } else {
-            g_print("int expected\n");
-        }
-        return;
-    }
-
-
-    zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    std_hnd->write_property(object, member, value, cache_slot);
-
-    zend_string_release(member_str);
 }
 /* }}} */
 
-static void
-php_cairo_path_data_t_unset_property(zval *object, zval *member, void **cache_slot) {
-    php_cairo_path_data_t *obj = ZVAL_GET_PHP_CAIRO_PATH_DATA_T(object);
-    zend_string *member_str = zval_get_string(member);
-    php_printf("%s(%s)\n", __FUNCTION__, member->value.str->val);
+/* {{{ php_cairo_path_data_t_get_property_ptr_ptr */
+static zval *
+php_cairo_path_data_t_get_property_ptr_ptr(zval *object, zval *member, int type, void **cache_slot) {
+    php_cairo_path_data_t  *intern = ZVAL_GET_PHP_CAIRO_PATH_DATA_T(object);
+    zend_string *member_str = member->value.str;
+    zval *retval = NULL;
+
+    const struct PhpCairoPathDataTProperty *cmd = php_cairo_path_data_t_properties_lookup(member_str->val, member_str->len);
+    if (cmd) {
+        switch(cmd->code) {
+        case PHP_CAIRO_PATH_DATA_T_HEADER:
+            if(PHP_CAIRO_PATH_DATA_T_HEADER==intern->union_type) {
+                return &intern->header;
+            } else {
+                g_print("Type error : Expecting '%s' but you try to acces to '%s'\n",php_cairo_path_data_t_properties[intern->union_type-1].name, php_cairo_path_data_t_properties[PHP_CAIRO_PATH_DATA_T_HEADER-1].name);
+            }
+        case PHP_CAIRO_PATH_DATA_T_POINT:
+            if(PHP_CAIRO_PATH_DATA_T_POINT==intern->union_type) {
+                return &intern->point;
+            } else {
+                g_print("Type error : Expecting '%s' but you try to acces to '%s'\n",php_cairo_path_data_t_properties[intern->union_type-1].name, php_cairo_path_data_t_properties[PHP_CAIRO_PATH_DATA_T_POINT-1].name);
+            }
+        }
+    } else {
+        // Error
+    }
+
+    return retval;
+}/* }}} */
 
 
-    zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    std_hnd->unset_property(object, member, cache_slot);
-
-    zend_string_release(member_str);
-}
 
 
+
+/* {{{ php_cairo_path_data_t_get_debug_info */
 static HashTable*
-php_cairo_path_data_t_get_debug_info(zval *object, int *is_temp) /* {{{ */
+php_cairo_path_data_t_get_debug_info(zval *object, int *is_temp)
 {
-    php_cairo_path_data_t  *obj =  ZVAL_GET_PHP_CAIRO_PATH_DATA_T(object);
+    php_cairo_path_data_t  *intern = ZVAL_GET_PHP_CAIRO_PATH_DATA_T(object);
     HashTable   *debug_info,
     *std_props;
-    zend_string *string_key = NULL;
-    zval *value;
 
     *is_temp = 1;
     std_props = zend_std_get_properties(object);
     debug_info = zend_array_dup(std_props);
 
-
-    ZEND_HASH_FOREACH_STR_KEY_VAL(obj->std.properties, string_key, value) {
-        zend_hash_add(debug_info, string_key, value);
-    } ZEND_HASH_FOREACH_END();
-
-
-    zval value_x;
-    zval value_y;
-    zval value_type;
-    zval value_length;
-
-    if (obj->is_header) {
-        ZVAL_LONG(&value_type, obj->ptr->header.type);
-        zend_hash_str_update(debug_info, "type", sizeof("type")-1, &value_type);
-        ZVAL_LONG(&value_length, obj->ptr->header.length);
-        zend_hash_str_update(debug_info, "length", sizeof("length")-1, &value_length);
-    } else {
-        ZVAL_DOUBLE(&value_x, obj->ptr->point.x);
-        zend_hash_str_update(debug_info, "x", sizeof("x")-1, &value_x);
-        ZVAL_DOUBLE(&value_y, obj->ptr->point.y);
-        zend_hash_str_update(debug_info, "y", sizeof("y")-1, &value_y);
+    switch (intern->union_type) {
+    case PHP_CAIRO_PATH_DATA_T_HEADER:
+    {
+        zval zheader; ZVAL_COPY(&zheader, &intern->header);
+        zend_hash_str_update(debug_info, "header", sizeof("header")-1, &zheader);
+    }
+    break;
+    case PHP_CAIRO_PATH_DATA_T_POINT:
+    {
+        zval zpoint; ZVAL_COPY(&zpoint, &intern->point);
+        zend_hash_str_update(debug_info, "point", sizeof("point")-1, &zpoint);
+    }
+    break;
     }
 
     return debug_info;
@@ -241,13 +309,7 @@ php_cairo_path_data_t_get_debug_info(zval *object, int *is_temp) /* {{{ */
 /* }}} */
 
 
-static HashTable*
-php_cairo_path_data_t_get_properties(zval *object){
-    php_cairo_path_data_t  *self =  ZVAL_GET_PHP_CAIRO_PATH_DATA_T(object);
 
-
-    return NULL;
-}
 
 
 static zend_object_handlers*
@@ -255,13 +317,12 @@ php_cairo_path_data_t_get_handlers()
 {
     memcpy(&php_cairo_path_data_t_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     php_cairo_path_data_t_handlers.offset = PHP_CAIRO_PATH_DATA_T_OFFSET;
-
     php_cairo_path_data_t_handlers.dtor_obj = php_cairo_path_data_t_dtor_object;
     php_cairo_path_data_t_handlers.free_obj = php_cairo_path_data_t_free_object;
+
     php_cairo_path_data_t_handlers.read_property = php_cairo_path_data_t_read_property;
     php_cairo_path_data_t_handlers.write_property = php_cairo_path_data_t_write_property;
-    php_cairo_path_data_t_handlers.unset_property = php_cairo_path_data_t_unset_property;
-    //php_cairo_path_data_t_handlers.get_property_ptr_ptr = php_cairo_path_data_t_get_property_ptr_ptr;
+    php_cairo_path_data_t_handlers.get_property_ptr_ptr = php_cairo_path_data_t_get_property_ptr_ptr;
 
     php_cairo_path_data_t_handlers.get_debug_info = php_cairo_path_data_t_get_debug_info;
 
@@ -269,13 +330,11 @@ php_cairo_path_data_t_get_handlers()
     return &php_cairo_path_data_t_handlers;
 }
 
-
-
 /*----------------------------------------------------------------------+
-| PHP_MINIT                                                            |
-+----------------------------------------------------------------------*/
+ | PHP_MINIT                                                            |
+ +----------------------------------------------------------------------*/
 
-/*{{{ php_cairo_path_data_t_class_init */
+ /*{{{ php_cairo_path_data_t_class_init */
 zend_class_entry*
 php_cairo_path_data_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_cairo_path_data_t_get_handlers();
@@ -289,81 +348,128 @@ php_cairo_path_data_t_class_init(zend_class_entry *container_ce, zend_class_entr
 /*----------------------------------------------------------------------+
  | Zend-User utils                                                      |
  +----------------------------------------------------------------------*/
+void
+php_cairo_path_data_t_create_header(php_cairo_path_data_t*intern, cairo_path_data_t *data){
+    zval *rv = &intern->header;
+    //zend_object *object = php_cairo_path_data_t_create_object(php_cairo_path_data_t_class_entry);
+    //cairo_path_data_t *intern = ZOBJ_TO_PHP_CAIRO_PATH_DATA_T(object);
+    zend_object *std_class;
+
+    //intern->header
+    intern->union_type = PHP_CAIRO_PATH_DATA_T_HEADER;
+
+
+    zend_string *member_type_str = zend_string_init("type", sizeof("type")-1, 0);
+    zend_string *member_length_str = zend_string_init("length", sizeof("length")-1, 0);
+    zval member_type; ZVAL_STR(&member_type, member_type_str);
+    zval member_length; ZVAL_STR(&member_length, member_length_str);
+
+    zval ztype; ZVAL_LONG(&ztype, data->header.type);
+    zval zlength; ZVAL_LONG(&zlength, data->header.length);
+
+
+    std_class = zend_objects_new(zend_standard_class_def);
+    ZVAL_OBJ(rv, std_class);
+
+    zend_std_write_property(rv, &member_type, &ztype, NULL);
+    zend_std_write_property(rv, &member_length, &zlength, NULL);
+
+    zend_string_delref(member_type_str);
+    zend_string_delref(member_length_str);
+
+}
+
+void
+php_cairo_path_data_t_create_point(php_cairo_path_data_t *intern, cairo_path_data_t *data){
+    zend_object *std_class;
+    zval *rv = &intern->point;
+    intern->union_type = PHP_CAIRO_PATH_DATA_T_POINT;
+
+    zend_string *member_x_str = zend_string_init("x", sizeof("x")-1, 0);
+    zend_string *member_y_str = zend_string_init("y", sizeof("y")-1, 0);
+    zval member_x; ZVAL_STR(&member_x, member_x_str);
+    zval member_y; ZVAL_STR(&member_y, member_y_str);
+
+    zval zx; ZVAL_DOUBLE(&zx, data->point.x);
+    zval zy; ZVAL_DOUBLE(&zy, data->point.y);
+
+
+    std_class = zend_objects_new(zend_standard_class_def);
+    ZVAL_OBJ(rv, std_class);
+
+
+    zend_std_write_property(rv, &member_x, &zx, NULL);
+    zend_std_write_property(rv, &member_y, &zy, NULL);
+
+    zend_string_delref(member_x_str);
+    zend_string_delref(member_y_str);
+}
+
+php_cairo_path_data_t *
+php_cairo_path_data_t_new(){
+    zend_object *object = php_cairo_path_data_t_create_object(php_cairo_path_data_t_class_entry);
+    php_cairo_path_data_t *path_data = ZOBJ_TO_PHP_CAIRO_PATH_DATA_T(object);
+    return path_data;
+
+}
+
 
 /*----------------------------------------------------------------------+
  | Zend-User API                                                        |
  +----------------------------------------------------------------------*/
-void
-php_cairo_path_data_t_create_header(cairo_path_data_t *data, zval *rv)
-{
-    zend_object *zobj = php_cairo_path_data_t_create_object(php_cairo_path_data_t_class_entry);
-    php_cairo_path_data_t *t = ZOBJ_TO_PHP_CAIRO_PATH_DATA_T(zobj);
-    t->ptr = data;// adpte ref
-    t->is_header = 1;
-
-    ZVAL_OBJ(rv, zobj);
-}
-
-void
-php_cairo_path_data_t_create_point(cairo_path_data_t *data, zval *rv)
-{
-    zend_object *zobj = php_cairo_path_data_t_create_object(php_cairo_path_data_t_class_entry);
-    php_cairo_path_data_t *t = ZOBJ_TO_PHP_CAIRO_PATH_DATA_T(zobj);
-    t->ptr = data;// adpte ref
-    t->is_header = 0;
-
-    ZVAL_OBJ(rv, zobj);
-}
 
 /*----------------------------------------------------------------------+
  | PHP_METHOD                                                           |
  +----------------------------------------------------------------------*/
 
-/* {{{ cairo_path_t::__construct() */
+ /* {{{ cairo_path_data_t::__construct() */
 PHP_METHOD(cairo_path_data_t, __construct)
 {
-    zval *x;
-    zval *y;
+    zval *zx;
+    zval *zy;
+    zval zlength;
 
     ZEND_PARSE_PARAMETERS_START(1,2)
-        Z_PARAM_ZVAL(x)
+        Z_PARAM_ZVAL(zx)
         Z_PARAM_OPTIONAL
-        Z_PARAM_ZVAL(y)
+        Z_PARAM_ZVAL(zy)
     ZEND_PARSE_PARAMETERS_END();
 
     zend_object *zobj = Z_OBJ_P(getThis());
     php_cairo_path_data_t *self = ZOBJ_TO_PHP_CAIRO_PATH_DATA_T(zobj);
-    self->ptr = emalloc(sizeof(cairo_path_data_t));
-    self->is_owner = 1;
+
+    zend_object *std_class;
+
+
 
     switch (EX_NUM_ARGS()) {
     case 1:
-        if (Z_TYPE_P(x)==IS_LONG) {
-            self->is_header = 1;
-            self->ptr->header.type = x->value.lval;
-            switch(x->value.lval){
+        if (Z_TYPE_P(zx)==IS_LONG) {
+            cairo_path_data_t data;
+            data.header.type = zx->value.lval;
+            switch(zx->value.lval){
             case CAIRO_PATH_MOVE_TO:
             case CAIRO_PATH_LINE_TO:
-                self->ptr->header.length = 2;
+                data.header.length = 2;
                 break;
             case CAIRO_PATH_CURVE_TO:
-                self->ptr->header.length = 4;
+                data.header.length = 4;
                 break;
             case CAIRO_PATH_CLOSE_PATH:
-                self->ptr->header.length = 1;
+                data.header.length = 1;
                 break;
             }
+            php_cairo_path_data_t_create_header(self, &data);
+
         } else {
             //error please use CAIRO_PATH_DATA_TYPE
         }
         break;
-    case 2:
-        self->is_header = 0;
-        if (Z_TYPE_P(x)==IS_DOUBLE && Z_TYPE_P(y)==IS_DOUBLE) {
-            self->ptr->point.x = x->value.dval;
-            self->ptr->point.y = y->value.dval;
-        } else {
-            //error please use CAIRO_PATH_DATA_TYPE
+    case 2: {
+            cairo_path_data_t data;
+            data.point.x = zx->value.dval;
+            data.point.y = zy->value.dval;
+            php_cairo_path_data_t_create_point(self, &data);
         }
         break;
     default:
@@ -376,3 +482,13 @@ PHP_METHOD(cairo_path_data_t, __construct)
 /*----------------------------------------------------------------------+
  | PHP_FUNCTION                                                         |
  +----------------------------------------------------------------------*/
+
+
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: noet sw=4 ts=4 fdm=marker
+ * vim<600: noet sw=4 ts=4
+ */

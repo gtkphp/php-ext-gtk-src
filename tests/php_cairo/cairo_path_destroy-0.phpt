@@ -14,9 +14,7 @@ cairo_rectangle ($cr, 0.0, 0.0, 21.0, 29.7);
 $path = cairo_copy_path ($cr);
 cairo_path_destroy ($path);
 
-var_dump($path);
+
 
 ?>
 --EXPECT--
-object(cairo_path_t)#3 (0) {
-}

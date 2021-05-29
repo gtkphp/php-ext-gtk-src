@@ -18,26 +18,25 @@
 
 /* $Id$ */
 
-#ifndef PHP_CAIRO_MATRIX_H
-#define PHP_CAIRO_MATRIX_H
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
+#ifndef PHP_CAIRO_MATRIX_T_H
+#define PHP_CAIRO_MATRIX_T_H
 
 
-#define PHP_CAIRO_MATRIX(ptr)           ((php_cairo_matrix*)(ptr))
-#define PHP_CAIRO_MATRIX_CLASS          php_cairo_matrix_class_entry
-#define PHP_CAIRO_MATRIX_OFFSET         (sizeof(php_cairo_matrix) - sizeof(zend_object))
+#define PHP_CAIRO_MATRIX_T(ptr)           ((php_cairo_matrix_t*)(ptr))
+#define PHP_CAIRO_MATRIX_T_CLASS          php_cairo_matrix_t_class_entry
+#define PHP_CAIRO_MATRIX_T_OFFSET         (sizeof(php_cairo_matrix_t) - sizeof(zend_object))
 
-#define ZOBJ_IS_PHP_CAIRO_MATRIX(obj)   ((obj)!=NULL && obj->ce == php_cairo_matrix_class_entry)
-#define ZOBJ_TO_PHP_CAIRO_MATRIX(std)   PHP_CAIRO_MATRIX( ((void*)(std))-PHP_CAIRO_MATRIX_OFFSET )
+#define ZOBJ_IS_PHP_CAIRO_MATRIX_T(obj)   ((obj)!=NULL && obj->ce == php_cairo_matrix_t_class_entry)
+#define ZOBJ_TO_PHP_CAIRO_MATRIX_T(std)   PHP_CAIRO_MATRIX_T( ((void*)(std))-PHP_CAIRO_MATRIX_T_OFFSET )
 
-#define ZVAL_IS_PHP_CAIRO_MATRIX(val)   ((val)!=NULL && Z_TYPE_P(val)==IS_OBJECT && ZOBJ_IS_PHP_CAIRO_MATRIX((val)->value.obj))
-#define ZVAL_GET_PHP_CAIRO_MATRIX(val)  (((val)==NULL || ZVAL_IS_NULL(val)) ? NULL : ZOBJ_TO_PHP_CAIRO_MATRIX((val)->value.obj))
+#define ZVAL_IS_PHP_CAIRO_MATRIX_T(val)   ((val)!=NULL && Z_TYPE_P(val)==IS_OBJECT && ZOBJ_IS_PHP_CAIRO_MATRIX_T((val)->value.obj))
+#define ZVAL_GET_PHP_CAIRO_MATRIX_T(val)  (((val)==NULL || ZVAL_IS_NULL(val)) ? NULL : ZOBJ_TO_PHP_CAIRO_MATRIX_T((val)->value.obj))
 
-#define ZVAL_SET_PHP_CAIRO_MATRIX(z, o) do {  \
+#define ZVAL_SET_PHP_CAIRO_MATRIX_T(z, o) do {        \
         if (o==NULL) {                              \
             ZVAL_NULL(z);                           \
         } else {                                    \
@@ -49,7 +48,35 @@
     } while (0)
 
 
-#define PHP_CAIRO_MATRIX_FE() \
+#define PHP_CAIRO_MATRIX_T_COPY(src, dest) \
+    ZVAL_GET_DOUBLE(&src->xx, (dest)->xx) \
+    ZVAL_GET_DOUBLE(&src->yx, (dest)->yx) \
+    ZVAL_GET_DOUBLE(&src->xy, (dest)->xy) \
+    ZVAL_GET_DOUBLE(&src->yy, (dest)->yy) \
+    ZVAL_GET_DOUBLE(&src->x0, (dest)->x0) \
+    ZVAL_GET_DOUBLE(&src->y0, (dest)->y0)
+
+#define PHP_CAIRO_MATRIX_T_SET(dest, src) \
+    ZVAL_SET_DOUBLE(&(dest)->xx, (src)->xx) \
+    ZVAL_SET_DOUBLE(&(dest)->yx, (src)->yx) \
+    ZVAL_SET_DOUBLE(&(dest)->xy, (src)->xy) \
+    ZVAL_SET_DOUBLE(&(dest)->yy, (src)->yy) \
+    ZVAL_SET_DOUBLE(&(dest)->x0, (src)->x0) \
+    ZVAL_SET_DOUBLE(&(dest)->y0, (src)->y0)
+
+
+
+#define PHP_CAIRO_MATRIX_T_PTR(intern)       php_cairo_matrix_t_get_ptr(intern)
+
+#define DECL_PHP_CAIRO_MATRIX_T(name) \
+    cairo_matrix_t __##name; \
+    cairo_matrix_t *name = &__##name; \
+    PHP_CAIRO_MATRIX_T_COPY(php_##name, name);
+
+
+
+
+#define PHP_CAIRO_MATRIX_T_FE() \
     PHP_GTK_FE(cairo_matrix_init,               arginfo_cairo_matrix_init) \
     PHP_GTK_FE(cairo_matrix_init_identity,      arginfo_cairo_matrix_init_identity) \
     PHP_GTK_FE(cairo_matrix_init_translate,     arginfo_cairo_matrix_init_translate) \
@@ -63,128 +90,126 @@
     PHP_GTK_FE(cairo_matrix_transform_distance, arginfo_cairo_matrix_transform_distance) \
     PHP_GTK_FE(cairo_matrix_transform_point,    arginfo_cairo_matrix_transform_point) \
 
+#define PHP_CAIRO_MATRIX_T_MINIT_FUNCTION(container_ce, parent_ce) \
+    php_cairo_matrix_t_class_init(container_ce, parent_ce)
 
-#define PHP_CAIRO_MATRIX_MINIT_FUNCTION(container_ce, parent_ce) \
-    php_cairo_matrix_class_init(container_ce, parent_ce)
-
-#define PHP_CAIRO_MATRIX_MSHUTDOWN_FUNCTION() { \
+#define PHP_CAIRO_MATRIX_T_MSHUTDOWN_FUNCTION() { \
 }
 
-#define PHP_CAIRO_MATRIX_RSHUTDOWN_FUNCTION() {\
+#define PHP_CAIRO_MATRIX_T_RSHUTDOWN_FUNCTION() {\
 }
 
-typedef struct _php_cairo_matrix php_cairo_matrix;
-struct _php_cairo_matrix {
-    cairo_matrix_t *ptr;
+extern zend_class_entry     *php_cairo_matrix_t_class_entry;
+
+
+typedef struct _php_cairo_matrix_t php_cairo_matrix_t;
+struct _php_cairo_matrix_t {
+    zval xx;// of double
+    zval yx;// of double
+    zval xy;// of double
+    zval yy;// of double
+    zval x0;// of double
+    zval y0;// of double
 
     zend_object std;
 };
 
-void php_cairo_matrix_init(php_cairo_matrix *matrix, double xx, double yx, double xy, double yy, double x0, double y0);
-void php_cairo_matrix_init_identity(php_cairo_matrix *matrix);
-void php_cairo_matrix_init_translate(php_cairo_matrix *matrix, double tx, double ty);
-void php_cairo_matrix_init_scale(php_cairo_matrix *matrix, double sx, double sy);
-void php_cairo_matrix_init_rotate(php_cairo_matrix *matrix, double radians);
-void php_cairo_matrixranslate(php_cairo_matrix *matrix, double tx, double ty);
-void php_cairo_matrix_scale(php_cairo_matrix *matrix, double sx, double sy);
-void php_cairo_matrix_rotate(php_cairo_matrix *matrix, double radians);
-php_cairo_matrix *php_cairo_matrix_invert(php_cairo_matrix *matrix);
-void php_cairo_matrix_multiply(php_cairo_matrix *result, php_cairo_matrix *a, php_cairo_matrix *b);
-void php_cairo_matrixransform_distance(php_cairo_matrix *matrix, double dx, double dy);
-void php_cairo_matrixransform_point(php_cairo_matrix *matrix, double x, double y);
+zend_class_entry*
+php_cairo_matrix_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
 
-zend_class_entry *php_cairo_matrix_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
+php_cairo_matrix_t *
+php_cairo_matrix_t_new();
 
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix___construct, 0, 0, 0)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_t___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()
-PHP_METHOD(cairo_matrix, __construct);
+PHP_METHOD(cairo_matrix_t, __construct);
 
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_init, 0, 0, 7)
-    ZEND_ARG_OBJ_INFO(0, matrix, cairo_matrix_t, 0)
-    ZEND_ARG_TYPE_INFO(0, xx, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(0, yx, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(0, xy, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(0, yy, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(0, x0, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(0, y0, IS_DOUBLE, 0)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_init, 0, ZEND_SEND_BY_VAL, 7)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, matrix, cairo_matrix_t, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, xx, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, yx, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, xy, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, yy, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, x0, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, y0, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_init);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_init_identity, 0, 0, 1)
-    ZEND_ARG_INFO(0, matrix)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_init_identity, 0, ZEND_SEND_BY_VAL, 1)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, matrix, cairo_matrix_t, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_init_identity);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_init_translate, 0, 0, 3)
-    ZEND_ARG_INFO(0, matrix)
-    ZEND_ARG_INFO(0, tx)
-    ZEND_ARG_INFO(0, ty)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_init_translate, 0, ZEND_SEND_BY_VAL, 3)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, matrix, cairo_matrix_t, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, tx, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, ty, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_init_translate);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_init_scale, 0, 0, 3)
-    ZEND_ARG_INFO(0, matrix)
-    ZEND_ARG_INFO(0, sx)
-    ZEND_ARG_INFO(0, sy)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_init_scale, 0, ZEND_SEND_BY_VAL, 3)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, matrix, cairo_matrix_t, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, sx, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, sy, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_init_scale);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_init_rotate, 0, 0, 2)
-    ZEND_ARG_INFO(0, matrix)
-    ZEND_ARG_INFO(0, radians)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_init_rotate, 0, ZEND_SEND_BY_VAL, 2)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, matrix, cairo_matrix_t, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, radians, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_init_rotate);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_translate, 0, 0, 3)
-    ZEND_ARG_INFO(0, matrix)
-    ZEND_ARG_INFO(0, tx)
-    ZEND_ARG_INFO(0, ty)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_translate, 0, ZEND_SEND_BY_VAL, 3)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, matrix, cairo_matrix_t, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, tx, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, ty, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_translate);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_scale, 0, 0, 3)
-    ZEND_ARG_INFO(0, matrix)
-    ZEND_ARG_INFO(0, sx)
-    ZEND_ARG_INFO(0, sy)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_scale, 0, ZEND_SEND_BY_VAL, 3)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, matrix, cairo_matrix_t, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, sx, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, sy, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_scale);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_rotate, 0, 0, 2)
-    ZEND_ARG_INFO(0, matrix)
-    ZEND_ARG_INFO(0, radians)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_rotate, 0, ZEND_SEND_BY_VAL, 2)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, matrix, cairo_matrix_t, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, radians, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_rotate);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_invert, 0, 0, 1)
-    ZEND_ARG_INFO(0, matrix)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_invert, 0, ZEND_SEND_BY_VAL, 1)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, matrix, cairo_matrix_t, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_invert);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_multiply, 0, 0, 3)
-    ZEND_ARG_INFO(0, result)
-    ZEND_ARG_INFO(0, a)
-    ZEND_ARG_INFO(0, b)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_multiply, 0, ZEND_SEND_BY_VAL, 3)
+    ZEND_ARG_INFO(ZEND_SEND_BY_REF, result)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, a, cairo_matrix_t, 0)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, b, cairo_matrix_t, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_multiply);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_transform_distance, 0, 0, 3)
-    ZEND_ARG_INFO(0, matrix)
-    ZEND_ARG_INFO(0, dx)
-    ZEND_ARG_INFO(0, dy)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_transform_distance, 0, ZEND_SEND_BY_VAL, 3)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, matrix, cairo_matrix_t, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, dx, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, dy, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_transform_distance);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_transform_point, 0, 0, 3)
-    ZEND_ARG_INFO(0, matrix)
-    ZEND_ARG_INFO(0, x)
-    ZEND_ARG_INFO(0, y)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_transform_point, 0, ZEND_SEND_BY_VAL, 3)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, matrix, cairo_matrix_t, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, x, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, y, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_transform_point);
 
 
-#endif	/* PHP_CAIRO_MATRIX_H */
+#endif	/* PHP_CAIRO_MATRIX_T_H */
+
+
 
 /*
  * Local variables:
