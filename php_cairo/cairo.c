@@ -92,7 +92,6 @@ php_cairo_t_free_object(zend_object *object)
     TRACE("php_cairo_t_free_object(\e[1;31m\"%s\"\e[0;m) / %d\n", intern->data.value.str->val, object->gc.refcount);
 
     if (intern->ptr) {
-        printf("php_cairo_t_free_object() / %d\n", cairo_get_reference_count(intern->ptr));
         cairo_destroy(intern->ptr);
     }
 
@@ -321,312 +320,9 @@ php_cairo_new() {
  | Zend-User API                                                        |
  +----------------------------------------------------------------------*/
 
-php_cairo_t *
-php_cairo_create(zval *target) {
-    // TODO: implementation
-}
-
-php_cairo_t *
-php_cairo_reference(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_destroy(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_status(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_save(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_restore(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_get_target(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_push_group(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_push_group_with_content(php_cairo_t *cr, zval *content) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_pop_group(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_pop_group_to_source(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_get_group_target(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_source_rgb(php_cairo_t *cr, zval *red, zval *green, zval *blue) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_source_rgba(php_cairo_t *cr, zval *red, zval *green, zval *blue, zval *alpha) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_source(php_cairo_t *cr, zval *source) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_source_surface(php_cairo_t *cr, zval *surface, zval *x, zval *y) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_get_source(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_antialias(php_cairo_t *cr, zval *antialias) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_get_antialias(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_dash(php_cairo_t *cr, zval *dashes, zend_long num_dashes, zval *offset) {
-    // TODO: implementation
-}
-
-zend_long
-php_cairo_get_dash_count(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_get_dash(php_cairo_t *cr, zval *dashes, zval *offset) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_fill_rule(php_cairo_t *cr, zval *fill_rule) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_get_fill_rule(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_line_cap(php_cairo_t *cr, zval *line_cap) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_get_line_cap(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_line_join(php_cairo_t *cr, zval *line_join) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_get_line_join(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_line_width(php_cairo_t *cr, zval *width) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_get_line_width(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_miter_limit(php_cairo_t *cr, zval *limit) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_get_miter_limit(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_operator(php_cairo_t *cr, zval *op) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_get_operator(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_set_tolerance(php_cairo_t *cr, zval *tolerance) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_get_tolerance(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_clip(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_clip_preserve(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_clip_extents(php_cairo_t *cr, zval *x1, zval *y1, zval *x2, zval *y2) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_in_clip(php_cairo_t *cr, zval *x, zval *y) {
-    // TODO: implementation
-}
-
-void
-php_cairo_reset_clip(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_rectangle_list_destroy(zval *rectangle_list) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_copy_clip_rectangle_list(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_fill(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_fill_preserve(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_fill_extents(php_cairo_t *cr, zval *x1, zval *y1, zval *x2, zval *y2) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_in_fill(php_cairo_t *cr, zval *x, zval *y) {
-    // TODO: implementation
-}
-
-void
-php_cairo_mask(php_cairo_t *cr, zval *pattern) {
-    // TODO: implementation
-}
-
-void
-php_cairo_mask_surface(php_cairo_t *cr, zval *surface, zval *surface_x, zval *surface_y) {
-    // TODO: implementation
-}
-
-void
-php_cairo_paint(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_paint_with_alpha(php_cairo_t *cr, zval *alpha) {
-    // TODO: implementation
-}
-
-void
-php_cairo_stroke(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_stroke_preserve(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_stroke_extents(php_cairo_t *cr, zval *x1, zval *y1, zval *x2, zval *y2) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_in_stroke(php_cairo_t *cr, zval *x, zval *y) {
-    // TODO: implementation
-}
-
-void
-php_cairo_copy_page(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-void
-php_cairo_show_page(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_get_reference_count(php_cairo_t *cr) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_set_user_data(php_cairo_t *cr, zval *key, void *user_data, zval *destroy) {
-    // TODO: implementation
-}
-
-void
-php_cairo_get_user_data(php_cairo_t *cr, zval *key) {
-    // TODO: implementation
-}
-
-
-
-
 /*----------------------------------------------------------------------+
-| PHP_METHOD                                                           |
-+----------------------------------------------------------------------*/
+ | PHP_METHOD                                                           |
+ +----------------------------------------------------------------------*/
 
 /* {{{ cairo_t::__construct() */
 PHP_METHOD(cairo_t, __construct)
@@ -654,12 +350,12 @@ PHP_FUNCTION(cairo_create)
 
     zval *ztarget;
 
-    ZEND_PARSE_PARAMETERS_START(1, 1);
-        Z_PARAM_OBJECT_OF_CLASS_EX(ztarget, php_cairo_surface_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(ztarget, php_cairo_surface_t_class_entry, 1, 0)
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_surface_t *php_target = ZVAL_IS_PHP_CAIRO_SURFACE_T(ztarget)? ZVAL_GET_PHP_CAIRO_SURFACE_T(ztarget): NULL;
-    cairo_surface_t *target = php_target==NULL ? NULL : php_target->ptr;
+    cairo_surface_t *target =  php_target==NULL ? NULL : php_target->ptr;
 
     cairo_t *ret = cairo_create(target);
     cairo_status_t status = cairo_status (ret);
@@ -674,6 +370,7 @@ PHP_FUNCTION(cairo_create)
         RETURN_NULL();
     }
 
+
 }/* }}} */
 
 
@@ -687,12 +384,12 @@ PHP_FUNCTION(cairo_reference)
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
-    cairo_t *cr = php_cr==NULL ? NULL : php_cr->ptr;
+    cairo_t *cr =  php_cr==NULL ? NULL : php_cr->ptr;
+
     if (NULL==cr) {
         g_print("Internal Error: cairo_reference\n");
         return;
     }
-
     cairo_t *ret = cairo_reference(cr);
     cairo_status_t status = cairo_status (ret);
     if (CAIRO_STATUS_SUCCESS==status) {
@@ -712,19 +409,19 @@ PHP_FUNCTION(cairo_reference)
 /* {{{ proto void cairo_destroy(cairo_t cr) */
 PHP_FUNCTION(cairo_destroy)
 {
-    zval *zcr = NULL;
+    zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
-    cairo_t *cr = php_cr==NULL ? NULL : php_cr->ptr;
+    cairo_t *cr =  php_cr==NULL ? NULL : php_cr->ptr;
+
     if (NULL==cr) {
         g_print("Internal Error: cairo_destroy\n");
         return;
     }
-
     cairo_destroy(cr);
     php_cr->ptr = NULL;
 
@@ -740,12 +437,12 @@ PHP_FUNCTION(cairo_status)
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
-    cairo_t *cr = php_cr==NULL ? NULL : php_cr->ptr;
+    cairo_t *cr =  php_cr==NULL ? NULL : php_cr->ptr;
+
     if (NULL==cr) {
         g_print("Internal Error: cairo_status\n");
         return;
     }
-
     cairo_status_t ret = cairo_status(cr);
     RETURN_LONG(ret);
 
@@ -761,12 +458,12 @@ PHP_FUNCTION(cairo_save)
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
-    cairo_t *cr = php_cr==NULL ? NULL : php_cr->ptr;
+    cairo_t *cr =  php_cr==NULL ? NULL : php_cr->ptr;
+
     if (NULL==cr) {
         g_print("Internal Error: cairo_save\n");
         return;
     }
-
     cairo_save(cr);
 
 }/* }}} */
@@ -774,20 +471,20 @@ PHP_FUNCTION(cairo_save)
 /* {{{ proto void cairo_restore(cairo_t cr) */
 PHP_FUNCTION(cairo_restore)
 {
-    zval *zcr = NULL;
+    zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
     ZEND_PARSE_PARAMETERS_END();
 
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_restore(, __cr);
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    cairo_t *cr =  php_cr==NULL ? NULL : php_cr->ptr;
 
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
+    if (NULL==cr) {
+        g_print("Internal Error: cairo_restore\n");
+        return;
+    }
+    cairo_restore(cr);
 }/* }}} */
 
 /* {{{ proto mixed cairo_get_target(cairo_t cr) */

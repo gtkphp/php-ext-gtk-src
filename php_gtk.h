@@ -59,6 +59,37 @@ extern zend_module_entry gtk_module_entry;
 #define PHP_GTK_INIT_CLASS_ENTRY(ce, name, methods) INIT_CLASS_ENTRY(ce, name, methods)
 #endif
 
+#define ZVAL_SET_LONG(z, lval) \
+    if (IS_REFERENCE==Z_TYPE_P(z)) { \
+        ZVAL_LONG(&(z)->value.ref->val, lval); \
+    } else { \
+        ZVAL_LONG((z), lval); \
+    }
+
+#define ZVAL_GET_LONG(src, dest) \
+    if (IS_LONG==Z_TYPE_P(src)) {\
+        dest = Z_LVAL_P(src);\
+    } else if(IS_REFERENCE==Z_TYPE_P(src)) {\
+        if(IS_LONG==Z_TYPE((src)->value.ref->val)) {\
+            dest = Z_LVAL((src)->value.ref->val);\
+        } \
+    }
+
+#define ZVAL_SET_DOUBLE(z, dval) \
+    if (IS_REFERENCE==Z_TYPE_P(z)) { \
+        ZVAL_DOUBLE(&(z)->value.ref->val, dval); \
+    } else { \
+        ZVAL_DOUBLE((z), dval); \
+    }
+
+#define ZVAL_GET_DOUBLE(src, dest) \
+    if (IS_DOUBLE==Z_TYPE_P(src)) {\
+        dest = Z_DVAL_P(src);\
+    } else if(IS_REFERENCE==Z_TYPE_P(src)) {\
+        if(IS_DOUBLE==Z_TYPE((src)->value.ref->val)) {\
+            dest = Z_DVAL((src)->value.ref->val);\
+        } \
+    }
 
 /*
 ZEND_VERSION "3.2.0"

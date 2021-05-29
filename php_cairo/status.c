@@ -18,6 +18,7 @@
 
 /* $Id$ */
 
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -28,27 +29,24 @@
 #include <ext/standard/info.h>
 
 #include <cairo/cairo.h>
+
 #include "php_gtk.h"
+#include "php_cairo/status.h"
 
-#include "status.h"
 
+extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
 
-/*----------------------------------------------------------------------+
- | Internal                                                             |
- +----------------------------------------------------------------------*/
 
-/*----------------------------------------------------------------------+
- | Zend Handler                                                         |
- +----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------+
  | PHP_MINIT                                                            |
  +----------------------------------------------------------------------*/
 
-/*{{{ php_cairo_status_t_class_init */
+ /*{{{ php_cairo_status_t_class_init */
 zend_class_entry*
 php_cairo_status_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
+
     zend_register_long_constant("CAIRO_STATUS_SUCCESS", sizeof("CAIRO_STATUS_SUCCESS")-1,
         CAIRO_STATUS_SUCCESS, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
     zend_register_long_constant("CAIRO_STATUS_NO_MEMORY", sizeof("CAIRO_STATUS_NO_MEMORY")-1,
@@ -138,7 +136,6 @@ php_cairo_status_t_class_init(zend_class_entry *container_ce, zend_class_entry *
     zend_register_long_constant("CAIRO_STATUS_LAST_STATUS", sizeof("CAIRO_STATUS_LAST_STATUS")-1,
         CAIRO_STATUS_LAST_STATUS, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
 
-
     return NULL;
 }/*}}} */
 
@@ -158,7 +155,8 @@ php_cairo_status_t_class_init(zend_class_entry *container_ce, zend_class_entry *
  | PHP_FUNCTION                                                         |
  +----------------------------------------------------------------------*/
 
-/* {{{ proto string cairo_status_to_string(mixed status) */
+/* {{{ proto char cairo_status_to_string(int status)
+   Provides a human-readable description of a cairo_status_t. */
 PHP_FUNCTION(cairo_status_to_string)
 {
     zend_long zstatus;
@@ -169,19 +167,27 @@ PHP_FUNCTION(cairo_status_to_string)
 
     cairo_status_t status = zstatus;
 
-    char *ret = cairo_status_to_string(status);
+    const char *ret = cairo_status_to_string(status);
+
     RETURN_STRING(ret);
-
-
 }/* }}} */
 
-/* {{{ proto void cairo_debug_reset_static_data() */
+/* {{{ proto void cairo_debug_reset_static_data()
+   Resets all static data within cairo to its original state, (ie. */
 PHP_FUNCTION(cairo_debug_reset_static_data)
 {
 
 
     cairo_debug_reset_static_data();
-
+    RETURN_NULL();
 }/* }}} */
 
 
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: noet sw=4 ts=4 fdm=marker
+ * vim<600: noet sw=4 ts=4
+ */

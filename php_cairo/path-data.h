@@ -18,13 +18,12 @@
 
 /* $Id$ */
 
-#ifndef PHP_CAIRO_PATH_DATA_T_H
-#define PHP_CAIRO_PATH_DATA_T_H
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
+#ifndef PHP_CAIRO_PATH_DATA_T_H
+#define PHP_CAIRO_PATH_DATA_T_H
 
 
 #define PHP_CAIRO_PATH_DATA_T(ptr)           ((php_cairo_path_data_t*)(ptr))
@@ -37,28 +36,60 @@
 #define ZVAL_IS_PHP_CAIRO_PATH_DATA_T(val)   ((val)!=NULL && Z_TYPE_P(val)==IS_OBJECT && ZOBJ_IS_PHP_CAIRO_PATH_DATA_T((val)->value.obj))
 #define ZVAL_GET_PHP_CAIRO_PATH_DATA_T(val)  (((val)==NULL || ZVAL_IS_NULL(val)) ? NULL : ZOBJ_TO_PHP_CAIRO_PATH_DATA_T((val)->value.obj))
 
+#define ZVAL_SET_PHP_CAIRO_PATH_DATA_T(z, o) do {        \
+        if (o==NULL) {                              \
+            ZVAL_NULL(z);                           \
+        } else {                                    \
+            zval *__z = (z);                        \
+            Z_OBJ_P(__z) = &(o)->std;               \
+            Z_TYPE_INFO_P(__z) = IS_OBJECT_EX;	    \
+            GC_REFCOUNT(&o->std)++;                 \
+        }                                           \
+    } while (0)
+
+
+#define PHP_CAIRO_PATH_DATA_T_FE() \
+
+#define PHP_CAIRO_PATH_DATA_T_MINIT_FUNCTION(container_ce, parent_ce) \
+    php_cairo_path_data_t_class_init(container_ce, parent_ce)
+
+#define PHP_CAIRO_PATH_DATA_T_MSHUTDOWN_FUNCTION() { \
+}
+
+#define PHP_CAIRO_PATH_DATA_T_RSHUTDOWN_FUNCTION() {\
+}
+
+extern zend_class_entry     *php_cairo_path_data_t_class_entry;
+
 
 typedef struct _php_cairo_path_data_t php_cairo_path_data_t;
 struct _php_cairo_path_data_t {
-    cairo_path_data_t *ptr;
-    zend_bool is_header;
-    zend_bool is_owner;
-    //cairo_path_t *path;
+    int union_type;
+    zval header;
+    zval point;
 
     zend_object std;
 };
 
-void php_cairo_path_data_t_create_header(cairo_path_data_t *data, zval *rv);
-void php_cairo_path_data_t_create_point(cairo_path_data_t *data, zval *rv);
-zend_class_entry *php_cairo_path_data_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
+zend_class_entry*
+php_cairo_path_data_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_path_data_t___construct, 0, 0, 1)
-    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, x)
-    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, y)
+void
+php_cairo_path_data_t_create_header(php_cairo_path_data_t*intern, cairo_path_data_t *data);
+void
+php_cairo_path_data_t_create_point(php_cairo_path_data_t *intern, cairo_path_data_t *data);
+php_cairo_path_data_t *
+php_cairo_path_data_t_new();
+
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_path_data_t___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()
 PHP_METHOD(cairo_path_data_t, __construct);
 
+
 #endif	/* PHP_CAIRO_PATH_DATA_T_H */
+
+
 
 /*
  * Local variables:

@@ -89,7 +89,6 @@ php_cairo_surface_t_free_object(zend_object *object)
     //printf("php_cairo_surface_t_free_object() / %d\n", object->gc.refcount);
 
     if (intern->ptr) {
-        printf("php_cairo_surface_t_free_object() / %d\n", cairo_surface_get_reference_count(intern->ptr));
         cairo_surface_destroy(intern->ptr);
         intern->ptr = NULL;
     }

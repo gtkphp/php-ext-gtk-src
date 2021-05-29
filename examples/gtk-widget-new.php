@@ -13,6 +13,37 @@ class MyWidget extends \GtkWidget {
 
     /**
      * Put this function to protected to get error message
+     * @override GtkWidget::realize
+    public function realize(GtkWidget $widget) {
+        MyWidget *priv = (MyWidget *)widget;
+        //MyCpuPrivate *priv = MY_CPU(widget)->priv;
+        GtkAllocation alloc;
+        GdkWindowAttr attrs;
+        guint attrs_mask;
+
+        gtk_widget_set_realized(widget, TRUE);
+
+        gtk_widget_get_allocation(widget, &alloc);
+
+        attrs.x           = alloc.x;
+        attrs.y           = alloc.y;
+        attrs.width       = alloc.width;
+        attrs.height      = alloc.height;
+        attrs.window_type = GDK_WINDOW_CHILD;
+        attrs.wclass      = GDK_INPUT_OUTPUT;
+        attrs.event_mask  = gtk_widget_get_events(widget) | GDK_EXPOSURE_MASK;
+
+        attrs_mask = GDK_WA_X | GDK_WA_Y;
+
+        priv->window = gdk_window_new(gtk_widget_get_parent_window(widget),
+                    &attrs, attrs_mask);
+        gdk_window_set_user_data(priv->window, widget);
+        gtk_widget_set_window(widget, priv->window);
+    }
+    */
+
+    /**
+     * Put this function to protected to get error message
      * @override GtkWidget::draw
      */
     public function draw(cairo_t $cr):bool {

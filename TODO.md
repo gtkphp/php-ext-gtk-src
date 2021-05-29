@@ -2,9 +2,14 @@
 
 This file show all technical debt.
 By continuously improving the design of code, we make it easier and easier to work with.
+Service : Support, consulting, training, certification
 
 ## Priority
 
+cairo_text_path use utf-8 ; what need to do ?
+
+
+In php_glist use Z_SET_REFCOUNT/Z_DELREF_P/Z_ADDREF_P/Z_REFCOUNT_P
 
 - **TODO**: php_gtk/widget.c : php_gtk_widget_register
 - **TODO**: add signal destroy on each widget to know if wee need to free widget in php_gtk_**_free_object

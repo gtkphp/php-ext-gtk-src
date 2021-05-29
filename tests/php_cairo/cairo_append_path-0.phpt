@@ -23,17 +23,15 @@ var_dump($path);
 
 ?>
 --EXPECT--
-object(cairo_path_t)#6 (3) {
+object(cairo_path_t)#28 (3) {
   ["status"]=>
   int(0)
-  ["num_data"]=>
-  int(20)
   ["data"]=>
   array(20) {
     [0]=>
-    object(stdClass)#8 (1) {
+    object(cairo_path_data_t)#29 (1) {
       ["header"]=>
-      object(cairo_path_data_t)#7 (2) {
+      object(stdClass)#30 (2) {
         ["type"]=>
         int(0)
         ["length"]=>
@@ -41,9 +39,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [1]=>
-    object(stdClass)#10 (1) {
+    object(cairo_path_data_t)#31 (1) {
       ["point"]=>
-      object(cairo_path_data_t)#9 (2) {
+      object(stdClass)#32 (2) {
         ["x"]=>
         float(0)
         ["y"]=>
@@ -51,9 +49,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [2]=>
-    object(stdClass)#12 (1) {
+    object(cairo_path_data_t)#33 (1) {
       ["header"]=>
-      object(cairo_path_data_t)#11 (2) {
+      object(stdClass)#34 (2) {
         ["type"]=>
         int(1)
         ["length"]=>
@@ -61,9 +59,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [3]=>
-    object(stdClass)#14 (1) {
+    object(cairo_path_data_t)#35 (1) {
       ["point"]=>
-      object(cairo_path_data_t)#13 (2) {
+      object(stdClass)#36 (2) {
         ["x"]=>
         float(21)
         ["y"]=>
@@ -71,9 +69,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [4]=>
-    object(stdClass)#16 (1) {
+    object(cairo_path_data_t)#37 (1) {
       ["header"]=>
-      object(cairo_path_data_t)#15 (2) {
+      object(stdClass)#38 (2) {
         ["type"]=>
         int(1)
         ["length"]=>
@@ -81,9 +79,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [5]=>
-    object(stdClass)#18 (1) {
+    object(cairo_path_data_t)#39 (1) {
       ["point"]=>
-      object(cairo_path_data_t)#17 (2) {
+      object(stdClass)#40 (2) {
         ["x"]=>
         float(21)
         ["y"]=>
@@ -91,9 +89,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [6]=>
-    object(stdClass)#20 (1) {
+    object(cairo_path_data_t)#41 (1) {
       ["header"]=>
-      object(cairo_path_data_t)#19 (2) {
+      object(stdClass)#42 (2) {
         ["type"]=>
         int(1)
         ["length"]=>
@@ -101,9 +99,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [7]=>
-    object(stdClass)#22 (1) {
+    object(cairo_path_data_t)#43 (1) {
       ["point"]=>
-      object(cairo_path_data_t)#21 (2) {
+      object(stdClass)#44 (2) {
         ["x"]=>
         float(0)
         ["y"]=>
@@ -111,9 +109,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [8]=>
-    object(stdClass)#24 (1) {
+    object(cairo_path_data_t)#45 (1) {
       ["header"]=>
-      object(cairo_path_data_t)#23 (2) {
+      object(stdClass)#46 (2) {
         ["type"]=>
         int(3)
         ["length"]=>
@@ -121,9 +119,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [9]=>
-    object(stdClass)#26 (1) {
+    object(cairo_path_data_t)#47 (1) {
       ["header"]=>
-      object(cairo_path_data_t)#25 (2) {
+      object(stdClass)#48 (2) {
         ["type"]=>
         int(0)
         ["length"]=>
@@ -131,9 +129,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [10]=>
-    object(stdClass)#28 (1) {
+    object(cairo_path_data_t)#49 (1) {
       ["point"]=>
-      object(cairo_path_data_t)#27 (2) {
+      object(stdClass)#50 (2) {
         ["x"]=>
         float(10)
         ["y"]=>
@@ -141,9 +139,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [11]=>
-    object(stdClass)#30 (1) {
+    object(cairo_path_data_t)#51 (1) {
       ["header"]=>
-      object(cairo_path_data_t)#29 (2) {
+      object(stdClass)#52 (2) {
         ["type"]=>
         int(1)
         ["length"]=>
@@ -151,9 +149,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [12]=>
-    object(stdClass)#32 (1) {
+    object(cairo_path_data_t)#53 (1) {
       ["point"]=>
-      object(cairo_path_data_t)#31 (2) {
+      object(stdClass)#54 (2) {
         ["x"]=>
         float(31)
         ["y"]=>
@@ -161,9 +159,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [13]=>
-    object(stdClass)#34 (1) {
+    object(cairo_path_data_t)#55 (1) {
       ["header"]=>
-      object(cairo_path_data_t)#33 (2) {
+      object(stdClass)#56 (2) {
         ["type"]=>
         int(1)
         ["length"]=>
@@ -171,9 +169,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [14]=>
-    object(stdClass)#36 (1) {
+    object(cairo_path_data_t)#57 (1) {
       ["point"]=>
-      object(cairo_path_data_t)#35 (2) {
+      object(stdClass)#58 (2) {
         ["x"]=>
         float(31)
         ["y"]=>
@@ -181,9 +179,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [15]=>
-    object(stdClass)#38 (1) {
+    object(cairo_path_data_t)#59 (1) {
       ["header"]=>
-      object(cairo_path_data_t)#37 (2) {
+      object(stdClass)#60 (2) {
         ["type"]=>
         int(1)
         ["length"]=>
@@ -191,9 +189,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [16]=>
-    object(stdClass)#40 (1) {
+    object(cairo_path_data_t)#61 (1) {
       ["point"]=>
-      object(cairo_path_data_t)#39 (2) {
+      object(stdClass)#62 (2) {
         ["x"]=>
         float(10)
         ["y"]=>
@@ -201,9 +199,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [17]=>
-    object(stdClass)#42 (1) {
+    object(cairo_path_data_t)#63 (1) {
       ["header"]=>
-      object(cairo_path_data_t)#41 (2) {
+      object(stdClass)#64 (2) {
         ["type"]=>
         int(3)
         ["length"]=>
@@ -211,9 +209,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [18]=>
-    object(stdClass)#44 (1) {
+    object(cairo_path_data_t)#65 (1) {
       ["header"]=>
-      object(cairo_path_data_t)#43 (2) {
+      object(stdClass)#66 (2) {
         ["type"]=>
         int(0)
         ["length"]=>
@@ -221,9 +219,9 @@ object(cairo_path_t)#6 (3) {
       }
     }
     [19]=>
-    object(stdClass)#46 (1) {
+    object(cairo_path_data_t)#67 (1) {
       ["point"]=>
-      object(cairo_path_data_t)#45 (2) {
+      object(stdClass)#68 (2) {
         ["x"]=>
         float(10)
         ["y"]=>
@@ -231,4 +229,6 @@ object(cairo_path_t)#6 (3) {
       }
     }
   }
+  ["num_data"]=>
+  int(20)
 }

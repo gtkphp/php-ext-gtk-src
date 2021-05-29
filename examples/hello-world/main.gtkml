@@ -1,12 +1,14 @@
 <application id="org.gtk.example">
 <applicationwindow title="Window" height="200" width="200">
-    <?script
+    <script type="text/php">
         function print_hello (GtkWidget $widget, $data):void {
             echo "Hello $data\n";
         }
-    ?>
+    </script>
     <buttonbox>
-        <button label="Hello World" clicked="print_hello($../../button$, 'World'); gtk_widget_destroy($_GLOBAL['window']);"/>
+        <button label="Hello World" clicked="print_hello($button, $button->label);"/>
     </buttonbox>
+    <bal
 </applicationwindow>
 </application>
+
