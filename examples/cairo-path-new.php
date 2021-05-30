@@ -81,4 +81,3 @@ cairo_stroke ($cr);
 
 $status = cairo_surface_write_to_png($surface, "/home/dev/Projects/gtkphp/hello.png");
 */
-

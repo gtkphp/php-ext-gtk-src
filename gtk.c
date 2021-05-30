@@ -37,7 +37,7 @@
 /// include "php_gtkml.h"
 #include "php_gtk.h"
 
-/// include "php_glib.h"
+/// include "php_cairo.h"
 #include "php_cairo/cairo.h"
 #include "php_cairo/status.h"
 #include "php_cairo/rectangle.h"
@@ -48,6 +48,9 @@
 #include "php_cairo/png.h"
 #include "php_cairo/surface.h"
 #include "php_cairo/image-surface.h"
+#if CAIRO_VERSION >= 11600
+#include "php_cairo/pdf-metadata.h"
+#endif
 
 /// include "php_glib.h"
 #include "php_glib/hash-table.h"
@@ -394,6 +397,9 @@ PHP_MINIT_FUNCTION(gtk)
                         PHP_CAIRO_SURFACE_T_MINIT_FUNCTION(&ce, NULL);
                         PHP_CAIRO_IMAGE_SURFACE_T_MINIT_FUNCTION(NULL, NULL);
                         PHP_CAIRO_PNG_T_MINIT_FUNCTION(NULL, NULL);
+#if CAIRO_VERSION >= 11600
+                        PHP_CAIRO_PDF_METADATA_T_MINIT_FUNCTION(NULL, NULL);
+#endif
     //                  PHP_PANGO_MINIT_FUNCTION(&ce);
                         PHP_GLIB_HASH_TABLE_MINIT_FUNCTION(&ce, NULL);
                         PHP_GLIB_LIST_MINIT_FUNCTION(&ce, NULL);
@@ -444,6 +450,9 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
     PHP_CAIRO_SURFACE_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_IMAGE_SURFACE_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_PNG_T_MSHUTDOWN_FUNCTION();
+#if CAIRO_VERSION >= 11600
+    PHP_CAIRO_PDF_METADATA_T_MSHUTDOWN_FUNCTION(NULL, NULL);
+#endif
 
     PHP_GLIB_LIST_MSHUTDOWN_FUNCTION();
     PHP_GLIB_HASH_TABLE_MSHUTDOWN_FUNCTION();
@@ -503,6 +512,9 @@ PHP_RSHUTDOWN_FUNCTION(gtk)
     PHP_CAIRO_SURFACE_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_IMAGE_SURFACE_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_PNG_T_RSHUTDOWN_FUNCTION();
+#if CAIRO_VERSION >= 11600
+    PHP_CAIRO_PDF_METADATA_T_RSHUTDOWN_FUNCTION(NULL, NULL);
+#endif
 
     PHP_GLIB_HASH_TABLE_RSHUTDOWN_FUNCTION();
     PHP_GLIB_LIST_RSHUTDOWN_FUNCTION();
@@ -558,6 +570,9 @@ const zend_function_entry gtk_functions[] = {
     PHP_CAIRO_SURFACE_T_FE()
     PHP_CAIRO_IMAGE_SURFACE_T_FE()
     PHP_CAIRO_PNG_T_FE()
+#if CAIRO_VERSION >= 11600
+    PHP_CAIRO_PDF_METADATA_T_FE(NULL, NULL);
+#endif
 
     PHP_GLIB_LIST_FE()
     PHP_GLIB_HASH_TABLE_FE()
