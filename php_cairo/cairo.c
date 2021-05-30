@@ -71,6 +71,7 @@ php_cairo_t_create_object(zend_class_entry *class_type)
 
     intern->std.handlers = &php_cairo_t_handlers;
 
+
     TRACE("php_cairo_t_create_object(%p) / %d\n", &intern->std, intern->std.gc.refcount);
     return &intern->std;
 }
