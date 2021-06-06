@@ -24,9 +24,6 @@
 
 
 
-
-
-
 #include <php.h>
 #include <php_ini.h>
 #include <zend_interfaces.h>
@@ -44,38 +41,41 @@
 #include "php_cairo/path-data-type.h"
 #include "php_cairo/path-data.h"
 #include "php_cairo/path.h"
-#include "php_cairo/matrix.h"
 #include "php_cairo/png.h"
+#include "php_cairo/matrix.h"
 #include "php_cairo/surface.h"
+#if CAIRO_HAS_IMAGE_SURFACE
+#include "php_cairo/format.h"
 #include "php_cairo/image-surface.h"
+#endif
 #if CAIRO_VERSION >= 11600
-#include "php_cairo/pdf-metadata.h"
+//#include "php_cairo/pdf-metadata.h"
 #endif
 
 /// include "php_glib.h"
-#include "php_glib/hash-table.h"
-#include "php_glib/list.h"
-#include "php_glib/quark.h"
-#include "php_glib/error.h"
+//#include "php_glib/hash-table.h"
+//#include "php_glib/list.h"
+//#include "php_glib/quark.h"
+//#include "php_glib/error.h"
 
 /// include "php_gobject.h"
-#include "php_gobject/object.h"
-#include "php_gobject/signal.h"
+//#include "php_gobject/object.h"
+//#include "php_gobject/signal.h"
 
 /// include "php_gdk.h"
-#include "php_gdk/pixbuf.h"
-#include "php_gdk/rectangle.h"
+//#include "php_gdk/pixbuf.h"
+//#include "php_gdk/rectangle.h"
 
 /// include "php_gtk.h"
-#include "php_gtk/widget.h"
-#include "php_gtk/requisition.h"
-#include "php_gtk/requested-size.h"
-#include "php_gtk/container.h"
-#include "php_gtk/bin.h"
-#include "php_gtk/box.h"
-#include "php_gtk/window.h"
-#include "php_gtk/button.h"
-#include "php_gtk/main.h"
+//#include "php_gtk/widget.h"
+//#include "php_gtk/requisition.h"
+//#include "php_gtk/requested-size.h"
+//#include "php_gtk/container.h"
+//#include "php_gtk/bin.h"
+//#include "php_gtk/box.h"
+//#include "php_gtk/window.h"
+//#include "php_gtk/button.h"
+//#include "php_gtk/main.h"
 
 
 
@@ -131,6 +131,9 @@ get_glyph (cairo_t *cr, const char *utf8, cairo_glyph_t *glyph)
     return CAIRO_STATUS_SUCCESS;
 }
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_confirm_gtk_compiled, 0, ZEND_SEND_BY_VAL, 1)
+    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, msg)
+ZEND_END_ARG_INFO()
 PHP_FUNCTION(confirm_gtk_compiled)
 {
     cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 200, 200);
@@ -390,40 +393,39 @@ PHP_MINIT_FUNCTION(gtk)
                         PHP_CAIRO_T_MINIT_FUNCTION(&ce, NULL);
                         PHP_CAIRO_STATUS_T_MINIT_FUNCTION(NULL, NULL);
                         PHP_CAIRO_RECTANGLE_T_MINIT_FUNCTION(&ce, NULL);
-                        PHP_CAIRO_PATH_DATA_TYPE_T_MINIT_FUNCTION(&ce, NULL);
+                        PHP_CAIRO_PATH_DATA_TYPE_T_MINIT_FUNCTION(NULL, NULL);
                         PHP_CAIRO_PATH_DATA_T_MINIT_FUNCTION(&ce, NULL);
                         PHP_CAIRO_PATH_T_MINIT_FUNCTION(&ce, NULL);
                         PHP_CAIRO_MATRIX_T_MINIT_FUNCTION(&ce, NULL);
                         PHP_CAIRO_SURFACE_T_MINIT_FUNCTION(&ce, NULL);
-                        PHP_CAIRO_IMAGE_SURFACE_T_MINIT_FUNCTION(NULL, NULL);
+#if CAIRO_HAS_IMAGE_SURFACE
+                        PHP_CAIRO_FORMAT_T_MINIT_FUNCTION(NULL, NULL);
+    //                    PHP_CAIRO_IMAGE_SURFACE_MINIT_FUNCTION(NULL, NULL);
+#endif
                         PHP_CAIRO_PNG_T_MINIT_FUNCTION(NULL, NULL);
 #if CAIRO_VERSION >= 11600
-                        PHP_CAIRO_PDF_METADATA_T_MINIT_FUNCTION(NULL, NULL);
+    //                    PHP_CAIRO_PDF_METADATA_T_MINIT_FUNCTION(NULL, NULL);
 #endif
     //                  PHP_PANGO_MINIT_FUNCTION(&ce);
-                        PHP_GLIB_HASH_TABLE_MINIT_FUNCTION(&ce, NULL);
-                        PHP_GLIB_LIST_MINIT_FUNCTION(&ce, NULL);
-                        PHP_GLIB_ERROR_MINIT_FUNCTION(&ce, NULL);
-    gobject_object_ce = PHP_GOBJECT_OBJECT_MINIT_FUNCTION(&ce, NULL);
-                        PHP_GOBJECT_SIGNAL_MINIT_FUNCTION(&ce, NULL);
-    gdk_pixbuf_ce     = PHP_GDK_PIXBUF_MINIT_FUNCTION(&ce, gobject_object_ce);
-    gdk_rectangle_ce  = PHP_GDK_RECTANGLE_MINIT_FUNCTION(&ce, NULL);
+    //                    PHP_GLIB_HASH_TABLE_MINIT_FUNCTION(&ce, NULL);
+    //                    PHP_GLIB_LIST_MINIT_FUNCTION(&ce, NULL);
+    //                    PHP_GLIB_ERROR_MINIT_FUNCTION(&ce, NULL);
+    //gobject_object_ce = PHP_GOBJECT_OBJECT_MINIT_FUNCTION(&ce, NULL);
+    //                    PHP_GOBJECT_SIGNAL_MINIT_FUNCTION(&ce, NULL);
+    //gdk_pixbuf_ce     = PHP_GDK_PIXBUF_MINIT_FUNCTION(&ce, gobject_object_ce);
+    //gdk_rectangle_ce  = PHP_GDK_RECTANGLE_MINIT_FUNCTION(&ce, NULL);
 
-    gtk_widget_ce     = PHP_GTK_WIDGET_MINIT_FUNCTION(&ce, gobject_object_ce);
-                        PHP_GTK_REQUESTED_SIZE_MINIT_FUNCTION(&ce, NULL);
-                        PHP_GTK_REQUISITION_MINIT_FUNCTION(&ce, NULL);
-    gtk_container_ce  = PHP_GTK_CONTAINER_MINIT_FUNCTION(&ce, gtk_widget_ce);
-    gtk_bin_ce        = PHP_GTK_BIN_MINIT_FUNCTION(&ce, gtk_container_ce);
-    gtk_box_ce        = PHP_GTK_BOX_MINIT_FUNCTION(&ce, gtk_container_ce);
-    gtk_window_ce     = PHP_GTK_WINDOW_MINIT_FUNCTION(&ce, gtk_bin_ce);
-    gtk_button_ce     = PHP_GTK_BUTTON_MINIT_FUNCTION(&ce, gtk_bin_ce);
+    //gtk_widget_ce     = PHP_GTK_WIDGET_MINIT_FUNCTION(&ce, gobject_object_ce);
+    //                    PHP_GTK_REQUESTED_SIZE_MINIT_FUNCTION(&ce, NULL);
+    //                    PHP_GTK_REQUISITION_MINIT_FUNCTION(&ce, NULL);
+    //gtk_container_ce  = PHP_GTK_CONTAINER_MINIT_FUNCTION(&ce, gtk_widget_ce);
+    //gtk_bin_ce        = PHP_GTK_BIN_MINIT_FUNCTION(&ce, gtk_container_ce);
+    //gtk_box_ce        = PHP_GTK_BOX_MINIT_FUNCTION(&ce, gtk_container_ce);
+    //gtk_window_ce     = PHP_GTK_WINDOW_MINIT_FUNCTION(&ce, gtk_bin_ce);
+    //gtk_button_ce     = PHP_GTK_BUTTON_MINIT_FUNCTION(&ce, gtk_bin_ce);
 
-    //REGISTER_GTK_ENUM(GTK_ORIENTATION_HORIZONTAL);
-    zend_register_long_constant("GTK_ORIENTATION_HORIZONTAL", sizeof("GTK_ORIENTATION_HORIZONTAL")-1,
-                                GTK_ORIENTATION_HORIZONTAL, CONST_CS | CONST_PERSISTENT, module_number);
-    //REGISTER_GTK_ENUM(GTK_ORIENTATION_VERTICAL);
-    zend_register_long_constant("GTK_ORIENTATION_VERTICAL", sizeof("GTK_ORIENTATION_VERTICAL")-1,
-                                GTK_ORIENTATION_VERTICAL, CONST_CS | CONST_PERSISTENT, module_number);
+    //zend_register_long_constant("GTK_ORIENTATION_HORIZONTAL", sizeof("GTK_ORIENTATION_HORIZONTAL")-1, GTK_ORIENTATION_HORIZONTAL, CONST_CS | CONST_PERSISTENT, module_number);
+    //zend_register_long_constant("GTK_ORIENTATION_VERTICAL", sizeof("GTK_ORIENTATION_VERTICAL")-1, GTK_ORIENTATION_VERTICAL, CONST_CS | CONST_PERSISTENT, module_number);
 
 	return SUCCESS;
 }
@@ -443,37 +445,40 @@ PHP_MSHUTDOWN_FUNCTION(gtk)
     PHP_CAIRO_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_STATUS_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_RECTANGLE_T_MSHUTDOWN_FUNCTION();
-    PHP_CAIRO_PATH_DATA_TYPE_T_MSHUTDOWN_FUNCTION();
+    //PHP_CAIRO_PATH_DATA_TYPE_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_PATH_DATA_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_PATH_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_MATRIX_T_MSHUTDOWN_FUNCTION();
     PHP_CAIRO_SURFACE_T_MSHUTDOWN_FUNCTION();
-    PHP_CAIRO_IMAGE_SURFACE_T_MSHUTDOWN_FUNCTION();
+#if CAIRO_HAS_IMAGE_SURFACE
+    PHP_CAIRO_FORMAT_T_MSHUTDOWN_FUNCTION();
+    //PHP_CAIRO_IMAGE_SURFACE_MSHUTDOWN_FUNCTION();
+#endif
     PHP_CAIRO_PNG_T_MSHUTDOWN_FUNCTION();
 #if CAIRO_VERSION >= 11600
-    PHP_CAIRO_PDF_METADATA_T_MSHUTDOWN_FUNCTION(NULL, NULL);
+    //PHP_CAIRO_PDF_METADATA_T_MSHUTDOWN_FUNCTION(NULL, NULL);
 #endif
 
-    PHP_GLIB_LIST_MSHUTDOWN_FUNCTION();
-    PHP_GLIB_HASH_TABLE_MSHUTDOWN_FUNCTION();
-    PHP_GLIB_ERROR_MSHUTDOWN_FUNCTION();
-    PHP_GLIB_QUARK_MSHUTDOWN_FUNCTION();
+    //PHP_GLIB_LIST_MSHUTDOWN_FUNCTION();
+    //PHP_GLIB_HASH_TABLE_MSHUTDOWN_FUNCTION();
+    //PHP_GLIB_ERROR_MSHUTDOWN_FUNCTION();
+    //PHP_GLIB_QUARK_MSHUTDOWN_FUNCTION();
 
-    PHP_GOBJECT_OBJECT_MSHUTDOWN_FUNCTION();
-    PHP_GOBJECT_SIGNAL_MSHUTDOWN_FUNCTION();
+    //PHP_GOBJECT_OBJECT_MSHUTDOWN_FUNCTION();
+    //PHP_GOBJECT_SIGNAL_MSHUTDOWN_FUNCTION();
 
-    PHP_GDK_PIXBUF_MSHUTDOWN_FUNCTION();
-    PHP_GDK_RECTANGLE_MSHUTDOWN_FUNCTION();
+    //PHP_GDK_PIXBUF_MSHUTDOWN_FUNCTION();
+    //PHP_GDK_RECTANGLE_MSHUTDOWN_FUNCTION();
 
 
-    PHP_GTK_WIDGET_MSHUTDOWN_FUNCTION();
-    PHP_GTK_REQUESTED_SIZE_MSHUTDOWN_FUNCTION();
-    PHP_GTK_REQUISITION_MSHUTDOWN_FUNCTION();
-    PHP_GTK_CONTAINER_MSHUTDOWN_FUNCTION();
-    PHP_GTK_BIN_MSHUTDOWN_FUNCTION();
-    PHP_GTK_WINDOW_MSHUTDOWN_FUNCTION();
-    PHP_GTK_BUTTON_MSHUTDOWN_FUNCTION();
-    PHP_GTK_BOX_MSHUTDOWN_FUNCTION();
+    //PHP_GTK_WIDGET_MSHUTDOWN_FUNCTION();
+    //PHP_GTK_REQUESTED_SIZE_MSHUTDOWN_FUNCTION();
+    //PHP_GTK_REQUISITION_MSHUTDOWN_FUNCTION();
+    //PHP_GTK_CONTAINER_MSHUTDOWN_FUNCTION();
+    //PHP_GTK_BIN_MSHUTDOWN_FUNCTION();
+    //PHP_GTK_WINDOW_MSHUTDOWN_FUNCTION();
+    //PHP_GTK_BUTTON_MSHUTDOWN_FUNCTION();
+    //PHP_GTK_BOX_MSHUTDOWN_FUNCTION();
 
     //zend_hash_destroy(&php_glib_object_handlers);
     zend_hash_destroy(&classes);
@@ -505,36 +510,39 @@ PHP_RSHUTDOWN_FUNCTION(gtk)
     PHP_CAIRO_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_STATUS_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_RECTANGLE_T_RSHUTDOWN_FUNCTION();
-    PHP_CAIRO_PATH_DATA_TYPE_T_RSHUTDOWN_FUNCTION();
+    //PHP_CAIRO_PATH_DATA_TYPE_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_PATH_DATA_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_PATH_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_MATRIX_T_RSHUTDOWN_FUNCTION();
     PHP_CAIRO_SURFACE_T_RSHUTDOWN_FUNCTION();
-    PHP_CAIRO_IMAGE_SURFACE_T_RSHUTDOWN_FUNCTION();
+#if CAIRO_HAS_IMAGE_SURFACE
+    PHP_CAIRO_FORMAT_T_RSHUTDOWN_FUNCTION();
+    //PHP_CAIRO_IMAGE_SURFACE_RSHUTDOWN_FUNCTION();
+#endif
     PHP_CAIRO_PNG_T_RSHUTDOWN_FUNCTION();
 #if CAIRO_VERSION >= 11600
-    PHP_CAIRO_PDF_METADATA_T_RSHUTDOWN_FUNCTION(NULL, NULL);
+    //PHP_CAIRO_PDF_METADATA_T_RSHUTDOWN_FUNCTION(NULL, NULL);
 #endif
 
-    PHP_GLIB_HASH_TABLE_RSHUTDOWN_FUNCTION();
-    PHP_GLIB_LIST_RSHUTDOWN_FUNCTION();
-    PHP_GLIB_ERROR_RSHUTDOWN_FUNCTION();
-    PHP_GLIB_QUARK_RSHUTDOWN_FUNCTION();
+    //PHP_GLIB_HASH_TABLE_RSHUTDOWN_FUNCTION();
+    //PHP_GLIB_LIST_RSHUTDOWN_FUNCTION();
+    //PHP_GLIB_ERROR_RSHUTDOWN_FUNCTION();
+    //PHP_GLIB_QUARK_RSHUTDOWN_FUNCTION();
 
-    PHP_GOBJECT_OBJECT_RSHUTDOWN_FUNCTION();
-    PHP_GOBJECT_SIGNAL_RSHUTDOWN_FUNCTION();
+    //PHP_GOBJECT_OBJECT_RSHUTDOWN_FUNCTION();
+    //PHP_GOBJECT_SIGNAL_RSHUTDOWN_FUNCTION();
 
-    PHP_GDK_PIXBUF_RSHUTDOWN_FUNCTION();
-    PHP_GDK_RECTANGLE_RSHUTDOWN_FUNCTION();
+    //PHP_GDK_PIXBUF_RSHUTDOWN_FUNCTION();
+    //PHP_GDK_RECTANGLE_RSHUTDOWN_FUNCTION();
 
-    PHP_GTK_WIDGET_RSHUTDOWN_FUNCTION();
-    PHP_GTK_REQUESTED_SIZE_RSHUTDOWN_FUNCTION();
-    PHP_GTK_REQUISITION_RSHUTDOWN_FUNCTION();
-    PHP_GTK_CONTAINER_RSHUTDOWN_FUNCTION();
-    PHP_GTK_BIN_RSHUTDOWN_FUNCTION();
-    PHP_GTK_BOX_RSHUTDOWN_FUNCTION();
-    PHP_GTK_WINDOW_RSHUTDOWN_FUNCTION();
-    PHP_GTK_BUTTON_RSHUTDOWN_FUNCTION();
+    //PHP_GTK_WIDGET_RSHUTDOWN_FUNCTION();
+    //PHP_GTK_REQUESTED_SIZE_RSHUTDOWN_FUNCTION();
+    //PHP_GTK_REQUISITION_RSHUTDOWN_FUNCTION();
+    //PHP_GTK_CONTAINER_RSHUTDOWN_FUNCTION();
+    //PHP_GTK_BIN_RSHUTDOWN_FUNCTION();
+    //PHP_GTK_BOX_RSHUTDOWN_FUNCTION();
+    //PHP_GTK_WINDOW_RSHUTDOWN_FUNCTION();
+    //PHP_GTK_BUTTON_RSHUTDOWN_FUNCTION();
 
     return SUCCESS;
 }
@@ -554,45 +562,49 @@ PHP_MINFO_FUNCTION(gtk)
 }
 /* }}} */
 
+
 /* {{{ gtk_functions[]
  *
  * Every user visible function must have an entry in gtk_functions[].
  */
 const zend_function_entry gtk_functions[] = {
-    PHP_GTK_FE(confirm_gtk_compiled,	NULL)		     /* For testing, remove later. */
+    PHP_GTK_FE(confirm_gtk_compiled,	arginfo_confirm_gtk_compiled)		     /* For testing, remove later. */
     PHP_CAIRO_T_FE()
     PHP_CAIRO_STATUS_T_FE()
     PHP_CAIRO_RECTANGLE_T_FE()
-    PHP_CAIRO_PATH_DATA_TYPE_T_FE()
+    //PHP_CAIRO_PATH_DATA_TYPE_T_FE()
     PHP_CAIRO_PATH_DATA_T_FE()
     PHP_CAIRO_PATH_T_FE()
     PHP_CAIRO_MATRIX_T_FE()
     PHP_CAIRO_SURFACE_T_FE()
-    PHP_CAIRO_IMAGE_SURFACE_T_FE()
+#if CAIRO_HAS_IMAGE_SURFACE
+    PHP_CAIRO_FORMAT_T_FE()
+    PHP_CAIRO_IMAGE_SURFACE_FE()
+#endif
     PHP_CAIRO_PNG_T_FE()
 #if CAIRO_VERSION >= 11600
-    PHP_CAIRO_PDF_METADATA_T_FE(NULL, NULL);
+    //PHP_CAIRO_PDF_METADATA_T_FE(NULL, NULL);
 #endif
 
-    PHP_GLIB_LIST_FE()
-    PHP_GLIB_HASH_TABLE_FE()
-    PHP_GLIB_ERROR_FE()
-    PHP_GLIB_QUARK_FE()
+    //PHP_GLIB_LIST_FE()
+    //PHP_GLIB_HASH_TABLE_FE()
+    //PHP_GLIB_ERROR_FE()
+    //PHP_GLIB_QUARK_FE()
 
-    PHP_GOBJECT_OBJECT_FE()
-    PHP_GOBJECT_SIGNAL_FE()
+    //PHP_GOBJECT_OBJECT_FE()
+    //PHP_GOBJECT_SIGNAL_FE()
 
-    PHP_GDK_PIXBUF_FE()
-    PHP_GDK_RECTANGLE_FE()
+    //PHP_GDK_PIXBUF_FE()
+    //PHP_GDK_RECTANGLE_FE()
 
-    PHP_GTK_WIDGET_FE()
-    PHP_GTK_REQUISITION_FE()
-    PHP_GTK_CONTAINER_FE()
-    PHP_GTK_BIN_FE()
-    PHP_GTK_BOX_FE()
-    PHP_GTK_WINDOW_FE()
-    PHP_GTK_BUTTON_FE()
-    PHP_GTK_MAIN_FE()
+    //PHP_GTK_WIDGET_FE()
+    //PHP_GTK_REQUISITION_FE()
+    //PHP_GTK_CONTAINER_FE()
+    //PHP_GTK_BIN_FE()
+    //PHP_GTK_BOX_FE()
+    //PHP_GTK_WINDOW_FE()
+    //PHP_GTK_BUTTON_FE()
+    //PHP_GTK_MAIN_FE()
     PHP_FE_END	/* Must be the last line in gtk_functions[] */
 };
 /* }}} */

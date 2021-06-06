@@ -1,6 +1,6 @@
 /*
 +----------------------------------------------------------------------+
-| PHP Version 7                                                        |
+| PHP Version 8                                                        |
 +----------------------------------------------------------------------+
 | Copyright (c) 1997-2018 The PHP Group                                |
 +----------------------------------------------------------------------+
@@ -39,8 +39,19 @@ extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
 
 
-zend_class_entry     *php_cairo_rectangle_t_class_entry;
+zend_class_entry     *php_cairo_rectangle_t_class_entry;// struct
 zend_object_handlers  php_cairo_rectangle_t_handlers;
+
+
+
+
+enum _php_cairo_rectangle_t_properties {
+    PHP_CAIRO_RECTANGLE_T_X = 1,
+    PHP_CAIRO_RECTANGLE_T_Y = 2,
+    PHP_CAIRO_RECTANGLE_T_WIDTH = 3,
+    PHP_CAIRO_RECTANGLE_T_HEIGHT = 4
+};
+//typedef enum php_cairo_rectangle_t_properties php_cairo_rectangle_t_properties;
 
 
 
@@ -62,8 +73,7 @@ php_cairo_rectangle_t_methods[] = {
 static zend_object*
 php_cairo_rectangle_t_create_object(zend_class_entry *class_type)
 {
-    php_cairo_rectangle_t *intern = ecalloc(1, sizeof(php_cairo_rectangle_t) + zend_object_properties_size(class_type));
-
+    php_cairo_rectangle_t *intern = zend_object_alloc(sizeof(php_cairo_rectangle_t), class_type);
     zend_object_std_init(&intern->std, class_type);
     object_properties_init(&intern->std, class_type);
 
@@ -82,7 +92,7 @@ php_cairo_rectangle_t_create_object(zend_class_entry *class_type)
 
 static void
 php_cairo_rectangle_t_dtor_object(zend_object *obj) {
-    php_cairo_rectangle_t *intern = ZOBJ_TO_PHP_CAIRO_RECTANGLE_T(obj);
+    //php_cairo_rectangle_t *intern = ZOBJ_TO_PHP_CAIRO_RECTANGLE_T(obj);
 
 }
 
@@ -103,6 +113,7 @@ php_cairo_rectangle_t_free_object(zend_object *object)
 
 
 
+
 /** TODO: implement all the types */
 /** rename it by : php_gtkml_setter_[double|long|string] */
 static void
@@ -111,9 +122,9 @@ php_cairo_rectangle_t_setter_double(php_cairo_rectangle_t *intern, zval *value, 
         ZVAL_SET_DOUBLE(dest, value->value.dval);
     } else {
         zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
-        zend_string *type = zend_zval_get_type(value);
+        const char *type_name = zend_zval_type_name(value);
         if (strict_types) {
-            zend_internal_type_error(1, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_rectangle_t::$%s of type float,", type->val, name);
+            zend_type_error("Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_rectangle_t::$%s of type float,", type_name, name);
         } else {
             int allow_errors = -1;
             zend_long lval=0;
@@ -122,34 +133,26 @@ php_cairo_rectangle_t_setter_double(php_cairo_rectangle_t *intern, zval *value, 
                 zend_uchar z_type = is_numeric_string(Z_STRVAL_P(value), Z_STRLEN_P(value), &lval, &dval, allow_errors);
                 if (z_type==IS_LONG) {
                     ZVAL_SET_DOUBLE(dest, (double)lval);
-                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to float(%f) convertion,", type->val, value->value.str->val, (double)lval);
+                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to float(%f) convertion,", type_name, value->value.str->val, (double)lval);
                     return;
                 } else if(z_type==IS_DOUBLE) {
                     ZVAL_SET_DOUBLE(dest, dval);
-                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to float(%f) convertion,", type->val, value->value.str->val, dval);
+                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to float(%f) convertion,", type_name, value->value.str->val, dval);
                     return;
                 }
             }
             if (Z_TYPE_P(value)==IS_LONG) {
                 ZVAL_SET_DOUBLE(dest, (double)value->value.lval);
-                zend_error(E_USER_NOTICE, "Implicite int(%d) to float(%f) convertion,", value->value.lval, (double)value->value.lval);
+                zend_error(E_USER_NOTICE, "Implicite int(%d) to float(%f) convertion,", (int)value->value.lval, (double)value->value.lval);
                 return;
             }
-            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_rectangle_t::$%s of type float,", type->val, name);
+            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_rectangle_t::$%s of type float,", type_name, name);
         }
     }
 }
 
 
 
-
-enum _php_cairo_rectangle_t_properties {
-    PHP_CAIRO_RECTANGLE_T_X = 1,
-    PHP_CAIRO_RECTANGLE_T_Y = 2,
-    PHP_CAIRO_RECTANGLE_T_WIDTH = 3,
-    PHP_CAIRO_RECTANGLE_T_HEIGHT = 4
-};
-//typedef enum php_cairo_rectangle_t_properties php_cairo_rectangle_t_properties;
 
 struct PhpCairoRectangleTProperty {
   const char *name;
@@ -190,28 +193,32 @@ php_cairo_rectangle_t_properties_lookup (const char *str, size_t len)
 
 /* {{{ php_cairo_rectangle_t_read_property */
 static zval*
-php_cairo_rectangle_t_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
+php_cairo_rectangle_t_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv)
 {
-    php_cairo_rectangle_t *intern = ZVAL_GET_PHP_CAIRO_RECTANGLE_T(object);
-    zend_string *member_str = member->value.str;
+    php_cairo_rectangle_t *intern = ZOBJ_TO_PHP_CAIRO_RECTANGLE_T(object);
 
-    struct PhpCairoRectangleTProperty *cmd = php_cairo_rectangle_t_properties_lookup(member_str->val, member_str->len);
+    const struct PhpCairoRectangleTProperty *cmd = php_cairo_rectangle_t_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
         switch(cmd->code) {
         case PHP_CAIRO_RECTANGLE_T_X:
             ZVAL_COPY(rv, &intern->x);
+            return rv;
             break;
         case PHP_CAIRO_RECTANGLE_T_Y:
             ZVAL_COPY(rv, &intern->y);
+            return rv;
             break;
         case PHP_CAIRO_RECTANGLE_T_WIDTH:
             ZVAL_COPY(rv, &intern->width);
+            return rv;
             break;
         case PHP_CAIRO_RECTANGLE_T_HEIGHT:
             ZVAL_COPY(rv, &intern->height);
+            return rv;
             break;
         default:
-            zend_internal_type_error(1, "Internal bug,");
+            //zend_internal_type_error(1, "Internal bug,");
+            //zend_error(E_USER_NOTICE, "Internal bug,");
             break;
         }
     } else {
@@ -223,14 +230,12 @@ php_cairo_rectangle_t_read_property(zval *object, zval *member, int type, void *
 /* }}} */
 
 /* {{{ php_cairo_rectangle_t_write_property */
-static void
-php_cairo_rectangle_t_write_property(zval *object, zval *member, zval *value, void **cache_slot)
+static zval*
+php_cairo_rectangle_t_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot)
 {
-    php_cairo_rectangle_t *intern = ZVAL_GET_PHP_CAIRO_RECTANGLE_T(object);
-    zend_string *member_str = member->value.str;
-
+    php_cairo_rectangle_t *intern = ZOBJ_TO_PHP_CAIRO_RECTANGLE_T(object);
     // struct
-    struct PhpCairoRectangleTProperty *cmd = php_cairo_rectangle_t_properties_lookup(member_str->val, member_str->len);
+    const struct PhpCairoRectangleTProperty *cmd = php_cairo_rectangle_t_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
         switch(cmd->code) {
         case PHP_CAIRO_RECTANGLE_T_X:
@@ -249,18 +254,18 @@ php_cairo_rectangle_t_write_property(zval *object, zval *member, zval *value, vo
     } else {
         // property not found
     }
+    return value;
 }
 /* }}} */
 
 /* {{{ php_cairo_rectangle_t_get_property_ptr_ptr */
-static zval *
-php_cairo_rectangle_t_get_property_ptr_ptr(zval *object, zval *member, int type, void **cache_slot) {
-    php_cairo_rectangle_t  *intern = ZVAL_GET_PHP_CAIRO_RECTANGLE_T(object);
-    zend_string *member_str = member->value.str;
-    char *str = member_str->val;
+static zval*
+php_cairo_rectangle_t_get_property_ptr_ptr(zend_object *object, zend_string *member_str, int type, void **cache_slot)
+{
+    php_cairo_rectangle_t *intern = ZOBJ_TO_PHP_CAIRO_RECTANGLE_T(object);
     zval *retval = NULL;
 
-    struct PhpCairoRectangleTProperty *cmd = php_cairo_rectangle_t_properties_lookup(member_str->val, member_str->len);
+    const struct PhpCairoRectangleTProperty *cmd = php_cairo_rectangle_t_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
         switch(cmd->code) {
         case PHP_CAIRO_RECTANGLE_T_X:
@@ -285,9 +290,9 @@ php_cairo_rectangle_t_get_property_ptr_ptr(zval *object, zval *member, int type,
 
 /* {{{ php_cairo_rectangle_t_get_debug_info */
 static HashTable*
-php_cairo_rectangle_t_get_debug_info(zval *object, int *is_temp)
+php_cairo_rectangle_t_get_debug_info(zend_object *object, int *is_temp)
 {
-    php_cairo_rectangle_t  *intern = ZVAL_GET_PHP_CAIRO_RECTANGLE_T(object);
+    php_cairo_rectangle_t  *intern = ZOBJ_TO_PHP_CAIRO_RECTANGLE_T(object);
     HashTable   *debug_info,
     *std_props;
 
@@ -360,8 +365,8 @@ php_cairo_rectangle_t_class_init(zend_class_entry *container_ce, zend_class_entr
  /* {{{ cairo_rectangle_t::__construct() */
 PHP_METHOD(cairo_rectangle_t, __construct)
 {
-    zend_object *zobj = Z_OBJ_P(getThis());
-    php_cairo_rectangle_t *self = ZOBJ_TO_PHP_CAIRO_RECTANGLE_T(zobj);
+    //zend_object *zobj = Z_OBJ_P(getThis());
+    //php_cairo_rectangle_t *self = ZOBJ_TO_PHP_CAIRO_RECTANGLE_T(zobj);
 
 
 }

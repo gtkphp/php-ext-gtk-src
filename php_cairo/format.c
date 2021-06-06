@@ -30,8 +30,10 @@
 
 #include <cairo/cairo.h>
 
+#if CAIRO_HAS_IMAGE_SURFACE
+
 #include "php_gtk.h"
-#include "php_cairo/path-data-type.h"
+#include "php_cairo/format.h"
 
 
 extern HashTable         classes;
@@ -43,18 +45,28 @@ extern zend_module_entry gtk_module_entry;
  | PHP_MINIT                                                            |
  +----------------------------------------------------------------------*/
 
- /*{{{ php_cairo_path_data_type_t_class_init */
+ /*{{{ php_cairo_format_t_class_init */
 zend_class_entry*
-php_cairo_path_data_type_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
+php_cairo_format_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
 
-    zend_register_long_constant("CAIRO_PATH_MOVE_TO", sizeof("CAIRO_PATH_MOVE_TO")-1,
-        CAIRO_PATH_MOVE_TO, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
-    zend_register_long_constant("CAIRO_PATH_LINE_TO", sizeof("CAIRO_PATH_LINE_TO")-1,
-        CAIRO_PATH_LINE_TO, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
-    zend_register_long_constant("CAIRO_PATH_CURVE_TO", sizeof("CAIRO_PATH_CURVE_TO")-1,
-        CAIRO_PATH_CURVE_TO, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
-    zend_register_long_constant("CAIRO_PATH_CLOSE_PATH", sizeof("CAIRO_PATH_CLOSE_PATH")-1,
-        CAIRO_PATH_CLOSE_PATH, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("CAIRO_FORMAT_INVALID", sizeof("CAIRO_FORMAT_INVALID")-1,
+        CAIRO_FORMAT_INVALID, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("CAIRO_FORMAT_ARGB32", sizeof("CAIRO_FORMAT_ARGB32")-1,
+        CAIRO_FORMAT_ARGB32, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("CAIRO_FORMAT_RGB24", sizeof("CAIRO_FORMAT_RGB24")-1,
+        CAIRO_FORMAT_RGB24, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("CAIRO_FORMAT_A8", sizeof("CAIRO_FORMAT_A8")-1,
+        CAIRO_FORMAT_A8, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+    zend_register_long_constant("CAIRO_FORMAT_A1", sizeof("CAIRO_FORMAT_A1")-1,
+        CAIRO_FORMAT_A1, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#if CAIRO_VERSION >= 10200
+    zend_register_long_constant("CAIRO_FORMAT_RGB16_565", sizeof("CAIRO_FORMAT_RGB16_565")-1,
+        CAIRO_FORMAT_RGB16_565, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#endif
+#if CAIRO_VERSION >= 11200
+    zend_register_long_constant("CAIRO_FORMAT_RGB30", sizeof("CAIRO_FORMAT_RGB30")-1,
+        CAIRO_FORMAT_RGB30, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#endif
 
     return NULL;
 }/*}}} */
@@ -75,6 +87,28 @@ php_cairo_path_data_type_t_class_init(zend_class_entry *container_ce, zend_class
  | PHP_FUNCTION                                                         |
  +----------------------------------------------------------------------*/
 
+#if CAIRO_VERSION >= 10600
+/* {{{ proto int cairo_format_stride_for_width(int format, int width)
+   This function provides a stride value that will respect all alignment... */
+PHP_FUNCTION(cairo_format_stride_for_width)
+{
+    zend_long zformat;
+    zend_long width;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2);
+        Z_PARAM_LONG(zformat);
+        Z_PARAM_LONG(width);
+    ZEND_PARSE_PARAMETERS_END();
+
+    cairo_format_t format = zformat;
+
+    int ret = cairo_format_stride_for_width(format, width);
+
+    RETURN_LONG(ret);
+}/* }}} */
+#endif
+
+#endif /* CAIRO_HAS_IMAGE_SURFACE */
 
 /*
  * Local variables:

@@ -35,7 +35,7 @@
 
 extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
-extern zend_class_entry *php_cairo_surface_t_class_entry;
+
 
 //#define TRACE(format, string, option) php_printf(format, string, option)
 #define TRACE(format, string, option)
@@ -52,12 +52,6 @@ extern zend_class_entry *php_cairo_surface_t_class_entry;
  | PHP_MINIT                                                            |
  +----------------------------------------------------------------------*/
 
-/*{{{ php_cairo_image_surface_t_class_init */
-zend_class_entry*
-php_cairo_image_surface_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
-    return php_cairo_surface_t_class_entry;
-}/*}}} */
-
 /*----------------------------------------------------------------------+
  | Zend-User utils                                                      |
  +----------------------------------------------------------------------*/
@@ -73,158 +67,168 @@ php_cairo_image_surface_t_class_init(zend_class_entry *container_ce, zend_class_
 /*----------------------------------------------------------------------+
  | PHP_FUNCTION                                                         |
  +----------------------------------------------------------------------*/
-#if IS_IMPLEMENTED
-
-/* {{{ proto int cairo_format_stride_for_width(mixed format, int width) */
-PHP_FUNCTION(cairo_format_stride_for_width)
-{
-    zval *zformat = NULL;
-    zval *zwidth = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zformat)
-        Z_PARAM_ZVAL(zwidth)
-    ZEND_PARSE_PARAMETERS_END();
-
-    zval * *__format = zformat;
-    zend_long  *__width = zwidth;
-    php_cairo_image_surface_t *__ret = php_cairo_format_stride_for_width(, __format, __width);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-}/* }}} */
-#endif
-
-
-/* {{{ proto mixed cairo_image_surface_create(mixed format, int width, int height) */
+/* {{{ proto php_cairo_surface_t cairo_image_surface_create(int format, int width, int height)
+   Creates an image surface of the specified format and dimensions. */
 PHP_FUNCTION(cairo_image_surface_create)
 {
-    zval *zformat = NULL;
-    zval *zwidth = NULL;
-    zval *zheight = NULL;
+    zend_long zformat;
+    zend_long width;
+    zend_long height;
 
-    ZEND_PARSE_PARAMETERS_START(3, 3);
-        Z_PARAM_ZVAL(zformat);
-        Z_PARAM_ZVAL(zwidth);
-        Z_PARAM_ZVAL(zheight);
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+        Z_PARAM_LONG(zformat);
+        Z_PARAM_LONG(width);
+        Z_PARAM_LONG(height);
     ZEND_PARSE_PARAMETERS_END();
 
-    zend_long __format = zformat->value.lval;
-    zend_long __width = zwidth->value.lval;
-    zend_long __height = zheight->value.lval;
-    cairo_surface_t *surface = cairo_image_surface_create((cairo_format_t)__format, (int)__width, (int)__height);
-    zend_object *__ret = php_cairo_surface_t_create_object(php_cairo_surface_t_class_entry);
-    ZOBJ_TO_PHP_CAIRO_SURFACE_T(__ret)->ptr = surface;
+    cairo_format_t format = zformat;
 
-    RETURN_OBJ(__ret);
+    cairo_surface_t *ret = cairo_image_surface_create(format, width, height);
+
+    php_cairo_surface_t *php_ret = php_cairo_surface_t_new();
+    php_ret->ptr = ret;
+    RETURN_OBJ(&php_ret->std);
+
 }/* }}} */
 
 
-#if IS_IMPLEMENTED
+static void
+php_cairo_image_surface_destroy_func_t(void *data){
+    efree(data);
+}
 
-/* {{{ proto mixed cairo_image_surface_create_for_data(mixed data, mixed format, int width, int height, int stride) */
+/* {{{ proto php_cairo_surface_t cairo_image_surface_create_for_data(unsigned char data, int format, int width, int height, int stride)
+   Creates an image surface for the provided pixel data. */
 PHP_FUNCTION(cairo_image_surface_create_for_data)
 {
-    zval *zdata = NULL;
-    zval *zformat = NULL;
-    zval *zwidth = NULL;
-    zval *zheight = NULL;
-    zval *zstride = NULL;
+    char *data;
+    size_t data_len;
+    zend_long zformat;
+    zend_long width;
+    zend_long height;
+    zend_long stride;
 
     ZEND_PARSE_PARAMETERS_START(5, 5)
-        Z_PARAM_ZVAL(zdata)
-        Z_PARAM_ZVAL(zformat)
-        Z_PARAM_ZVAL(zwidth)
-        Z_PARAM_ZVAL(zheight)
-        Z_PARAM_ZVAL(zstride)
+        Z_PARAM_STRING(data, data_len);
+        Z_PARAM_LONG(zformat);
+        Z_PARAM_LONG(width);
+        Z_PARAM_LONG(height);
+        Z_PARAM_LONG(stride);
     ZEND_PARSE_PARAMETERS_END();
 
-    zval *__data = zdata;
-    zval *__format = zformat;
-    zend_long  *__width = zwidth;
-    zend_long  *__height = zheight;
-    zend_long  *__stride = zstride;
-    php_cairo_image_surface_t *__ret = cairo_image_surface_create_for_data(__data, __format, __width, __height, __stride);
+    cairo_format_t format = zformat;
 
-    RETURN_NULL();
+    unsigned char *user_data;
+    user_data = emalloc(sizeof(unsigned char)*stride*height);
+    memset(user_data, 0, sizeof(unsigned char)*stride*height);
+    memcpy(user_data, data, data_len);
+    cairo_surface_t *ret = cairo_image_surface_create_for_data(user_data, format, width, height, stride);
+    php_cairo_surface_t *php_ret = php_cairo_surface_t_new();
+    php_ret->ptr = ret;
+    zend_object *z_ret = &php_ret->std;
+    cairo_status_t status =
+    cairo_surface_set_user_data (ret,
+                                 &php_ret->key,
+                                 (void *)user_data,
+                                 php_cairo_image_surface_destroy_func_t);
+
+    RETURN_OBJ(z_ret);
 }/* }}} */
 
-/* {{{ proto mixed cairo_image_surface_get_data(mixed surface) */
+#if CAIRO_VERSION >= 10200
+/* {{{ proto unsigned char cairo_image_surface_get_data(php_cairo_surface_t surface)
+   Get a pointer to the data of the image surface, for direct inspection... */
 PHP_FUNCTION(cairo_image_surface_get_data)
 {
-    zval *zsurface = NULL;
+    zval *zsurface;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zsurface)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zsurface, php_cairo_surface_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
-    php_cairo_surface_t *__surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
-    unsigned char *__ret = cairo_image_surface_get_data(__surface);
+    php_cairo_surface_t *php_surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
+    DECL_PHP_CAIRO_SURFACE_T(surface);
 
-    // TODO:
-    //RETURN_ARR();SPL_ARRAY
 
-    RETURN_NULL();
+    cairo_surface_flush(surface);
+    unsigned char *ret = cairo_image_surface_get_data(surface);
+    int height = cairo_image_surface_get_height (surface);
+    int stride = cairo_image_surface_get_stride(surface);
+    zend_string *z_ret;
+    z_ret = zend_string_init((const char*)ret, height*stride, 0);
+
+    RETURN_STR(z_ret);
+}/* }}} */
+/* {{{ proto int cairo_image_surface_get_format(php_cairo_surface_t surface)
+   Get the format of the surface. */
+PHP_FUNCTION(cairo_image_surface_get_format)
+{
+    zval *zsurface;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zsurface, php_cairo_surface_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_surface_t *php_surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
+    DECL_PHP_CAIRO_SURFACE_T(surface);
+
+    int ret = cairo_image_surface_get_format(surface);
+
+    RETURN_LONG(ret);
 }/* }}} */
 #endif
 
-/* {{{ proto mixed cairo_image_surface_get_format(mixed surface) */
-PHP_FUNCTION(cairo_image_surface_get_format)
-{
-    zval *zsurface = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zsurface)
-    ZEND_PARSE_PARAMETERS_END();
-
-    php_cairo_surface_t *__surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
-    int __ret = cairo_image_surface_get_format(__surface->ptr);
-
-    RETURN_LONG(__ret);
-}/* }}} */
-
-/* {{{ proto int cairo_image_surface_get_width(mixed surface) */
+/* {{{ proto int cairo_image_surface_get_width(php_cairo_surface_t surface)
+   Get the width of the image surface in pixels. */
 PHP_FUNCTION(cairo_image_surface_get_width)
 {
-    zval *zsurface = NULL;
+    zval *zsurface;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zsurface)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zsurface, php_cairo_surface_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
-    php_cairo_surface_t *__surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
-    int __ret = cairo_image_surface_get_width(__surface->ptr);
+    php_cairo_surface_t *php_surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
+    DECL_PHP_CAIRO_SURFACE_T(surface);
 
-    RETURN_LONG(__ret);
+    int ret = cairo_image_surface_get_width(surface);
+
+    RETURN_LONG(ret);
 }/* }}} */
-
-/* {{{ proto int cairo_image_surface_get_height(mixed surface) */
+/* {{{ proto int cairo_image_surface_get_height(php_cairo_surface_t surface)
+   Get the height of the image surface in pixels. */
 PHP_FUNCTION(cairo_image_surface_get_height)
 {
-    zval *zsurface = NULL;
+    zval *zsurface;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zsurface)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zsurface, php_cairo_surface_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
-    php_cairo_surface_t *__surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
-    int __ret = cairo_image_surface_get_height(__surface->ptr);
+    php_cairo_surface_t *php_surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
+    DECL_PHP_CAIRO_SURFACE_T(surface);
 
-    RETURN_LONG(__ret);
+    int ret = cairo_image_surface_get_height(surface);
+
+    RETURN_LONG(ret);
 }/* }}} */
 
-/* {{{ proto int cairo_image_surface_get_stride(mixed surface) */
+#if CAIRO_VERSION >= 10200
+/* {{{ proto int cairo_image_surface_get_stride(php_cairo_surface_t surface)
+   Get the stride of the image surface in bytes */
 PHP_FUNCTION(cairo_image_surface_get_stride)
 {
-    zval *zsurface = NULL;
+    zval *zsurface;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zsurface)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zsurface, php_cairo_surface_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
-    php_cairo_surface_t *__surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
-    int __ret = cairo_image_surface_get_stride(__surface->ptr);
+    php_cairo_surface_t *php_surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
+    DECL_PHP_CAIRO_SURFACE_T(surface);
 
-    RETURN_LONG(__ret);
+    int ret = cairo_image_surface_get_stride(surface);
+
+    RETURN_LONG(ret);
 }/* }}} */
+#endif

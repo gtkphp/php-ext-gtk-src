@@ -186,27 +186,17 @@ if test "$PHP_GTK" != "no"; then
 
   PHP_SUBST(GTK_SHARED_LIBADD)
 
-  cairo_sources_tmp="php_cairo/cairo.c \
+  cairo_sources="php_cairo/cairo.c \
                  php_cairo/status.c \
                  php_cairo/rectangle.c \
                  php_cairo/path-data-type.c \
                  php_cairo/path-data.c \
                  php_cairo/path.c \
                  php_cairo/matrix.c \
-                 php_cairo/png.c \
+                 php_cairo/format.c \
+                 php_cairo/surface.c \
                  php_cairo/image-surface.c \
-                 php_cairo/surface.c "
-
-  cairo_sources="php_cairo/cairo.c \
-               php_cairo/status.c \
-               php_cairo/matrix.c \
-               php_cairo/rectangle.c \
-               php_cairo/path-data-type.c \
-               php_cairo/path-data.c \
-               php_cairo/path.c \
-               php_cairo/png.c \
-               php_cairo/image-surface.c \
-               php_cairo/surface.c "
+                 php_cairo/png.c "
 
   doc_sources="php_doc/parser.c \
                php_doc/comment.c "
@@ -236,7 +226,7 @@ if test "$PHP_GTK" != "no"; then
 
   ext_ns=$gtk_namespace
 
-  PHP_NEW_EXTENSION(gtk, gtk.c $cairo_sources $doc_sources $glib_sources $gobject_sources $gdk_sources $gtk_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DGTK_NS="$ext_ns")
+  PHP_NEW_EXTENSION(gtk, gtk.c $cairo_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DGTK_NS="$ext_ns")
   PHP_ADD_BUILD_DIR($ext_builddir/php_doc, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_cairo, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_glib, 1)

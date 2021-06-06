@@ -8,7 +8,12 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 
-confirm_gtk_compiled("");
+//confirm_gtk_compiled("");
+
+$rect = new cairo_rectangle_t();
+$rect->x = 10.0;
+$rect->x = "hello";
+var_dump($rect);
 
 /*
 $surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 250, 80);

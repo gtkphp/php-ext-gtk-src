@@ -1,6 +1,6 @@
 /*
 +----------------------------------------------------------------------+
-| PHP Version 7                                                        |
+| PHP Version 8                                                        |
 +----------------------------------------------------------------------+
 | Copyright (c) 1997-2018 The PHP Group                                |
 +----------------------------------------------------------------------+
@@ -87,16 +87,23 @@ php_cairo_status_t_class_init(zend_class_entry *container_ce, zend_class_entry *
         CAIRO_STATUS_FILE_NOT_FOUND, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
     zend_register_long_constant("CAIRO_STATUS_INVALID_DASH", sizeof("CAIRO_STATUS_INVALID_DASH")-1,
         CAIRO_STATUS_INVALID_DASH, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#if CAIRO_VERSION >= 10200
     zend_register_long_constant("CAIRO_STATUS_INVALID_DSC_COMMENT", sizeof("CAIRO_STATUS_INVALID_DSC_COMMENT")-1,
         CAIRO_STATUS_INVALID_DSC_COMMENT, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#endif
+#if CAIRO_VERSION >= 10400
     zend_register_long_constant("CAIRO_STATUS_INVALID_INDEX", sizeof("CAIRO_STATUS_INVALID_INDEX")-1,
         CAIRO_STATUS_INVALID_INDEX, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
     zend_register_long_constant("CAIRO_STATUS_CLIP_NOT_REPRESENTABLE", sizeof("CAIRO_STATUS_CLIP_NOT_REPRESENTABLE")-1,
         CAIRO_STATUS_CLIP_NOT_REPRESENTABLE, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#endif
+#if CAIRO_VERSION >= 10600
     zend_register_long_constant("CAIRO_STATUS_TEMP_FILE_ERROR", sizeof("CAIRO_STATUS_TEMP_FILE_ERROR")-1,
         CAIRO_STATUS_TEMP_FILE_ERROR, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
     zend_register_long_constant("CAIRO_STATUS_INVALID_STRIDE", sizeof("CAIRO_STATUS_INVALID_STRIDE")-1,
         CAIRO_STATUS_INVALID_STRIDE, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#endif
+#if CAIRO_VERSION >= 10800
     zend_register_long_constant("CAIRO_STATUS_FONT_TYPE_MISMATCH", sizeof("CAIRO_STATUS_FONT_TYPE_MISMATCH")-1,
         CAIRO_STATUS_FONT_TYPE_MISMATCH, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
     zend_register_long_constant("CAIRO_STATUS_USER_FONT_IMMUTABLE", sizeof("CAIRO_STATUS_USER_FONT_IMMUTABLE")-1,
@@ -111,6 +118,8 @@ php_cairo_status_t_class_init(zend_class_entry *container_ce, zend_class_entry *
         CAIRO_STATUS_INVALID_SLANT, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
     zend_register_long_constant("CAIRO_STATUS_INVALID_WEIGHT", sizeof("CAIRO_STATUS_INVALID_WEIGHT")-1,
         CAIRO_STATUS_INVALID_WEIGHT, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#endif
+#if CAIRO_VERSION >= 11000
     zend_register_long_constant("CAIRO_STATUS_INVALID_SIZE", sizeof("CAIRO_STATUS_INVALID_SIZE")-1,
         CAIRO_STATUS_INVALID_SIZE, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
     zend_register_long_constant("CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED", sizeof("CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED")-1,
@@ -119,12 +128,18 @@ php_cairo_status_t_class_init(zend_class_entry *container_ce, zend_class_entry *
         CAIRO_STATUS_DEVICE_TYPE_MISMATCH, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
     zend_register_long_constant("CAIRO_STATUS_DEVICE_ERROR", sizeof("CAIRO_STATUS_DEVICE_ERROR")-1,
         CAIRO_STATUS_DEVICE_ERROR, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#endif
+#if CAIRO_VERSION >= 11200
     zend_register_long_constant("CAIRO_STATUS_INVALID_MESH_CONSTRUCTION", sizeof("CAIRO_STATUS_INVALID_MESH_CONSTRUCTION")-1,
         CAIRO_STATUS_INVALID_MESH_CONSTRUCTION, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
     zend_register_long_constant("CAIRO_STATUS_DEVICE_FINISHED", sizeof("CAIRO_STATUS_DEVICE_FINISHED")-1,
         CAIRO_STATUS_DEVICE_FINISHED, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#endif
+#if CAIRO_VERSION >= 11400
     zend_register_long_constant("CAIRO_STATUS_JBIG2_GLOBAL_MISSING", sizeof("CAIRO_STATUS_JBIG2_GLOBAL_MISSING")-1,
         CAIRO_STATUS_JBIG2_GLOBAL_MISSING, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#endif
+#if CAIRO_VERSION >= 11600
     zend_register_long_constant("CAIRO_STATUS_PNG_ERROR", sizeof("CAIRO_STATUS_PNG_ERROR")-1,
         CAIRO_STATUS_PNG_ERROR, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
     zend_register_long_constant("CAIRO_STATUS_FREETYPE_ERROR", sizeof("CAIRO_STATUS_FREETYPE_ERROR")-1,
@@ -133,8 +148,11 @@ php_cairo_status_t_class_init(zend_class_entry *container_ce, zend_class_entry *
         CAIRO_STATUS_WIN32_GDI_ERROR, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
     zend_register_long_constant("CAIRO_STATUS_TAG_ERROR", sizeof("CAIRO_STATUS_TAG_ERROR")-1,
         CAIRO_STATUS_TAG_ERROR, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#endif
+#if CAIRO_VERSION >= 11000
     zend_register_long_constant("CAIRO_STATUS_LAST_STATUS", sizeof("CAIRO_STATUS_LAST_STATUS")-1,
         CAIRO_STATUS_LAST_STATUS, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
+#endif
 
     return NULL;
 }/*}}} */
@@ -162,7 +180,7 @@ PHP_FUNCTION(cairo_status_to_string)
     zend_long zstatus;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_LONG(zstatus)
+        Z_PARAM_LONG(zstatus);
     ZEND_PARSE_PARAMETERS_END();
 
     cairo_status_t status = zstatus;

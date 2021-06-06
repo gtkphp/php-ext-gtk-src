@@ -1,6 +1,6 @@
 /*
 +----------------------------------------------------------------------+
-| PHP Version 7                                                        |
+| PHP Version 8                                                        |
 +----------------------------------------------------------------------+
 | Copyright (c) 1997-2018 The PHP Group                                |
 +----------------------------------------------------------------------+
@@ -76,8 +76,7 @@ php_cairo_path_t_methods[] = {
 static zend_object*
 php_cairo_path_t_create_object(zend_class_entry *class_type)
 {
-    php_cairo_path_t *intern = ecalloc(1, sizeof(php_cairo_path_t) + zend_object_properties_size(class_type));
-
+    php_cairo_path_t *intern = zend_object_alloc(sizeof(php_cairo_path_t), class_type);
     zend_object_std_init(&intern->std, class_type);
     object_properties_init(&intern->std, class_type);
 
@@ -131,9 +130,9 @@ php_cairo_path_t_setter_int(php_cairo_path_t *intern, zval *value, char *name, z
         ZVAL_SET_LONG(dest, value->value.lval);
     } else {
         zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
-        zend_string *type = zend_zval_get_type(value);
+        const char *type_name = zend_zval_type_name(value);
         if (strict_types) {
-            zend_internal_type_error(1, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_path_t::$%s of type float,", type->val, name);
+            zend_type_error("Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_path_t::$%s of type float,", type_name, name);
         } else {
             int allow_errors = -1;
             zend_long lval=0;
@@ -142,11 +141,11 @@ php_cairo_path_t_setter_int(php_cairo_path_t *intern, zval *value, char *name, z
                 zend_uchar z_type = is_numeric_string(Z_STRVAL_P(value), Z_STRLEN_P(value), &lval, &dval, allow_errors);
                 if (z_type==IS_LONG) {
                     ZVAL_SET_LONG(dest, lval);
-                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to int(%d) convertion,", type->val, value->value.str->val, lval);
+                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to int(%d) convertion,", type_name, value->value.str->val, lval);
                     return;
                 } else if(z_type==IS_DOUBLE) {
                     ZVAL_SET_LONG(dest, (int)dval);
-                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to int(%d) convertion,", type->val, value->value.str->val, (int)dval);
+                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to int(%d) convertion,", type_name, value->value.str->val, (int)dval);
                     return;
                 }
             }
@@ -155,7 +154,7 @@ php_cairo_path_t_setter_int(php_cairo_path_t *intern, zval *value, char *name, z
                 zend_error(E_USER_WARNING, "Implicite float(%f) to int(%d) convertion,", value->value.dval, (int)value->value.dval);
                 return;
             }
-            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_path_t::$%s of type int,", type->val, name);
+            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_path_t::$%s of type int,", type_name, name);
         }
     }
 }
@@ -216,10 +215,9 @@ php_cairo_path_t_properties_lookup (const char *str, size_t len)
 
 /* {{{ php_cairo_path_t_read_property */
 static zval*
-php_cairo_path_t_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
+php_cairo_path_t_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv)
 {
-    php_cairo_path_t *intern = ZVAL_GET_PHP_CAIRO_PATH_T(object);
-    zend_string *member_str = member->value.str;
+    php_cairo_path_t *intern = ZOBJ_TO_PHP_CAIRO_PATH_T(object);
 
     const struct PhpCairoPathTProperty *cmd = php_cairo_path_t_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
@@ -238,7 +236,8 @@ php_cairo_path_t_read_property(zval *object, zval *member, int type, void **cach
             return rv;
             break;
         default:
-            zend_internal_type_error(1, "Internal bug,");
+            //zend_internal_type_error(1, "Internal bug,");
+            //zend_error(E_USER_NOTICE, "Internal bug,");
             break;
         }
     } else {
@@ -250,12 +249,10 @@ php_cairo_path_t_read_property(zval *object, zval *member, int type, void **cach
 /* }}} */
 
 /* {{{ php_cairo_path_t_write_property */
-static void
-php_cairo_path_t_write_property(zval *object, zval *member, zval *value, void **cache_slot)
+static zval*
+php_cairo_path_t_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot)
 {
-    php_cairo_path_t *intern = ZVAL_GET_PHP_CAIRO_PATH_T(object);
-    zend_string *member_str = member->value.str;
-
+    php_cairo_path_t *intern = ZOBJ_TO_PHP_CAIRO_PATH_T(object);
     // struct
     const struct PhpCairoPathTProperty *cmd = php_cairo_path_t_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
@@ -273,14 +270,15 @@ php_cairo_path_t_write_property(zval *object, zval *member, zval *value, void **
     } else {
         // property not found
     }
+    return value;
 }
 /* }}} */
 
 /* {{{ php_cairo_path_t_get_property_ptr_ptr */
-static zval *
-php_cairo_path_t_get_property_ptr_ptr(zval *object, zval *member, int type, void **cache_slot) {
-    php_cairo_path_t  *intern = ZVAL_GET_PHP_CAIRO_PATH_T(object);
-    zend_string *member_str = member->value.str;
+static zval*
+php_cairo_path_t_get_property_ptr_ptr(zend_object *object, zend_string *member_str, int type, void **cache_slot)
+{
+    php_cairo_path_t *intern = ZOBJ_TO_PHP_CAIRO_PATH_T(object);
     zval *retval = NULL;
 
     const struct PhpCairoPathTProperty *cmd = php_cairo_path_t_properties_lookup(member_str->val, member_str->len);
@@ -307,9 +305,9 @@ php_cairo_path_t_get_property_ptr_ptr(zval *object, zval *member, int type, void
 
 /* {{{ php_cairo_path_t_get_debug_info */
 static HashTable*
-php_cairo_path_t_get_debug_info(zval *object, int *is_temp)
+php_cairo_path_t_get_debug_info(zend_object *object, int *is_temp)
 {
-    php_cairo_path_t  *intern = ZVAL_GET_PHP_CAIRO_PATH_T(object);
+    php_cairo_path_t  *intern = ZOBJ_TO_PHP_CAIRO_PATH_T(object);
     HashTable   *debug_info,
     *std_props;
 
@@ -537,6 +535,7 @@ PHP_METHOD(cairo_path_t, __construct)
  | PHP_FUNCTION                                                         |
  +----------------------------------------------------------------------*/
 
+#if CAIRO_VERSION >= 10000
 /* {{{ proto php_cairo_path_t cairo_copy_path(php_cairo_t cr)
    Creates a copy of the current path and returns it to the user as a ca... */
 PHP_FUNCTION(cairo_copy_path)
@@ -544,7 +543,7 @@ PHP_FUNCTION(cairo_copy_path)
     zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -557,7 +556,6 @@ PHP_FUNCTION(cairo_copy_path)
 
     RETURN_OBJ(z_ret);
 }/* }}} */
-
 /* {{{ proto php_cairo_path_t cairo_copy_path_flat(php_cairo_t cr)
    Gets a flattened copy of the current path and returns it to the user ... */
 PHP_FUNCTION(cairo_copy_path_flat)
@@ -565,7 +563,7 @@ PHP_FUNCTION(cairo_copy_path_flat)
     zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -578,7 +576,6 @@ PHP_FUNCTION(cairo_copy_path_flat)
 
     RETURN_OBJ(z_ret);
 }/* }}} */
-
 /* {{{ proto void cairo_path_destroy(php_cairo_path_t path)
    Immediately releases all memory associated with path . */
 PHP_FUNCTION(cairo_path_destroy)
@@ -586,7 +583,7 @@ PHP_FUNCTION(cairo_path_destroy)
     zval *zpath;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zpath, php_cairo_path_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zpath, php_cairo_path_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_path_t *php_path = ZVAL_IS_PHP_CAIRO_PATH_T(zpath)? ZVAL_GET_PHP_CAIRO_PATH_T(zpath): NULL;
@@ -596,7 +593,6 @@ PHP_FUNCTION(cairo_path_destroy)
 
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_append_path(php_cairo_t cr, php_cairo_path_t path)
    Append the path onto the current path. */
 PHP_FUNCTION(cairo_append_path)
@@ -605,8 +601,8 @@ PHP_FUNCTION(cairo_append_path)
     zval *zpath;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zpath, php_cairo_path_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zpath, php_cairo_path_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -619,7 +615,8 @@ PHP_FUNCTION(cairo_append_path)
 
     RETURN_NULL();
 }/* }}} */
-
+#endif
+#if CAIRO_VERSION >= 10600
 /* {{{ proto cairo_bool_t cairo_has_current_point(php_cairo_t cr)
    Returns whether a current point is defined on the current path. */
 PHP_FUNCTION(cairo_has_current_point)
@@ -627,7 +624,7 @@ PHP_FUNCTION(cairo_has_current_point)
     zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -641,7 +638,8 @@ PHP_FUNCTION(cairo_has_current_point)
         RETURN_FALSE;
     }
 }/* }}} */
-
+#endif
+#if CAIRO_VERSION >= 10000
 /* {{{ proto void cairo_get_current_point(php_cairo_t cr, double x, double y)
    Gets the current point of the current path, which is conceptually the... */
 PHP_FUNCTION(cairo_get_current_point)
@@ -651,9 +649,9 @@ PHP_FUNCTION(cairo_get_current_point)
     zval *zy;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_ZVAL_DEREF(zx)
-        Z_PARAM_ZVAL_DEREF(zy)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_ZVAL_EX2(zx, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zy, 0, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -666,7 +664,6 @@ PHP_FUNCTION(cairo_get_current_point)
     ZVAL_DOUBLE(zy, y);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_new_path(php_cairo_t cr)
    Clears the current path. */
 PHP_FUNCTION(cairo_new_path)
@@ -674,7 +671,7 @@ PHP_FUNCTION(cairo_new_path)
     zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -683,7 +680,8 @@ PHP_FUNCTION(cairo_new_path)
     cairo_new_path(cr);
     RETURN_NULL();
 }/* }}} */
-
+#endif
+#if CAIRO_VERSION >= 10200
 /* {{{ proto void cairo_new_sub_path(php_cairo_t cr)
    Begin a new sub-path. */
 PHP_FUNCTION(cairo_new_sub_path)
@@ -691,7 +689,7 @@ PHP_FUNCTION(cairo_new_sub_path)
     zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -700,7 +698,8 @@ PHP_FUNCTION(cairo_new_sub_path)
     cairo_new_sub_path(cr);
     RETURN_NULL();
 }/* }}} */
-
+#endif
+#if CAIRO_VERSION >= 10000
 /* {{{ proto void cairo_close_path(php_cairo_t cr)
    Adds a line segment to the path from the current point to the beginni... */
 PHP_FUNCTION(cairo_close_path)
@@ -708,7 +707,7 @@ PHP_FUNCTION(cairo_close_path)
     zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -717,7 +716,6 @@ PHP_FUNCTION(cairo_close_path)
     cairo_close_path(cr);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_arc(php_cairo_t cr, double xc, double yc, double radius, double angle1, double angle2)
    Adds a circular arc of the given radius to the current path. */
 PHP_FUNCTION(cairo_arc)
@@ -730,12 +728,12 @@ PHP_FUNCTION(cairo_arc)
     double angle2;
 
     ZEND_PARSE_PARAMETERS_START(6, 6)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(xc)
-        Z_PARAM_DOUBLE(yc)
-        Z_PARAM_DOUBLE(radius)
-        Z_PARAM_DOUBLE(angle1)
-        Z_PARAM_DOUBLE(angle2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(xc);
+        Z_PARAM_DOUBLE(yc);
+        Z_PARAM_DOUBLE(radius);
+        Z_PARAM_DOUBLE(angle1);
+        Z_PARAM_DOUBLE(angle2);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -744,7 +742,6 @@ PHP_FUNCTION(cairo_arc)
     cairo_arc(cr, xc, yc, radius, angle1, angle2);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_arc_negative(php_cairo_t cr, double xc, double yc, double radius, double angle1, double angle2)
    Adds a circular arc of the given radius to the current path. */
 PHP_FUNCTION(cairo_arc_negative)
@@ -757,12 +754,12 @@ PHP_FUNCTION(cairo_arc_negative)
     double angle2;
 
     ZEND_PARSE_PARAMETERS_START(6, 6)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(xc)
-        Z_PARAM_DOUBLE(yc)
-        Z_PARAM_DOUBLE(radius)
-        Z_PARAM_DOUBLE(angle1)
-        Z_PARAM_DOUBLE(angle2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(xc);
+        Z_PARAM_DOUBLE(yc);
+        Z_PARAM_DOUBLE(radius);
+        Z_PARAM_DOUBLE(angle1);
+        Z_PARAM_DOUBLE(angle2);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -771,7 +768,6 @@ PHP_FUNCTION(cairo_arc_negative)
     cairo_arc_negative(cr, xc, yc, radius, angle1, angle2);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_curve_to(php_cairo_t cr, double x1, double y1, double x2, double y2, double x3, double y3)
    Adds a cubic Bézier spline to the path from the current point to pos... */
 PHP_FUNCTION(cairo_curve_to)
@@ -785,13 +781,13 @@ PHP_FUNCTION(cairo_curve_to)
     double y3;
 
     ZEND_PARSE_PARAMETERS_START(7, 7)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(x1)
-        Z_PARAM_DOUBLE(y1)
-        Z_PARAM_DOUBLE(x2)
-        Z_PARAM_DOUBLE(y2)
-        Z_PARAM_DOUBLE(x3)
-        Z_PARAM_DOUBLE(y3)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(x1);
+        Z_PARAM_DOUBLE(y1);
+        Z_PARAM_DOUBLE(x2);
+        Z_PARAM_DOUBLE(y2);
+        Z_PARAM_DOUBLE(x3);
+        Z_PARAM_DOUBLE(y3);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -800,7 +796,6 @@ PHP_FUNCTION(cairo_curve_to)
     cairo_curve_to(cr, x1, y1, x2, y2, x3, y3);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_line_to(php_cairo_t cr, double x, double y)
    Adds a line to the path from the current point to position (x , y ) i... */
 PHP_FUNCTION(cairo_line_to)
@@ -810,9 +805,9 @@ PHP_FUNCTION(cairo_line_to)
     double y;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(x)
-        Z_PARAM_DOUBLE(y)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(x);
+        Z_PARAM_DOUBLE(y);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -821,7 +816,6 @@ PHP_FUNCTION(cairo_line_to)
     cairo_line_to(cr, x, y);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_move_to(php_cairo_t cr, double x, double y)
    Begin a new sub-path. After this call the current point will be (x , y ). */
 PHP_FUNCTION(cairo_move_to)
@@ -831,9 +825,9 @@ PHP_FUNCTION(cairo_move_to)
     double y;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(x)
-        Z_PARAM_DOUBLE(y)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(x);
+        Z_PARAM_DOUBLE(y);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -842,7 +836,6 @@ PHP_FUNCTION(cairo_move_to)
     cairo_move_to(cr, x, y);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_rectangle(php_cairo_t cr, double x, double y, double width, double height)
    Adds a closed sub-path rectangle of the given size to the current pat... */
 PHP_FUNCTION(cairo_rectangle)
@@ -854,11 +847,11 @@ PHP_FUNCTION(cairo_rectangle)
     double height;
 
     ZEND_PARSE_PARAMETERS_START(5, 5)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(x)
-        Z_PARAM_DOUBLE(y)
-        Z_PARAM_DOUBLE(width)
-        Z_PARAM_DOUBLE(height)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(x);
+        Z_PARAM_DOUBLE(y);
+        Z_PARAM_DOUBLE(width);
+        Z_PARAM_DOUBLE(height);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -867,7 +860,6 @@ PHP_FUNCTION(cairo_rectangle)
     cairo_rectangle(cr, x, y, width, height);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_glyph_path(php_cairo_t cr, php_cairo_glyph_t glyphs, int num_glyphs)
    Adds closed paths for the glyphs to the current path. */
 PHP_FUNCTION(cairo_glyph_path)
@@ -877,9 +869,9 @@ PHP_FUNCTION(cairo_glyph_path)
     zend_long num_glyphs;
 #if 0
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zglyphs, php_cairo_glyph_t_class_entry, 1, 0)
-        Z_PARAM_LONG(num_glyphs)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zglyphs, php_cairo_glyph_t_class_entry, 1, 0);
+        Z_PARAM_LONG(num_glyphs);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -888,10 +880,9 @@ PHP_FUNCTION(cairo_glyph_path)
     DECL_PHP_CAIRO_GLYPH_T(glyphs);
 
     cairo_glyph_path(cr, glyphs, num_glyphs);
-#endif
     RETURN_NULL();
+#endif
 }/* }}} */
-
 /* {{{ proto void cairo_text_path(php_cairo_t cr, char utf8)
    Adds closed paths for text to the current path. */
 PHP_FUNCTION(cairo_text_path)
@@ -901,8 +892,8 @@ PHP_FUNCTION(cairo_text_path)
     int utf8_len;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_STRING(utf8, utf8_len)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_STRING(utf8, utf8_len);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -911,7 +902,6 @@ PHP_FUNCTION(cairo_text_path)
     cairo_text_path(cr, utf8);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_rel_curve_to(php_cairo_t cr, double dx1, double dy1, double dx2, double dy2, double dx3, double dy3)
    Relative-coordinate version of cairo_curve_to(). */
 PHP_FUNCTION(cairo_rel_curve_to)
@@ -925,13 +915,13 @@ PHP_FUNCTION(cairo_rel_curve_to)
     double dy3;
 
     ZEND_PARSE_PARAMETERS_START(7, 7)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(dx1)
-        Z_PARAM_DOUBLE(dy1)
-        Z_PARAM_DOUBLE(dx2)
-        Z_PARAM_DOUBLE(dy2)
-        Z_PARAM_DOUBLE(dx3)
-        Z_PARAM_DOUBLE(dy3)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(dx1);
+        Z_PARAM_DOUBLE(dy1);
+        Z_PARAM_DOUBLE(dx2);
+        Z_PARAM_DOUBLE(dy2);
+        Z_PARAM_DOUBLE(dx3);
+        Z_PARAM_DOUBLE(dy3);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -940,7 +930,6 @@ PHP_FUNCTION(cairo_rel_curve_to)
     cairo_rel_curve_to(cr, dx1, dy1, dx2, dy2, dx3, dy3);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_rel_line_to(php_cairo_t cr, double dx, double dy)
    Relative-coordinate version of cairo_line_to(). */
 PHP_FUNCTION(cairo_rel_line_to)
@@ -950,9 +939,9 @@ PHP_FUNCTION(cairo_rel_line_to)
     double dy;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(dx)
-        Z_PARAM_DOUBLE(dy)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(dx);
+        Z_PARAM_DOUBLE(dy);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -961,7 +950,6 @@ PHP_FUNCTION(cairo_rel_line_to)
     cairo_rel_line_to(cr, dx, dy);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_rel_move_to(php_cairo_t cr, double dx, double dy)
    Begin a new sub-path. */
 PHP_FUNCTION(cairo_rel_move_to)
@@ -971,9 +959,9 @@ PHP_FUNCTION(cairo_rel_move_to)
     double dy;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(dx)
-        Z_PARAM_DOUBLE(dy)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(dx);
+        Z_PARAM_DOUBLE(dy);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -982,7 +970,8 @@ PHP_FUNCTION(cairo_rel_move_to)
     cairo_rel_move_to(cr, dx, dy);
     RETURN_NULL();
 }/* }}} */
-
+#endif
+#if CAIRO_VERSION >= 10600
 /* {{{ proto void cairo_path_extents(php_cairo_t cr, double x1, double y1, double x2, double y2)
    Computes a bounding box in user-space coordinates covering the points... */
 PHP_FUNCTION(cairo_path_extents)
@@ -994,11 +983,11 @@ PHP_FUNCTION(cairo_path_extents)
     zval *zy2;
 
     ZEND_PARSE_PARAMETERS_START(5, 5)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_ZVAL_DEREF(zx1)
-        Z_PARAM_ZVAL_DEREF(zy1)
-        Z_PARAM_ZVAL_DEREF(zx2)
-        Z_PARAM_ZVAL_DEREF(zy2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_ZVAL_EX2(zx1, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zy1, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zx2, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zy2, 0, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -1015,7 +1004,7 @@ PHP_FUNCTION(cairo_path_extents)
     ZVAL_DOUBLE(zy2, y2);
     RETURN_NULL();
 }/* }}} */
-
+#endif
 
 /*
  * Local variables:

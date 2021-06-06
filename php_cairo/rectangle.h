@@ -1,6 +1,6 @@
 /*
 +----------------------------------------------------------------------+
-| PHP Version 7                                                        |
+| PHP Version 8                                                        |
 +----------------------------------------------------------------------+
 | Copyright (c) 1997-2018 The PHP Group                                |
 +----------------------------------------------------------------------+
@@ -29,7 +29,6 @@
 #define PHP_CAIRO_RECTANGLE_T(ptr)           ((php_cairo_rectangle_t*)(ptr))
 #define PHP_CAIRO_RECTANGLE_T_CLASS          php_cairo_rectangle_t_class_entry
 #define PHP_CAIRO_RECTANGLE_T_OFFSET         (sizeof(php_cairo_rectangle_t) - sizeof(zend_object))
-#define PHP_CAIRO_RECTANGLE_T_PTR(ptr)       php_cairo_rectangle_t_get_ptr(ptr)
 
 #define ZOBJ_IS_PHP_CAIRO_RECTANGLE_T(obj)   ((obj)!=NULL && obj->ce == php_cairo_rectangle_t_class_entry)
 #define ZOBJ_TO_PHP_CAIRO_RECTANGLE_T(std)   PHP_CAIRO_RECTANGLE_T( ((void*)(std))-PHP_CAIRO_RECTANGLE_T_OFFSET )
@@ -47,6 +46,17 @@
             GC_REFCOUNT(&o->std)++;                 \
         }                                           \
     } while (0)
+
+
+#define PHP_CAIRO_RECTANGLE_T_PTR(intern)       php_cairo_rectangle_t_get_ptr(intern)
+
+#define DECL_PHP_CAIRO_RECTANGLE_T(name) \
+    cairo_rectangle_t __##name; \
+    cairo_rectangle_t *name = &__##name; \
+    PHP_CAIRO_RECTANGLE_T_COPY(php_##name, name);
+
+
+
 
 #define PHP_CAIRO_RECTANGLE_T_FE() \
 

@@ -55,36 +55,14 @@ extern zend_module_entry gtk_module_entry;
 /*----------------------------------------------------------------------+
  | Zend-User API                                                        |
  +----------------------------------------------------------------------*/
-zval *
-php_cairo_image_surface_create_from_png(zval *filename) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_image_surface_create_from_png_stream(zval *read_func, void *closure) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_surface_write_to_png(zval *surface, zval *filename) {
-    // TODO: implementation
-}
-
-zval *
-php_cairo_surface_write_to_png_stream(zval *surface, zval *write_func, void *closure) {
-    // TODO: implementation
-}
-
-
-
 
 /*----------------------------------------------------------------------+
-| PHP_METHOD                                                           |
-+----------------------------------------------------------------------*/
+ | PHP_METHOD                                                           |
+ +----------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------+
-| PHP_FUNCTION                                                         |
-+----------------------------------------------------------------------*/
+ | PHP_FUNCTION                                                         |
+ +----------------------------------------------------------------------*/
 
 /* {{{ proto mixed cairo_image_surface_create_from_png(mixed filename) */
 PHP_FUNCTION(cairo_image_surface_create_from_png)
@@ -92,7 +70,7 @@ PHP_FUNCTION(cairo_image_surface_create_from_png)
     zval *zfilename = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zfilename)
+        Z_PARAM_ZVAL(zfilename);
     ZEND_PARSE_PARAMETERS_END();
 #if 0
     zval * *__filename = zfilename;
@@ -111,8 +89,8 @@ PHP_FUNCTION(cairo_image_surface_create_from_png_stream)
     zval *zclosure = NULL;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zread_func)
-        Z_PARAM_ZVAL(zclosure)
+        Z_PARAM_ZVAL(zread_func);
+        Z_PARAM_ZVAL(zclosure);
     ZEND_PARSE_PARAMETERS_END();
 #if 0
     zval * *__read_func = zread_func;
@@ -132,8 +110,8 @@ PHP_FUNCTION(cairo_surface_write_to_png)
     zval *zfilename = NULL;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zsurface)
-        Z_PARAM_ZVAL(zfilename)
+        Z_PARAM_ZVAL(zsurface);
+        Z_PARAM_ZVAL(zfilename);
     ZEND_PARSE_PARAMETERS_END();
 
 
@@ -152,9 +130,9 @@ PHP_FUNCTION(cairo_surface_write_to_png_stream)
     zval *zclosure = NULL;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_ZVAL(zsurface)
-        Z_PARAM_ZVAL(zwrite_func)
-        Z_PARAM_ZVAL(zclosure)
+        Z_PARAM_ZVAL(zsurface);
+        Z_PARAM_ZVAL(zwrite_func);
+        Z_PARAM_ZVAL(zclosure);
     ZEND_PARSE_PARAMETERS_END();
 #if 0
     zval * *__surface = zsurface;

@@ -1,6 +1,6 @@
 /*
 +----------------------------------------------------------------------+
-| PHP Version 7                                                        |
+| PHP Version 8                                                        |
 +----------------------------------------------------------------------+
 | Copyright (c) 1997-2018 The PHP Group                                |
 +----------------------------------------------------------------------+
@@ -18,6 +18,7 @@
 
 /* $Id$ */
 
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -28,27 +29,43 @@
 #include <ext/standard/info.h>
 
 #include <cairo/cairo.h>
-#include "php_gtk.h"
-#include "surface.h"
 
-#include "cairo.h"
+#include "php_gtk.h"
+
+#include "php_cairo/surface.h"
+#include "php_cairo/status.h"
+/*#include "php_cairo/content.h"
+#include "php_cairo/pattern.h"
+#include "php_cairo/antialias.h"
+#include "php_cairo/fill-rule.h"
+#include "php_cairo/line-cap.h"
+#include "php_cairo/line-join.h"
+#include "php_cairo/operator.h"
+#include "php_cairo/rectangle-list.h"*/
+#include "php_cairo/rectangle.h"
+
+#include "php_cairo/cairo.h"
+
 
 extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
-//extern zend_class_entry     *php_cairo_surface_t_class_entry;
 
 
-zend_class_entry     *php_cairo_t_class_entry;
+zend_class_entry     *php_cairo_t_class_entry;// struct
 zend_object_handlers  php_cairo_t_handlers;
 
-//#define TRACE(format, string, option) php_printf(format, string, option)
-#define TRACE(format, string, option)
+
+
+
+
+
 
 /*----------------------------------------------------------------------+
-| Internal                                                             |
-+----------------------------------------------------------------------*/
+ | Internal                                                             |
+ +----------------------------------------------------------------------*/
 
-static const zend_function_entry php_cairo_t_methods[] = {
+static const zend_function_entry
+php_cairo_t_methods[] = {
     PHP_ME(cairo_t, __construct, arginfo_cairo_t___construct, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
@@ -57,13 +74,11 @@ static const zend_function_entry php_cairo_t_methods[] = {
  | Zend Handler                                                         |
  +----------------------------------------------------------------------*/
 
-
 /* {{{ php_cairo_t_create_object */
 static zend_object*
 php_cairo_t_create_object(zend_class_entry *class_type)
 {
-    php_cairo_t *intern = ecalloc(1, sizeof(php_cairo_t) + zend_object_properties_size(class_type));
-
+    php_cairo_t *intern = zend_object_alloc(sizeof(php_cairo_t), class_type);
     zend_object_std_init(&intern->std, class_type);
     object_properties_init(&intern->std, class_type);
 
@@ -71,17 +86,13 @@ php_cairo_t_create_object(zend_class_entry *class_type)
 
     intern->std.handlers = &php_cairo_t_handlers;
 
-
-    TRACE("php_cairo_t_create_object(%p) / %d\n", &intern->std, intern->std.gc.refcount);
     return &intern->std;
 }
 /* }}} php_cairo_t_create_object */
 
-
 static void
 php_cairo_t_dtor_object(zend_object *obj) {
-    php_cairo_t *intern = ZOBJ_TO_PHP_CAIRO_T(obj);
-    TRACE("php_cairo_t_dtor_object(\e[1;31m\"%s\"\e[0;m) / %d\n", intern->data.value.str->val, obj->gc.refcount);
+    //php_cairo_t *intern = ZOBJ_TO_PHP_CAIRO_T(obj);
 
 }
 
@@ -90,220 +101,68 @@ static void
 php_cairo_t_free_object(zend_object *object)
 {
     php_cairo_t *intern = ZOBJ_TO_PHP_CAIRO_T(object);
-    TRACE("php_cairo_t_free_object(\e[1;31m\"%s\"\e[0;m) / %d\n", intern->data.value.str->val, object->gc.refcount);
 
     if (intern->ptr) {
         cairo_destroy(intern->ptr);
+        intern->ptr = NULL;
     }
 
     zend_object_std_dtor(&intern->std);
-    //efree(intern);
 }
 /* }}} php_cairo_t_free_object */
 
 
-/* {{{ gtk_read_property */
-static zval*
-php_cairo_t_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
-{
-    php_cairo_t *obj = ZVAL_GET_PHP_CAIRO_T(object);
-    zend_string *member_str = zval_get_string(member);
-    zval *retval;
-    php_printf("%s(%s)\n", __FUNCTION__, member->value.str->val);
 
-    zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    retval = std_hnd->read_property(object, member, type, cache_slot, rv);
 
-    zend_string_release(member_str);
-    return retval;
-}
-/* }}} */
 
-/* {{{ php_cairo_t_write_property */
-static void
-php_cairo_t_write_property(zval *object, zval *member, zval *value, void **cache_slot)
-{
-    php_cairo_t *obj = ZVAL_GET_PHP_CAIRO_T(object);
-    zend_string *member_str = zval_get_string(member);
-    php_printf("%s(%s)\n", __FUNCTION__, member->value.str->val);
-
-    if (zend_string_equals_literal(member->value.str, "child")
-     || zend_string_equals_literal(member->value.str, "parent") ) {
-#if 1
-        zend_error(E_USER_WARNING, "Readonly property Node::$%s", member->value.str->val);
-#else
-        if (ZVAL_IS_PHP_SAMPLE_NODE(value)) {
-            // do unset(object->child) and php_cairo_t_insert(object, value, 0);
-        } else {
-            zend_string *type = zend_zval_get_type(value);
-            zend_error(E_USER_WARNING, "Cannot assign %s to property Node::$child of type Node", type->val);
-        }
-#endif
-        return;
-    }
-    zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    std_hnd->write_property(object, member, value, cache_slot);
-
-    zend_string_release(member_str);
-}
-/* }}} */
-
-static void
-php_cairo_t_unset_property(zval *object, zval *member, void **cache_slot) {
-    php_cairo_t *obj = ZVAL_GET_PHP_CAIRO_T(object);
-    zend_string *member_str = zval_get_string(member);
-    php_printf("%s(%s)\n", __FUNCTION__, member->value.str->val);
-
-    zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    std_hnd->unset_property(object, member, cache_slot);
-
-    zend_string_release(member_str);
-}
-
+/** {{{ php_cairo_t_get_debug_info() */
 static HashTable*
-php_cairo_t_get_debug_info(zval *object, int *is_temp) /* {{{ */
+php_cairo_t_get_debug_info(zend_object *object, int *is_temp)
 {
-    php_cairo_t  *obj =  ZVAL_GET_PHP_CAIRO_T(object);
+    php_cairo_t  *obj = ZOBJ_TO_PHP_CAIRO_T(object);
     HashTable   *debug_info,
     *std_props;
-    zend_string *string_key = NULL;
-    zval *value;
 
     *is_temp = 1;
     std_props = zend_std_get_properties(object);
     debug_info = zend_array_dup(std_props);
 
-
-    ZEND_HASH_FOREACH_STR_KEY_VAL(obj->std.properties, string_key, value) {
-        zend_hash_add(debug_info, string_key, value);
-    } ZEND_HASH_FOREACH_END();
-
+    zval zstatus; ZVAL_LONG(&zstatus, cairo_status(obj->ptr));
+    zend_hash_str_update(debug_info, "status", sizeof("status")-1, &zstatus);
 
     return debug_info;
 }
 /* }}} */
 
 
-static HashTable*
-php_cairo_t_get_properties(zval *object){
-    php_cairo_t  *self =  ZVAL_GET_PHP_CAIRO_T(object);
 
-    return NULL;
-}
-
-
-static int
-php_cairo_t_cast_object(zval *readobj, zval *retval, int type)
-{
-    ZVAL_NULL(retval);
-
-    return FAILURE;
-}
-
-
-/* updates *count to hold the number of elements present and returns SUCCESS.
-* Returns FAILURE if the object does not have any sense of overloaded dimensions */
-static int
-php_cairo_t_count_elements(zval *object, zend_long *count) {
-
-    *count = 0;//php_cairo_t_length(ZVAL_GET_PHP_CAIRO_T(object));
-
-    return SUCCESS;
-}
-
-static int
-php_cairo_t_has_dimension(zval *object, zval *member, int check_empty) {
-    //return FAILURE;
-    return SUCCESS;
-}
-
-static zval*
-php_cairo_t_read_dimension(zval *object, zval *offset, int type, zval *rv) /* {{{ */
-{
-    return NULL;
-} /* }}} end php_g_hash_table_read_dimension */
-
-
-static void
-php_cairo_t_write_dimension(zval *object, zval *offset, zval *value)
-{
-    void *cache = NULL;
-    zval member;
-    ZVAL_COPY(&member, offset);
-    php_cairo_t_write_property(object, &member, value, &cache);
-}
-
-static void
-php_cairo_t_unset_dimension(zval *object, zval *offset) {
-    //php_g_list *list = ZVAL_GET_PHP_G_LIST(object);
-    void *cache;
-
-    switch(Z_TYPE_P(offset)) {
-    case IS_LONG:
-    // @TODO
-    //zend_hash_index_del(list->prop_handler, );
-    // php_g_list
-    break;
-    case IS_STRING:
-        php_cairo_t_unset_property(object, offset, &cache);
-    break;
-    default:
-    break;
-    }
-}
 
 static zend_object_handlers*
 php_cairo_t_get_handlers()
 {
     memcpy(&php_cairo_t_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     php_cairo_t_handlers.offset = PHP_CAIRO_T_OFFSET;
-    //php_cairo_t_handlers.clone_obj;
-    //php_cairo_t_handlers.compare;
-    //php_cairo_t_handlers.compare_objects;
-    //php_cairo_t_handlers.get_constructor;
     php_cairo_t_handlers.dtor_obj = php_cairo_t_dtor_object;
     php_cairo_t_handlers.free_obj = php_cairo_t_free_object;
-    php_cairo_t_handlers.read_property = php_cairo_t_read_property;
-    php_cairo_t_handlers.write_property = php_cairo_t_write_property;
-    php_cairo_t_handlers.unset_property = php_cairo_t_unset_property;
-    //php_cairo_t_handlers.get_property_ptr_ptr = php_cairo_t_get_property_ptr_ptr;
+
 
     php_cairo_t_handlers.get_debug_info = php_cairo_t_get_debug_info;
-    php_cairo_t_handlers.get_properties = php_cairo_t_get_properties;//get_properties_for TODO php 8.0
-    //php_cairo_t_handlers.set = php_cairo_t_set;
-    php_cairo_t_handlers.cast_object = php_cairo_t_cast_object;
-
-    php_cairo_t_handlers.count_elements = php_cairo_t_count_elements;
-    php_cairo_t_handlers.has_dimension = php_cairo_t_has_dimension;
-    php_cairo_t_handlers.read_dimension = php_cairo_t_read_dimension;
-    php_cairo_t_handlers.unset_dimension = php_cairo_t_unset_dimension;
-    php_cairo_t_handlers.write_dimension = php_cairo_t_write_dimension;
 
 
     return &php_cairo_t_handlers;
 }
 
-
-
 /*----------------------------------------------------------------------+
-| PHP_MINIT                                                            |
-+----------------------------------------------------------------------*/
+ | PHP_MINIT                                                            |
+ +----------------------------------------------------------------------*/
 
-/*{{{ php_cairo_t_class_init */
+ /*{{{ php_cairo_t_class_init */
 zend_class_entry*
 php_cairo_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_cairo_t_get_handlers();
     PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "cairo_t", php_cairo_t_methods);
     php_cairo_t_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_cairo_t_class_entry->create_object = php_cairo_t_create_object;
-    //ce->serialize;
-    /*
-    zend_hash_init(&php_cairo_t_prop_handlers, 0, NULL, php_cairo_t_dtor_prop_handler, 1);
-    php_cairo_t_register_prop_handler(&php_cairo_t_prop_handlers, "prev", sizeof("prev")-1, php_cairo_t_read_prev, php_cairo_t_write_prev);
-    php_cairo_t_register_prop_handler(&php_cairo_t_prop_handlers, "data", sizeof("data")-1, php_cairo_t_read_data, php_cairo_t_write_data);
-    php_cairo_t_register_prop_handler(&php_cairo_t_prop_handlers, "next", sizeof("next")-1, php_cairo_t_read_next, php_cairo_t_write_next);
-    zend_hash_add_ptr(&classes, ce->name, &php_cairo_t_prop_handlers);
-    */
 
     return php_cairo_t_class_entry;
 }/*}}} */
@@ -311,10 +170,12 @@ php_cairo_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_
 /*----------------------------------------------------------------------+
  | Zend-User utils                                                      |
  +----------------------------------------------------------------------*/
-php_cairo_t *
-php_cairo_new() {
-    zend_object *zobj = php_cairo_t_create_object(php_cairo_t_class_entry);
-    return ZOBJ_TO_PHP_CAIRO_T(zobj);
+php_cairo_t*
+php_cairo_t_new()
+{
+    zend_object *z_cairo_t = php_cairo_t_create_object(php_cairo_t_class_entry);
+    php_cairo_t *php_cairo = ZOBJ_TO_PHP_CAIRO_T(z_cairo_t);
+    return php_cairo;
 }
 
 /*----------------------------------------------------------------------+
@@ -325,1326 +186,1304 @@ php_cairo_new() {
  | PHP_METHOD                                                           |
  +----------------------------------------------------------------------*/
 
-/* {{{ cairo_t::__construct() */
+ /* {{{ cairo_t::__construct() */
 PHP_METHOD(cairo_t, __construct)
 {
-    zval *data=NULL;
+    //zend_object *zobj = Z_OBJ_P(getThis());
+    //php_cairo_t *self = ZOBJ_TO_PHP_CAIRO_T(zobj);
 
-    ZEND_PARSE_PARAMETERS_START(0, 1)
-        Z_PARAM_OPTIONAL
-        Z_PARAM_ZVAL(data)
-    ZEND_PARSE_PARAMETERS_END();
-
-    zend_object *zobj = Z_OBJ_P(getThis());
-    php_cairo_t *self = ZOBJ_TO_PHP_CAIRO_T(zobj);
 
 }
 /* }}} */
 
 /*----------------------------------------------------------------------+
-| PHP_FUNCTION                                                         |
-+----------------------------------------------------------------------*/
+ | PHP_FUNCTION                                                         |
+ +----------------------------------------------------------------------*/
 
-/* {{{ proto cairo_t cairo_create(mixed target) */
+/* {{{ proto php_cairo_t cairo_create(php_cairo_surface_t target)
+   Creates a new cairo_t with all graphics state parameters set to defau... */
 PHP_FUNCTION(cairo_create)
 {
-
     zval *ztarget;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(ztarget, php_cairo_surface_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(ztarget, php_cairo_surface_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_surface_t *php_target = ZVAL_IS_PHP_CAIRO_SURFACE_T(ztarget)? ZVAL_GET_PHP_CAIRO_SURFACE_T(ztarget): NULL;
-    cairo_surface_t *target =  php_target==NULL ? NULL : php_target->ptr;
+    //DECL_PHP_CAIRO_SURFACE_T(target);
+    cairo_surface_t *target = php_target->ptr;
 
     cairo_t *ret = cairo_create(target);
-    cairo_status_t status = cairo_status (ret);
-    if (CAIRO_STATUS_SUCCESS==status) {
-        zend_object *z_ret = php_cairo_t_create_object(php_cairo_t_class_entry);
-        php_cairo_t *php_ret = ZOBJ_TO_PHP_CAIRO_T(z_ret);
-        php_ret->ptr = ret;
-        RETURN_OBJ(z_ret);
-    } else {
-        const char *msg = cairo_status_to_string (status);
-        zend_error(E_USER_ERROR, "%s", msg);
-        RETURN_NULL();
-    }
 
-
+    php_cairo_t *php_ret = php_cairo_t_new();
+    php_ret->ptr = ret;
+    zend_object *z_ret = &php_ret->std;
+    RETURN_OBJ(z_ret);
 }/* }}} */
 
-
-/* {{{ proto cairo_t cairo_reference(cairo_t cr) */
+/* {{{ proto php_cairo_t cairo_reference(php_cairo_t cr)
+   Increases the reference count on cr by one. */
 PHP_FUNCTION(cairo_reference)
 {
     zval *zcr;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-    ZEND_PARSE_PARAMETERS_END();
-
-    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
-    cairo_t *cr =  php_cr==NULL ? NULL : php_cr->ptr;
-
-    if (NULL==cr) {
-        g_print("Internal Error: cairo_reference\n");
-        return;
-    }
-    cairo_t *ret = cairo_reference(cr);
-    cairo_status_t status = cairo_status (ret);
-    if (CAIRO_STATUS_SUCCESS==status) {
-        zend_object *z_ret = php_cairo_t_create_object(php_cairo_t_class_entry);
-        php_cairo_t *php_ret = ZOBJ_TO_PHP_CAIRO_T(z_ret);
-        php_ret->ptr = ret;
-        RETURN_OBJ(z_ret);
-    } else {
-        const char *msg = cairo_status_to_string (status);
-        zend_error(E_USER_ERROR, "%s", msg);
-        RETURN_NULL();
-    }
-
-
-}/* }}} */
-
-/* {{{ proto void cairo_destroy(cairo_t cr) */
-PHP_FUNCTION(cairo_destroy)
-{
-    zval *zcr;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-    ZEND_PARSE_PARAMETERS_END();
-
-    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
-    cairo_t *cr =  php_cr==NULL ? NULL : php_cr->ptr;
-
-    if (NULL==cr) {
-        g_print("Internal Error: cairo_destroy\n");
-        return;
-    }
-    cairo_destroy(cr);
-    php_cr->ptr = NULL;
-
-}/* }}} */
-
-/* {{{ proto mixed cairo_status(cairo_t cr) */
-PHP_FUNCTION(cairo_status)
-{
-    zval *zcr;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-    ZEND_PARSE_PARAMETERS_END();
-
-    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
-    cairo_t *cr =  php_cr==NULL ? NULL : php_cr->ptr;
-
-    if (NULL==cr) {
-        g_print("Internal Error: cairo_status\n");
-        return;
-    }
-    cairo_status_t ret = cairo_status(cr);
-    RETURN_LONG(ret);
-
-}/* }}} */
-
-/* {{{ proto void cairo_save(cairo_t cr) */
-PHP_FUNCTION(cairo_save)
-{
-    zval *zcr;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-    ZEND_PARSE_PARAMETERS_END();
-
-    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
-    cairo_t *cr =  php_cr==NULL ? NULL : php_cr->ptr;
-
-    if (NULL==cr) {
-        g_print("Internal Error: cairo_save\n");
-        return;
-    }
-    cairo_save(cr);
-
-}/* }}} */
-
-/* {{{ proto void cairo_restore(cairo_t cr) */
-PHP_FUNCTION(cairo_restore)
-{
-    zval *zcr;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-    ZEND_PARSE_PARAMETERS_END();
-
-    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
-    cairo_t *cr =  php_cr==NULL ? NULL : php_cr->ptr;
-
-    if (NULL==cr) {
-        g_print("Internal Error: cairo_restore\n");
-        return;
-    }
-    cairo_restore(cr);
-}/* }}} */
-
-/* {{{ proto mixed cairo_get_target(cairo_t cr) */
-PHP_FUNCTION(cairo_get_target)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_target(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_push_group(cairo_t cr) */
-PHP_FUNCTION(cairo_push_group)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_push_group(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_push_group_with_content(cairo_t cr, mixed content) */
-PHP_FUNCTION(cairo_push_group_with_content)
-{
-    zval *zcr = NULL;
-    zval *zcontent = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zcontent)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__content = zcontent;
-    php_cairo_t *__ret = php_cairo_push_group_with_content(, __cr, __content);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_pop_group(cairo_t cr) */
-PHP_FUNCTION(cairo_pop_group)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_pop_group(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_pop_group_to_source(cairo_t cr) */
-PHP_FUNCTION(cairo_pop_group_to_source)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_pop_group_to_source(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_get_group_target(cairo_t cr) */
-PHP_FUNCTION(cairo_get_group_target)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_group_target(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_set_source_rgb(cairo_t cr, mixed red, mixed green, mixed blue) */
-PHP_FUNCTION(cairo_set_source_rgb)
-{
-    zval *zcr = NULL;
-    zval *zred = NULL;
-    zval *zgreen = NULL;
-    zval *zblue = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(4, 4)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zred)
-        Z_PARAM_ZVAL(zgreen)
-        Z_PARAM_ZVAL(zblue)
-    ZEND_PARSE_PARAMETERS_END();
-
-
-    php_cairo_t *__cr = ZVAL_IS_PHP_CAIRO_T(zcr) ? ZVAL_GET_PHP_CAIRO_T(zcr) : NULL;
-    double __red = Z_TYPE_P(zred)==IS_DOUBLE ? zred->value.dval : 0.0;
-    double __green = Z_TYPE_P(zgreen)==IS_DOUBLE ? zgreen->value.dval : 0.0;
-    double __blue = Z_TYPE_P(zblue)==IS_DOUBLE ? zblue->value.dval : 0.0;
-    cairo_set_source_rgb(__cr->ptr, __red, __green, __blue);
-
-}/* }}} */
-
-/* {{{ proto void cairo_set_source_rgba(cairo_t cr, mixed red, mixed green, mixed blue, mixed alpha) */
-PHP_FUNCTION(cairo_set_source_rgba)
-{
-    zval *zcr = NULL;
-    zval *zred = NULL;
-    zval *zgreen = NULL;
-    zval *zblue = NULL;
-    zval *zalpha = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(5, 5)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zred)
-        Z_PARAM_ZVAL(zgreen)
-        Z_PARAM_ZVAL(zblue)
-        Z_PARAM_ZVAL(zalpha)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__red = zred;
-    zval * *__green = zgreen;
-    zval * *__blue = zblue;
-    zval * *__alpha = zalpha;
-    php_cairo_t *__ret = php_cairo_set_source_rgba(, __cr, __red, __green, __blue, __alpha);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_set_source(cairo_t cr, mixed source) */
-PHP_FUNCTION(cairo_set_source)
-{
-    zval *zcr = NULL;
-    zval *zsource = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zsource)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__source = zsource;
-    php_cairo_t *__ret = php_cairo_set_source(, __cr, __source);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_set_source_surface(cairo_t cr, mixed surface, mixed x, mixed y) */
-PHP_FUNCTION(cairo_set_source_surface)
-{
-    zval *zcr = NULL;
-    zval *zsurface = NULL;
-    zval *zx = NULL;
-    zval *zy = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(4, 4)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zsurface)
-        Z_PARAM_ZVAL(zx)
-        Z_PARAM_ZVAL(zy)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__surface = zsurface;
-    zval * *__x = zx;
-    zval * *__y = zy;
-    php_cairo_t *__ret = php_cairo_set_source_surface(, __cr, __surface, __x, __y);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_get_source(cairo_t cr) */
-PHP_FUNCTION(cairo_get_source)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_source(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_set_antialias(cairo_t cr, mixed antialias) */
-PHP_FUNCTION(cairo_set_antialias)
-{
-    zval *zcr = NULL;
-    zval *zantialias = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zantialias)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__antialias = zantialias;
-    php_cairo_t *__ret = php_cairo_set_antialias(, __cr, __antialias);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_get_antialias(cairo_t cr) */
-PHP_FUNCTION(cairo_get_antialias)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_antialias(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_set_dash(cairo_t cr, mixed dashes, int num_dashes, mixed offset) */
-PHP_FUNCTION(cairo_set_dash)
-{
-    zval *zcr = NULL;
-    zval *zdashes = NULL;
-    zval *znum_dashes = NULL;
-    zval *zoffset = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(4, 4)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zdashes)
-        Z_PARAM_ZVAL(znum_dashes)
-        Z_PARAM_ZVAL(zoffset)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__dashes = zdashes;
-    zend_long  *__num_dashes = znum_dashes;
-    zval * *__offset = zoffset;
-    php_cairo_t *__ret = php_cairo_set_dash(, __cr, __dashes, __num_dashes, __offset);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto int cairo_get_dash_count(cairo_t cr) */
-PHP_FUNCTION(cairo_get_dash_count)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_dash_count(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_get_dash(cairo_t cr, mixed dashes, mixed offset) */
-PHP_FUNCTION(cairo_get_dash)
-{
-    zval *zcr = NULL;
-    zval *zdashes = NULL;
-    zval *zoffset = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zdashes)
-        Z_PARAM_ZVAL(zoffset)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__dashes = zdashes;
-    zval * *__offset = zoffset;
-    php_cairo_t *__ret = php_cairo_get_dash(, __cr, __dashes, __offset);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_set_fill_rule(cairo_t cr, mixed fill_rule) */
-PHP_FUNCTION(cairo_set_fill_rule)
-{
-    zval *zcr = NULL;
-    zval *zfill_rule = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zfill_rule)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__fill_rule = zfill_rule;
-    php_cairo_t *__ret = php_cairo_set_fill_rule(, __cr, __fill_rule);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_get_fill_rule(cairo_t cr) */
-PHP_FUNCTION(cairo_get_fill_rule)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_fill_rule(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_set_line_cap(cairo_t cr, mixed line_cap) */
-PHP_FUNCTION(cairo_set_line_cap)
-{
-    zval *zcr = NULL;
-    zval *zline_cap = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zline_cap)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__line_cap = zline_cap;
-    php_cairo_t *__ret = php_cairo_set_line_cap(, __cr, __line_cap);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_get_line_cap(cairo_t cr) */
-PHP_FUNCTION(cairo_get_line_cap)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_line_cap(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_set_line_join(cairo_t cr, mixed line_join) */
-PHP_FUNCTION(cairo_set_line_join)
-{
-    zval *zcr = NULL;
-    zval *zline_join = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zline_join)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__line_join = zline_join;
-    php_cairo_t *__ret = php_cairo_set_line_join(, __cr, __line_join);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_get_line_join(cairo_t cr) */
-PHP_FUNCTION(cairo_get_line_join)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_line_join(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_set_line_width(cairo_t cr, mixed width) */
-PHP_FUNCTION(cairo_set_line_width)
-{
-    zval *zcr = NULL;
-    zval *zwidth = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zwidth)
-    ZEND_PARSE_PARAMETERS_END();
-
-    php_cairo_t *__cr = ZVAL_IS_PHP_CAIRO_T(zcr) ? ZVAL_GET_PHP_CAIRO_T(zcr) : NULL;
-    cairo_set_line_width(__cr->ptr, zwidth->value.dval);
-
-}/* }}} */
-
-/* {{{ proto mixed cairo_get_line_width(cairo_t cr) */
-PHP_FUNCTION(cairo_get_line_width)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_line_width(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_set_miter_limit(cairo_t cr, mixed limit) */
-PHP_FUNCTION(cairo_set_miter_limit)
-{
-    zval *zcr = NULL;
-    zval *zlimit = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zlimit)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__limit = zlimit;
-    php_cairo_t *__ret = php_cairo_set_miter_limit(, __cr, __limit);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_get_miter_limit(cairo_t cr) */
-PHP_FUNCTION(cairo_get_miter_limit)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_miter_limit(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_set_operator(cairo_t cr, mixed op) */
-PHP_FUNCTION(cairo_set_operator)
-{
-    zval *zcr = NULL;
-    zval *zop = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zop)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__op = zop;
-    php_cairo_t *__ret = php_cairo_set_operator(, __cr, __op);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_get_operator(cairo_t cr) */
-PHP_FUNCTION(cairo_get_operator)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_operator(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_set_tolerance(cairo_t cr, mixed tolerance) */
-PHP_FUNCTION(cairo_set_tolerance)
-{
-    zval *zcr = NULL;
-    zval *ztolerance = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(ztolerance)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__tolerance = ztolerance;
-    php_cairo_t *__ret = php_cairo_set_tolerance(, __cr, __tolerance);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_get_tolerance(cairo_t cr) */
-PHP_FUNCTION(cairo_get_tolerance)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_get_tolerance(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_clip(cairo_t cr) */
-PHP_FUNCTION(cairo_clip)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_clip(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_clip_preserve(cairo_t cr) */
-PHP_FUNCTION(cairo_clip_preserve)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_clip_preserve(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_clip_extents(cairo_t cr, mixed x1, mixed y1, mixed x2, mixed y2) */
-PHP_FUNCTION(cairo_clip_extents)
-{
-    zval *zcr = NULL;
-    zval *zx1 = NULL;
-    zval *zy1 = NULL;
-    zval *zx2 = NULL;
-    zval *zy2 = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(5, 5)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zx1)
-        Z_PARAM_ZVAL(zy1)
-        Z_PARAM_ZVAL(zx2)
-        Z_PARAM_ZVAL(zy2)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__x1 = zx1;
-    zval * *__y1 = zy1;
-    zval * *__x2 = zx2;
-    zval * *__y2 = zy2;
-    php_cairo_t *__ret = php_cairo_clip_extents(, __cr, __x1, __y1, __x2, __y2);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_in_clip(cairo_t cr, mixed x, mixed y) */
-PHP_FUNCTION(cairo_in_clip)
-{
-    zval *zcr = NULL;
-    zval *zx = NULL;
-    zval *zy = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zx)
-        Z_PARAM_ZVAL(zy)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__x = zx;
-    zval * *__y = zy;
-    php_cairo_t *__ret = php_cairo_in_clip(, __cr, __x, __y);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_reset_clip(cairo_t cr) */
-PHP_FUNCTION(cairo_reset_clip)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_reset_clip(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_rectangle_list_destroy(mixed rectangle_list) */
-PHP_FUNCTION(cairo_rectangle_list_destroy)
-{
-    zval *zrectangle_list = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zrectangle_list)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    zval * *__rectangle_list = zrectangle_list;
-    php_cairo_t *__ret = php_cairo_rectangle_list_destroy(, __rectangle_list);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_copy_clip_rectangle_list(cairo_t cr) */
-PHP_FUNCTION(cairo_copy_clip_rectangle_list)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_copy_clip_rectangle_list(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_fill(cairo_t cr) */
-PHP_FUNCTION(cairo_fill)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-    php_cairo_t *__cr = ZVAL_IS_PHP_CAIRO_T(zcr) ? ZVAL_GET_PHP_CAIRO_T(zcr) : NULL;
-    cairo_fill(__cr->ptr);
-
-}/* }}} */
-
-/* {{{ proto void cairo_fill_preserve(cairo_t cr) */
-PHP_FUNCTION(cairo_fill_preserve)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_fill_preserve(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_fill_extents(cairo_t cr, mixed x1, mixed y1, mixed x2, mixed y2) */
-PHP_FUNCTION(cairo_fill_extents)
-{
-    zval *zcr = NULL;
-    zval *zx1 = NULL;
-    zval *zy1 = NULL;
-    zval *zx2 = NULL;
-    zval *zy2 = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(5, 5)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zx1)
-        Z_PARAM_ZVAL(zy1)
-        Z_PARAM_ZVAL(zx2)
-        Z_PARAM_ZVAL(zy2)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__x1 = zx1;
-    zval * *__y1 = zy1;
-    zval * *__x2 = zx2;
-    zval * *__y2 = zy2;
-    php_cairo_t *__ret = php_cairo_fill_extents(, __cr, __x1, __y1, __x2, __y2);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_in_fill(cairo_t cr, mixed x, mixed y) */
-PHP_FUNCTION(cairo_in_fill)
-{
-    zval *zcr = NULL;
-    zval *zx = NULL;
-    zval *zy = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zx)
-        Z_PARAM_ZVAL(zy)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__x = zx;
-    zval * *__y = zy;
-    php_cairo_t *__ret = php_cairo_in_fill(, __cr, __x, __y);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_mask(cairo_t cr, mixed pattern) */
-PHP_FUNCTION(cairo_mask)
-{
-    zval *zcr = NULL;
-    zval *zpattern = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zpattern)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__pattern = zpattern;
-    php_cairo_t *__ret = php_cairo_mask(, __cr, __pattern);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_mask_surface(cairo_t cr, mixed surface, mixed surface_x, mixed surface_y) */
-PHP_FUNCTION(cairo_mask_surface)
-{
-    zval *zcr = NULL;
-    zval *zsurface = NULL;
-    zval *zsurface_x = NULL;
-    zval *zsurface_y = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(4, 4)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zsurface)
-        Z_PARAM_ZVAL(zsurface_x)
-        Z_PARAM_ZVAL(zsurface_y)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__surface = zsurface;
-    zval * *__surface_x = zsurface_x;
-    zval * *__surface_y = zsurface_y;
-    php_cairo_t *__ret = php_cairo_mask_surface(, __cr, __surface, __surface_x, __surface_y);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_paint(cairo_t cr) */
-PHP_FUNCTION(cairo_paint)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_paint(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_paint_with_alpha(cairo_t cr, mixed alpha) */
-PHP_FUNCTION(cairo_paint_with_alpha)
-{
-    zval *zcr = NULL;
-    zval *zalpha = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zalpha)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__alpha = zalpha;
-    php_cairo_t *__ret = php_cairo_paint_with_alpha(, __cr, __alpha);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_stroke(cairo_t cr) */
-PHP_FUNCTION(cairo_stroke)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-    php_cairo_t *__cr = ZVAL_IS_PHP_CAIRO_T(zcr) ? ZVAL_GET_PHP_CAIRO_T(zcr) : NULL;
-    cairo_stroke(__cr->ptr);
-
-}/* }}} */
-
-/* {{{ proto void cairo_stroke_preserve(cairo_t cr) */
-PHP_FUNCTION(cairo_stroke_preserve)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_stroke_preserve(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_stroke_extents(cairo_t cr, mixed x1, mixed y1, mixed x2, mixed y2) */
-PHP_FUNCTION(cairo_stroke_extents)
-{
-    zval *zcr = NULL;
-    zval *zx1 = NULL;
-    zval *zy1 = NULL;
-    zval *zx2 = NULL;
-    zval *zy2 = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(5, 5)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zx1)
-        Z_PARAM_ZVAL(zy1)
-        Z_PARAM_ZVAL(zx2)
-        Z_PARAM_ZVAL(zy2)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__x1 = zx1;
-    zval * *__y1 = zy1;
-    zval * *__x2 = zx2;
-    zval * *__y2 = zy2;
-    php_cairo_t *__ret = php_cairo_stroke_extents(, __cr, __x1, __y1, __x2, __y2);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_in_stroke(cairo_t cr, mixed x, mixed y) */
-PHP_FUNCTION(cairo_in_stroke)
-{
-    zval *zcr = NULL;
-    zval *zx = NULL;
-    zval *zy = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zx)
-        Z_PARAM_ZVAL(zy)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__x = zx;
-    zval * *__y = zy;
-    php_cairo_t *__ret = php_cairo_in_stroke(, __cr, __x, __y);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_copy_page(cairo_t cr) */
-PHP_FUNCTION(cairo_copy_page)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_copy_page(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto void cairo_show_page(cairo_t cr) */
-PHP_FUNCTION(cairo_show_page)
-{
-    zval *zcr = NULL;
-
-    ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zcr)
-    ZEND_PARSE_PARAMETERS_END();
-
-#if 0
-    php_cairo_t * *__cr = zcr;
-    php_cairo_t *__ret = php_cairo_show_page(, __cr);
-
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
-}/* }}} */
-
-/* {{{ proto mixed cairo_get_reference_count(cairo_t cr) */
-PHP_FUNCTION(cairo_get_reference_count)
-{
-    zval *zcr = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
         Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
-    cairo_t *cr = php_cr==NULL ? NULL : php_cr->ptr;
+    DECL_PHP_CAIRO_T(cr);
 
-    unsigned int ref = cairo_get_reference_count(cr);
+    cairo_t *ret = cairo_reference(cr);
 
-    RETURN_LONG(ref);
-
+    zend_object *z_ret = zend_objects_new(php_cairo_t_class_entry);
+    php_cairo_t *php_ret = ZOBJ_TO_PHP_CAIRO_T(z_ret);
+    php_ret->ptr = z_ret;
+    RETURN_OBJ(z_ret);
 }/* }}} */
 
-/* {{{ proto mixed cairo_set_user_data(cairo_t cr, mixed key, void user_data, mixed destroy) */
-PHP_FUNCTION(cairo_set_user_data)
+/* {{{ proto void cairo_destroy(php_cairo_t cr)
+   Decreases the reference count on cr by one. */
+PHP_FUNCTION(cairo_destroy)
 {
-    zval *zcr = NULL;
-    zval *zkey = NULL;
-    zval *zuser_data = NULL;
-    zval *zdestroy = NULL;
+    zval *zcr;
 
-    ZEND_PARSE_PARAMETERS_START(4, 4)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zkey)
-        Z_PARAM_ZVAL(zuser_data)
-        Z_PARAM_ZVAL(zdestroy)
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
-#if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__key = zkey;
-    void  *__user_data = zuser_data;
-    zval * *__destroy = zdestroy;
-    php_cairo_t *__ret = php_cairo_set_user_data(, __cr, __key, __user_data, __destroy);
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
 
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
+    cairo_destroy(cr);
+    php_cr->ptr = NULL;
+
+    RETURN_NULL();
 }/* }}} */
 
-/* {{{ proto void cairo_get_user_data(cairo_t cr, mixed key) */
-PHP_FUNCTION(cairo_get_user_data)
+/* {{{ proto int cairo_status(php_cairo_t cr)
+   Checks whether an error has previously occurred for this context. */
+PHP_FUNCTION(cairo_status)
 {
-    zval *zcr = NULL;
-    zval *zkey = NULL;
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    int ret = cairo_status(cr);
+
+    RETURN_LONG(ret);
+}/* }}} */
+
+/* {{{ proto void cairo_save(php_cairo_t cr)
+   Makes a copy of the current state of cr and saves it on an internal s... */
+PHP_FUNCTION(cairo_save)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_save(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_restore(php_cairo_t cr)
+   Restores cr to the state saved by a preceding call to cairo_save() an... */
+PHP_FUNCTION(cairo_restore)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_restore(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto php_cairo_surface_t cairo_get_target(php_cairo_t cr)
+   Gets the target surface for the cairo context as passed to cairo_create(). */
+PHP_FUNCTION(cairo_get_target)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_surface_t *ret = cairo_get_target(cr);
+
+    zend_object *z_ret = zend_objects_new(php_cairo_surface_t_class_entry);
+    php_cairo_surface_t *php_ret = ZOBJ_TO_PHP_CAIRO_SURFACE_T(z_ret);
+    php_ret->ptr = z_ret;
+    RETURN_OBJ(z_ret);
+}/* }}} */
+
+/* {{{ proto void cairo_push_group(php_cairo_t cr)
+   Temporarily redirects drawing to an intermediate surface known as a g... */
+PHP_FUNCTION(cairo_push_group)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_push_group(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_push_group_with_content(php_cairo_t cr, int content)
+   Temporarily redirects drawing to an intermediate surface known as a g... */
+PHP_FUNCTION(cairo_push_group_with_content)
+{
+    zval *zcr;
+    zend_long zcontent;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_ZVAL(zcr)
-        Z_PARAM_ZVAL(zkey)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_LONG(zcontent);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    cairo_content_t content = zcontent;
+
+    cairo_push_group_with_content(cr, content);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto php_cairo_pattern_t cairo_pop_group(php_cairo_t cr)
+   Terminates the redirection begun by a call to cairo_push_group() or c... */
+PHP_FUNCTION(cairo_pop_group)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
 #if 0
-    php_cairo_t * *__cr = zcr;
-    zval * *__key = zkey;
-    php_cairo_t *__ret = php_cairo_get_user_data(, __cr, __key);
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
 
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
+    cairo_pattern_t *ret = cairo_pop_group(cr);
+
+    zend_object *z_ret = zend_objects_new(php_cairo_pattern_t_class_entry);
+    php_cairo_pattern_t *php_ret = ZOBJ_TO_PHP_CAIRO_PATTERN_T(z_ret);
+    php_ret->ptr = z_ret;
+    RETURN_OBJ(z_ret);
 #endif
 }/* }}} */
+
+/* {{{ proto void cairo_pop_group_to_source(php_cairo_t cr)
+   Terminates the redirection begun by a call to cairo_push_group() or c... */
+PHP_FUNCTION(cairo_pop_group_to_source)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_pop_group_to_source(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto php_cairo_surface_t cairo_get_group_target(php_cairo_t cr)
+   Gets the current destination surface for the context. */
+PHP_FUNCTION(cairo_get_group_target)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_surface_t *ret = cairo_get_group_target(cr);
+
+    zend_object *z_ret = zend_objects_new(php_cairo_surface_t_class_entry);
+    php_cairo_surface_t *php_ret = ZOBJ_TO_PHP_CAIRO_SURFACE_T(z_ret);
+    php_ret->ptr = z_ret;
+    RETURN_OBJ(z_ret);
+}/* }}} */
+
+/* {{{ proto void cairo_set_source_rgb(php_cairo_t cr, double red, double green, double blue)
+   Sets the source pattern within cr to an opaque color. */
+PHP_FUNCTION(cairo_set_source_rgb)
+{
+    zval *zcr;
+    double red;
+    double green;
+    double blue;
+
+    ZEND_PARSE_PARAMETERS_START(4, 4)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(red);
+        Z_PARAM_DOUBLE(green);
+        Z_PARAM_DOUBLE(blue);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_set_source_rgb(cr, red, green, blue);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_set_source_rgba(php_cairo_t cr, double red, double green, double blue, double alpha)
+   Sets the source pattern within cr to a translucent color. */
+PHP_FUNCTION(cairo_set_source_rgba)
+{
+    zval *zcr;
+    double red;
+    double green;
+    double blue;
+    double alpha;
+
+    ZEND_PARSE_PARAMETERS_START(5, 5)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(red);
+        Z_PARAM_DOUBLE(green);
+        Z_PARAM_DOUBLE(blue);
+        Z_PARAM_DOUBLE(alpha);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_set_source_rgba(cr, red, green, blue, alpha);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_set_source(php_cairo_t cr, php_cairo_pattern_t source)
+   Sets the source pattern within cr to source . */
+PHP_FUNCTION(cairo_set_source)
+{
+    zval *zcr;
+    zval *zsource;
+
+#if 0
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zsource, php_cairo_pattern_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    php_cairo_pattern_t *php_source = ZVAL_IS_PHP_CAIRO_PATTERN_T(zsource)? ZVAL_GET_PHP_CAIRO_PATTERN_T(zsource): NULL;
+    DECL_PHP_CAIRO_PATTERN_T(source);
+
+    cairo_set_source(cr, source);
+    RETURN_NULL();
+#endif
+}/* }}} */
+
+/* {{{ proto void cairo_set_source_surface(php_cairo_t cr, php_cairo_surface_t surface, double x, double y)
+   This is a convenience function for creating a pattern from surface an... */
+PHP_FUNCTION(cairo_set_source_surface)
+{
+    zval *zcr;
+    zval *zsurface;
+    double x;
+    double y;
+
+    ZEND_PARSE_PARAMETERS_START(4, 4)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zsurface, php_cairo_surface_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(x);
+        Z_PARAM_DOUBLE(y);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    php_cairo_surface_t *php_surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
+    DECL_PHP_CAIRO_SURFACE_T(surface);
+
+    cairo_set_source_surface(cr, surface, x, y);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto php_cairo_pattern_t cairo_get_source(php_cairo_t cr)
+   Gets the current source pattern for cr . */
+PHP_FUNCTION(cairo_get_source)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+#if 0
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_pattern_t *ret = cairo_get_source(cr);
+
+    zend_object *z_ret = zend_objects_new(php_cairo_pattern_t_class_entry);
+    php_cairo_pattern_t *php_ret = ZOBJ_TO_PHP_CAIRO_PATTERN_T(z_ret);
+    php_ret->ptr = z_ret;
+    RETURN_OBJ(z_ret);
+#endif
+}/* }}} */
+
+/* {{{ proto void cairo_set_antialias(php_cairo_t cr, int antialias)
+   Set the antialiasing mode of the rasterizer used for drawing shapes. */
+PHP_FUNCTION(cairo_set_antialias)
+{
+    zval *zcr;
+    zend_long zantialias;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_LONG(zantialias);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    cairo_antialias_t antialias = zantialias;
+
+    cairo_set_antialias(cr, antialias);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto int cairo_get_antialias(php_cairo_t cr)
+   Gets the current shape antialiasing mode, as set by cairo_set_antialias(). */
+PHP_FUNCTION(cairo_get_antialias)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    int ret = cairo_get_antialias(cr);
+
+    RETURN_LONG(ret);
+}/* }}} */
+
+
+static double *
+zval_get_array_double(zval *zarray, zend_long *num_dashes) {
+    double *array;
+
+    int i=0;
+    int length = zend_array_count(zarray->value.arr);
+    array = emalloc(sizeof(double)*length);
+
+    zval *value;
+
+    //g_print("php_cairo_path_t_get_path: %d\n", data->value.arr->nNumOfElements);
+    ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(zarray), value) {
+        if (IS_DOUBLE==Z_TYPE_P(value)) {
+            array[i] = Z_DVAL_P(value);
+            i++;
+        }
+    } ZEND_HASH_FOREACH_END();
+
+    if (*num_dashes!=i) {
+        *num_dashes = i;
+        // echo Error : fix size of num_data
+    }
+
+
+    return array;
+}
+
+/* {{{ proto void cairo_set_dash(php_cairo_t cr, double dashes, int num_dashes, double offset)
+   Sets the dash pattern to be used by cairo_stroke(). */
+PHP_FUNCTION(cairo_set_dash)
+{
+    zval *zcr;
+    zval *zdashes;
+    zend_long num_dashes;
+    double offset;
+
+    ZEND_PARSE_PARAMETERS_START(4, 4)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_ARRAY_EX(zdashes, 1, 0);
+        Z_PARAM_LONG(num_dashes);
+        Z_PARAM_DOUBLE(offset);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    const double *dashes = zval_get_array_double(zdashes, &num_dashes);
+
+    cairo_set_dash(cr, dashes, num_dashes, offset);
+    emalloc(dashes);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto int cairo_get_dash_count(php_cairo_t cr)
+   This function returns the length of the dash array in cr (0 if dashin... */
+PHP_FUNCTION(cairo_get_dash_count)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    int ret = cairo_get_dash_count(cr);
+
+    RETURN_LONG(ret);
+}/* }}} */
+
+/* {{{ proto void cairo_get_dash(php_cairo_t cr, double dashes, double offset)
+   Gets the current dash array. */
+PHP_FUNCTION(cairo_get_dash)
+{
+    zval *zcr;
+    zval *zdashes;
+    zval *zoffset;
+
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_ZVAL_EX2(zdashes, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zoffset, 0, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    double dashes = zdashes->value.dval;
+    double offset = zoffset->value.dval;
+
+    cairo_get_dash(cr, &dashes, &offset);
+    ZVAL_DOUBLE(zdashes, dashes);
+    ZVAL_DOUBLE(zoffset, offset);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_set_fill_rule(php_cairo_t cr, int fill_rule)
+   Set the current fill rule within the cairo context. */
+PHP_FUNCTION(cairo_set_fill_rule)
+{
+    zval *zcr;
+    zend_long zfill_rule;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_LONG(zfill_rule);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    cairo_fill_rule_t fill_rule = zfill_rule;
+
+    cairo_set_fill_rule(cr, fill_rule);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto int cairo_get_fill_rule(php_cairo_t cr)
+   Gets the current fill rule, as set by cairo_set_fill_rule(). */
+PHP_FUNCTION(cairo_get_fill_rule)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    int ret = cairo_get_fill_rule(cr);
+
+    RETURN_LONG(ret);
+}/* }}} */
+
+/* {{{ proto void cairo_set_line_cap(php_cairo_t cr, int line_cap)
+   Sets the current line cap style within the cairo context. */
+PHP_FUNCTION(cairo_set_line_cap)
+{
+    zval *zcr;
+    zend_long zline_cap;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_LONG(zline_cap);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    cairo_line_cap_t line_cap = zline_cap;
+
+    cairo_set_line_cap(cr, line_cap);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto int cairo_get_line_cap(php_cairo_t cr)
+   Gets the current line cap style, as set by cairo_set_line_cap(). */
+PHP_FUNCTION(cairo_get_line_cap)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    int ret = cairo_get_line_cap(cr);
+
+    RETURN_LONG(ret);
+}/* }}} */
+
+/* {{{ proto void cairo_set_line_join(php_cairo_t cr, int line_join)
+   Sets the current line join style within the cairo context. */
+PHP_FUNCTION(cairo_set_line_join)
+{
+    zval *zcr;
+    zend_long zline_join;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_LONG(zline_join);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    cairo_line_join_t line_join = zline_join;
+
+    cairo_set_line_join(cr, line_join);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto int cairo_get_line_join(php_cairo_t cr)
+   Gets the current line join style, as set by cairo_set_line_join(). */
+PHP_FUNCTION(cairo_get_line_join)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    int ret = cairo_get_line_join(cr);
+
+    RETURN_LONG(ret);
+}/* }}} */
+
+/* {{{ proto void cairo_set_line_width(php_cairo_t cr, double width)
+   Sets the current line width within the cairo context. */
+PHP_FUNCTION(cairo_set_line_width)
+{
+    zval *zcr;
+    double width;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(width);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_set_line_width(cr, width);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto double cairo_get_line_width(php_cairo_t cr)
+   This function returns the current line width value exactly as set by ... */
+PHP_FUNCTION(cairo_get_line_width)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    double ret = cairo_get_line_width(cr);
+
+    RETURN_DOUBLE(ret);
+}/* }}} */
+
+/* {{{ proto void cairo_set_miter_limit(php_cairo_t cr, double limit)
+   Sets the current miter limit within the cairo context. */
+PHP_FUNCTION(cairo_set_miter_limit)
+{
+    zval *zcr;
+    double limit;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(limit);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_set_miter_limit(cr, limit);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto double cairo_get_miter_limit(php_cairo_t cr)
+   Gets the current miter limit, as set by cairo_set_miter_limit(). */
+PHP_FUNCTION(cairo_get_miter_limit)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    double ret = cairo_get_miter_limit(cr);
+
+    RETURN_DOUBLE(ret);
+}/* }}} */
+
+/* {{{ proto void cairo_set_operator(php_cairo_t cr, int op)
+   Sets the compositing operator to be used for all drawing operations. */
+PHP_FUNCTION(cairo_set_operator)
+{
+    zval *zcr;
+    zend_long zop;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_LONG(zop);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    cairo_operator_t op = zop;
+
+    cairo_set_operator(cr, op);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto int cairo_get_operator(php_cairo_t cr)
+   Gets the current compositing operator for a cairo context. */
+PHP_FUNCTION(cairo_get_operator)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    int ret = cairo_get_operator(cr);
+
+    RETURN_LONG(ret);
+}/* }}} */
+
+/* {{{ proto void cairo_set_tolerance(php_cairo_t cr, double tolerance)
+   Sets the tolerance used when converting paths into trapezoids. */
+PHP_FUNCTION(cairo_set_tolerance)
+{
+    zval *zcr;
+    double tolerance;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(tolerance);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_set_tolerance(cr, tolerance);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto double cairo_get_tolerance(php_cairo_t cr)
+   Gets the current tolerance value, as set by cairo_set_tolerance(). */
+PHP_FUNCTION(cairo_get_tolerance)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    double ret = cairo_get_tolerance(cr);
+
+    RETURN_DOUBLE(ret);
+}/* }}} */
+
+/* {{{ proto void cairo_clip(php_cairo_t cr)
+   Establishes a new clip region by intersecting the current clip region... */
+PHP_FUNCTION(cairo_clip)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_clip(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_clip_preserve(php_cairo_t cr)
+   Establishes a new clip region by intersecting the current clip region... */
+PHP_FUNCTION(cairo_clip_preserve)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_clip_preserve(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_clip_extents(php_cairo_t cr, double x1, double y1, double x2, double y2)
+   Computes a bounding box in user coordinates covering the area inside ... */
+PHP_FUNCTION(cairo_clip_extents)
+{
+    zval *zcr;
+    zval *zx1;
+    zval *zy1;
+    zval *zx2;
+    zval *zy2;
+
+    ZEND_PARSE_PARAMETERS_START(5, 5)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_ZVAL_EX2(zx1, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zy1, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zx2, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zy2, 0, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    double x1 = zx1->value.dval;
+    double y1 = zy1->value.dval;
+    double x2 = zx2->value.dval;
+    double y2 = zy2->value.dval;
+
+    cairo_clip_extents(cr, &x1, &y1, &x2, &y2);
+    ZVAL_DOUBLE(zx1, x1);
+    ZVAL_DOUBLE(zy1, y1);
+    ZVAL_DOUBLE(zx2, x2);
+    ZVAL_DOUBLE(zy2, y2);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto cairo_bool_t cairo_in_clip(php_cairo_t cr, double x, double y)
+   Tests whether the given point is inside the area that would be visibl... */
+PHP_FUNCTION(cairo_in_clip)
+{
+    zval *zcr;
+    double x;
+    double y;
+
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(x);
+        Z_PARAM_DOUBLE(y);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_bool_t ret = cairo_in_clip(cr, x, y);
+
+    if (ret) {
+        RETURN_TRUE;
+    } else {
+        RETURN_FALSE;
+    }
+}/* }}} */
+
+/* {{{ proto void cairo_reset_clip(php_cairo_t cr)
+   Reset the current clip region to its original, unrestricted state. */
+PHP_FUNCTION(cairo_reset_clip)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_reset_clip(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_rectangle_list_destroy(php_cairo_rectangle_list_t rectangle_list)
+   Unconditionally frees rectangle_list and all associated references. */
+PHP_FUNCTION(cairo_rectangle_list_destroy)
+{
+    zval *zrectangle_list;
+
+#if 0
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zrectangle_list, php_cairo_rectangle_list_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_rectangle_list_t *php_rectangle_list = ZVAL_IS_PHP_CAIRO_RECTANGLE_LIST_T(zrectangle_list)? ZVAL_GET_PHP_CAIRO_RECTANGLE_LIST_T(zrectangle_list): NULL;
+    DECL_PHP_CAIRO_RECTANGLE_LIST_T(rectangle_list);
+
+    cairo_rectangle_list_destroy(rectangle_list);
+    RETURN_NULL();
+#endif
+}/* }}} */
+
+/* {{{ proto php_cairo_rectangle_list_t cairo_copy_clip_rectangle_list(php_cairo_t cr)
+   Gets the current clip region as a list of rectangles in user coordina... */
+PHP_FUNCTION(cairo_copy_clip_rectangle_list)
+{
+    zval *zcr;
+
+#if 0
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_rectangle_list_t *ret = cairo_copy_clip_rectangle_list(cr);
+
+    zend_object *z_ret = zend_objects_new(php_cairo_rectangle_list_t_class_entry);
+    php_cairo_rectangle_list_t *php_ret = ZOBJ_TO_PHP_CAIRO_RECTANGLE_LIST_T(z_ret);
+    php_ret->ptr = z_ret;
+    RETURN_OBJ(z_ret);
+#endif
+}/* }}} */
+
+/* {{{ proto void cairo_fill(php_cairo_t cr)
+   A drawing operator that fills the current path according to the curre... */
+PHP_FUNCTION(cairo_fill)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_fill(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_fill_preserve(php_cairo_t cr)
+   A drawing operator that fills the current path according to the curre... */
+PHP_FUNCTION(cairo_fill_preserve)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_fill_preserve(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_fill_extents(php_cairo_t cr, double x1, double y1, double x2, double y2)
+   Computes a bounding box in user coordinates covering the area that wo... */
+PHP_FUNCTION(cairo_fill_extents)
+{
+    zval *zcr;
+    zval *zx1;
+    zval *zy1;
+    zval *zx2;
+    zval *zy2;
+
+    ZEND_PARSE_PARAMETERS_START(5, 5)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_ZVAL_EX2(zx1, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zy1, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zx2, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zy2, 0, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    double x1 = zx1->value.dval;
+    double y1 = zy1->value.dval;
+    double x2 = zx2->value.dval;
+    double y2 = zy2->value.dval;
+
+    cairo_fill_extents(cr, &x1, &y1, &x2, &y2);
+    ZVAL_DOUBLE(zx1, x1);
+    ZVAL_DOUBLE(zy1, y1);
+    ZVAL_DOUBLE(zx2, x2);
+    ZVAL_DOUBLE(zy2, y2);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto cairo_bool_t cairo_in_fill(php_cairo_t cr, double x, double y)
+   Tests whether the given point is inside the area that would be affect... */
+PHP_FUNCTION(cairo_in_fill)
+{
+    zval *zcr;
+    double x;
+    double y;
+
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(x);
+        Z_PARAM_DOUBLE(y);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_bool_t ret = cairo_in_fill(cr, x, y);
+
+    if (ret) {
+        RETURN_TRUE;
+    } else {
+        RETURN_FALSE;
+    }
+}/* }}} */
+
+/* {{{ proto void cairo_mask(php_cairo_t cr, php_cairo_pattern_t pattern)
+   A drawing operator that paints the current source using the alpha cha... */
+PHP_FUNCTION(cairo_mask)
+{
+    zval *zcr;
+    zval *zpattern;
+
+#if 0
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zpattern, php_cairo_pattern_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    php_cairo_pattern_t *php_pattern = ZVAL_IS_PHP_CAIRO_PATTERN_T(zpattern)? ZVAL_GET_PHP_CAIRO_PATTERN_T(zpattern): NULL;
+    DECL_PHP_CAIRO_PATTERN_T(pattern);
+
+    cairo_mask(cr, pattern);
+    RETURN_NULL();
+#endif
+}/* }}} */
+
+/* {{{ proto void cairo_mask_surface(php_cairo_t cr, php_cairo_surface_t surface, double surface_x, double surface_y)
+   A drawing operator that paints the current source using the alpha cha... */
+PHP_FUNCTION(cairo_mask_surface)
+{
+    zval *zcr;
+    zval *zsurface;
+    double surface_x;
+    double surface_y;
+
+    ZEND_PARSE_PARAMETERS_START(4, 4)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zsurface, php_cairo_surface_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(surface_x);
+        Z_PARAM_DOUBLE(surface_y);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    php_cairo_surface_t *php_surface = ZVAL_IS_PHP_CAIRO_SURFACE_T(zsurface)? ZVAL_GET_PHP_CAIRO_SURFACE_T(zsurface): NULL;
+    DECL_PHP_CAIRO_SURFACE_T(surface);
+
+    cairo_mask_surface(cr, surface, surface_x, surface_y);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_paint(php_cairo_t cr)
+   A drawing operator that paints the current source everywhere within t... */
+PHP_FUNCTION(cairo_paint)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_paint(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_paint_with_alpha(php_cairo_t cr, double alpha)
+   A drawing operator that paints the current source everywhere within t... */
+PHP_FUNCTION(cairo_paint_with_alpha)
+{
+    zval *zcr;
+    double alpha;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(alpha);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_paint_with_alpha(cr, alpha);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_stroke(php_cairo_t cr)
+   A drawing operator that strokes the current path according to the cur... */
+PHP_FUNCTION(cairo_stroke)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_stroke(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_stroke_preserve(php_cairo_t cr)
+   A drawing operator that strokes the current path according to the cur... */
+PHP_FUNCTION(cairo_stroke_preserve)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_stroke_preserve(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_stroke_extents(php_cairo_t cr, double x1, double y1, double x2, double y2)
+   Computes a bounding box in user coordinates covering the area that wo... */
+PHP_FUNCTION(cairo_stroke_extents)
+{
+    zval *zcr;
+    zval *zx1;
+    zval *zy1;
+    zval *zx2;
+    zval *zy2;
+
+    ZEND_PARSE_PARAMETERS_START(5, 5)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_ZVAL_EX2(zx1, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zy1, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zx2, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zy2, 0, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    double x1 = zx1->value.dval;
+    double y1 = zy1->value.dval;
+    double x2 = zx2->value.dval;
+    double y2 = zy2->value.dval;
+
+    cairo_stroke_extents(cr, &x1, &y1, &x2, &y2);
+    ZVAL_DOUBLE(zx1, x1);
+    ZVAL_DOUBLE(zy1, y1);
+    ZVAL_DOUBLE(zx2, x2);
+    ZVAL_DOUBLE(zy2, y2);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto cairo_bool_t cairo_in_stroke(php_cairo_t cr, double x, double y)
+   Tests whether the given point is inside the area that would be affect... */
+PHP_FUNCTION(cairo_in_stroke)
+{
+    zval *zcr;
+    double x;
+    double y;
+
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(x);
+        Z_PARAM_DOUBLE(y);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_bool_t ret = cairo_in_stroke(cr, x, y);
+
+    if (ret) {
+        RETURN_TRUE;
+    } else {
+        RETURN_FALSE;
+    }
+}/* }}} */
+
+/* {{{ proto void cairo_copy_page(php_cairo_t cr)
+   Emits the current page for backends that support multiple pages, but ... */
+PHP_FUNCTION(cairo_copy_page)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_copy_page(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto void cairo_show_page(php_cairo_t cr)
+   Emits and clears the current page for backends that support multiple ... */
+PHP_FUNCTION(cairo_show_page)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    cairo_show_page(cr);
+    RETURN_NULL();
+}/* }}} */
+
+/* {{{ proto int cairo_get_reference_count(php_cairo_t cr)
+   Returns the current reference count of cr . */
+PHP_FUNCTION(cairo_get_reference_count)
+{
+    zval *zcr;
+
+    ZEND_PARSE_PARAMETERS_START(1, 1)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+
+    int ret = cairo_get_reference_count(cr);
+
+    RETURN_LONG(ret);
+}/* }}} */
+
+/* {{{ proto int cairo_set_user_data(php_cairo_t cr, php_cairo_user_data_key_t key, void user_data, cairo_destroy_func_t destroy)
+   Attach user data to cr . */
+PHP_FUNCTION(cairo_set_user_data)
+{
+    zval *zcr;
+    zval *zkey;
+    zval *zuser_data;
+    zval *zdestroy;
+
+#if 0
+    ZEND_PARSE_PARAMETERS_START(4, 4)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zkey, php_cairo_user_data_key_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zuser_data, php_void_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zdestroy, php_cairo_destroy_func_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    php_cairo_user_data_key_t *php_key = ZVAL_IS_PHP_CAIRO_USER_DATA_KEY_T(zkey)? ZVAL_GET_PHP_CAIRO_USER_DATA_KEY_T(zkey): NULL;
+    DECL_PHP_CAIRO_USER_DATA_KEY_T(key);
+    php_void *php_user_data = ZVAL_IS_PHP_VOID(zuser_data)? ZVAL_GET_PHP_VOID(zuser_data): NULL;
+    DECL_PHP_VOID(user_data);
+    php_cairo_destroy_func_t *php_destroy = ZVAL_IS_PHP_CAIRO_DESTROY_FUNC_T(zdestroy)? ZVAL_GET_PHP_CAIRO_DESTROY_FUNC_T(zdestroy): NULL;
+    DECL_PHP_CAIRO_DESTROY_FUNC_T(destroy);
+
+    int ret = cairo_set_user_data(cr, key, user_data, destroy);
+
+    RETURN_LONG(ret);
+#endif
+}/* }}} */
+
+/* {{{ proto void cairo_get_user_data(php_cairo_t cr, php_cairo_user_data_key_t key)
+   Return user data previously attached to cr using the specified key. */
+PHP_FUNCTION(cairo_get_user_data)
+{
+    zval *zcr;
+    zval *zkey;
+
+#if 0
+    ZEND_PARSE_PARAMETERS_START(2, 2)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zkey, php_cairo_user_data_key_t_class_entry, 1, 0);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
+    DECL_PHP_CAIRO_T(cr);
+    php_cairo_user_data_key_t *php_key = ZVAL_IS_PHP_CAIRO_USER_DATA_KEY_T(zkey)? ZVAL_GET_PHP_CAIRO_USER_DATA_KEY_T(zkey): NULL;
+    DECL_PHP_CAIRO_USER_DATA_KEY_T(key);
+
+    cairo_get_user_data(cr, key);
+#endif
+    RETURN_NULL();
+}/* }}} */
+
+
+/*
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: noet sw=4 ts=4 fdm=marker
+ * vim<600: noet sw=4 ts=4
+ */

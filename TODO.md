@@ -6,6 +6,8 @@ Service : Support, consulting, training, certification
 
 ## Priority
 
+TODO: do not use zend_objects_new, use php_object_new instead
+
 cairo_text_path use utf-8 ; what need to do ?
 
 

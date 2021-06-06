@@ -1,6 +1,6 @@
 /*
 +----------------------------------------------------------------------+
-| PHP Version 7                                                        |
+| PHP Version 8                                                        |
 +----------------------------------------------------------------------+
 | Copyright (c) 1997-2018 The PHP Group                                |
 +----------------------------------------------------------------------+
@@ -76,8 +76,7 @@ php_cairo_matrix_t_methods[] = {
 static zend_object*
 php_cairo_matrix_t_create_object(zend_class_entry *class_type)
 {
-    php_cairo_matrix_t *intern = ecalloc(1, sizeof(php_cairo_matrix_t) + zend_object_properties_size(class_type));
-
+    php_cairo_matrix_t *intern = zend_object_alloc(sizeof(php_cairo_matrix_t), class_type);
     zend_object_std_init(&intern->std, class_type);
     object_properties_init(&intern->std, class_type);
 
@@ -130,9 +129,9 @@ php_cairo_matrix_t_setter_double(php_cairo_matrix_t *intern, zval *value, char *
         ZVAL_SET_DOUBLE(dest, value->value.dval);
     } else {
         zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
-        zend_string *type = zend_zval_get_type(value);
+        const char *type_name = zend_zval_type_name(value);
         if (strict_types) {
-            zend_internal_type_error(1, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_matrix_t::$%s of type float,", type->val, name);
+            zend_type_error("Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_matrix_t::$%s of type float,", type_name, name);
         } else {
             int allow_errors = -1;
             zend_long lval=0;
@@ -141,20 +140,20 @@ php_cairo_matrix_t_setter_double(php_cairo_matrix_t *intern, zval *value, char *
                 zend_uchar z_type = is_numeric_string(Z_STRVAL_P(value), Z_STRLEN_P(value), &lval, &dval, allow_errors);
                 if (z_type==IS_LONG) {
                     ZVAL_SET_DOUBLE(dest, (double)lval);
-                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to float(%f) convertion,", type->val, value->value.str->val, (double)lval);
+                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to float(%f) convertion,", type_name, value->value.str->val, (double)lval);
                     return;
                 } else if(z_type==IS_DOUBLE) {
                     ZVAL_SET_DOUBLE(dest, dval);
-                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to float(%f) convertion,", type->val, value->value.str->val, dval);
+                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to float(%f) convertion,", type_name, value->value.str->val, dval);
                     return;
                 }
             }
             if (Z_TYPE_P(value)==IS_LONG) {
                 ZVAL_SET_DOUBLE(dest, (double)value->value.lval);
-                zend_error(E_USER_NOTICE, "Implicite int(%d) to float(%f) convertion,", value->value.lval, (double)value->value.lval);
+                zend_error(E_USER_NOTICE, "Implicite int(%d) to float(%f) convertion,", (int)value->value.lval, (double)value->value.lval);
                 return;
             }
-            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_matrix_t::$%s of type float,", type->val, name);
+            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_matrix_t::$%s of type float,", type_name, name);
         }
     }
 }
@@ -201,10 +200,9 @@ php_cairo_matrix_t_properties_lookup (const char *str, size_t len)
 
 /* {{{ php_cairo_matrix_t_read_property */
 static zval*
-php_cairo_matrix_t_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
+php_cairo_matrix_t_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv)
 {
-    php_cairo_matrix_t *intern = ZVAL_GET_PHP_CAIRO_MATRIX_T(object);
-    zend_string *member_str = member->value.str;
+    php_cairo_matrix_t *intern = ZOBJ_TO_PHP_CAIRO_MATRIX_T(object);
 
     const struct PhpCairoMatrixTProperty *cmd = php_cairo_matrix_t_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
@@ -234,7 +232,8 @@ php_cairo_matrix_t_read_property(zval *object, zval *member, int type, void **ca
             return rv;
             break;
         default:
-            zend_internal_type_error(1, "Internal bug,");
+            //zend_internal_type_error(1, "Internal bug,");
+            //zend_error(E_USER_NOTICE, "Internal bug,");
             break;
         }
     } else {
@@ -246,12 +245,10 @@ php_cairo_matrix_t_read_property(zval *object, zval *member, int type, void **ca
 /* }}} */
 
 /* {{{ php_cairo_matrix_t_write_property */
-static void
-php_cairo_matrix_t_write_property(zval *object, zval *member, zval *value, void **cache_slot)
+static zval*
+php_cairo_matrix_t_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot)
 {
-    php_cairo_matrix_t *intern = ZVAL_GET_PHP_CAIRO_MATRIX_T(object);
-    zend_string *member_str = member->value.str;
-
+    php_cairo_matrix_t *intern = ZOBJ_TO_PHP_CAIRO_MATRIX_T(object);
     // struct
     const struct PhpCairoMatrixTProperty *cmd = php_cairo_matrix_t_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
@@ -278,14 +275,15 @@ php_cairo_matrix_t_write_property(zval *object, zval *member, zval *value, void 
     } else {
         // property not found
     }
+    return value;
 }
 /* }}} */
 
 /* {{{ php_cairo_matrix_t_get_property_ptr_ptr */
-static zval *
-php_cairo_matrix_t_get_property_ptr_ptr(zval *object, zval *member, int type, void **cache_slot) {
-    php_cairo_matrix_t  *intern = ZVAL_GET_PHP_CAIRO_MATRIX_T(object);
-    zend_string *member_str = member->value.str;
+static zval*
+php_cairo_matrix_t_get_property_ptr_ptr(zend_object *object, zend_string *member_str, int type, void **cache_slot)
+{
+    php_cairo_matrix_t *intern = ZOBJ_TO_PHP_CAIRO_MATRIX_T(object);
     zval *retval = NULL;
 
     const struct PhpCairoMatrixTProperty *cmd = php_cairo_matrix_t_properties_lookup(member_str->val, member_str->len);
@@ -317,9 +315,9 @@ php_cairo_matrix_t_get_property_ptr_ptr(zval *object, zval *member, int type, vo
 
 /* {{{ php_cairo_matrix_t_get_debug_info */
 static HashTable*
-php_cairo_matrix_t_get_debug_info(zval *object, int *is_temp)
+php_cairo_matrix_t_get_debug_info(zend_object *object, int *is_temp)
 {
-    php_cairo_matrix_t  *intern = ZVAL_GET_PHP_CAIRO_MATRIX_T(object);
+    php_cairo_matrix_t  *intern = ZOBJ_TO_PHP_CAIRO_MATRIX_T(object);
     HashTable   *debug_info,
     *std_props;
 
@@ -426,13 +424,13 @@ PHP_FUNCTION(cairo_matrix_init)
     double y0;
 
     ZEND_PARSE_PARAMETERS_START(7, 7)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(xx)
-        Z_PARAM_DOUBLE(yx)
-        Z_PARAM_DOUBLE(xy)
-        Z_PARAM_DOUBLE(yy)
-        Z_PARAM_DOUBLE(x0)
-        Z_PARAM_DOUBLE(y0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(xx);
+        Z_PARAM_DOUBLE(yx);
+        Z_PARAM_DOUBLE(xy);
+        Z_PARAM_DOUBLE(yy);
+        Z_PARAM_DOUBLE(x0);
+        Z_PARAM_DOUBLE(y0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_matrix_t *php_matrix = ZVAL_IS_PHP_CAIRO_MATRIX_T(zmatrix)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zmatrix): NULL;
@@ -451,7 +449,7 @@ PHP_FUNCTION(cairo_matrix_init_identity)
     zval *zmatrix;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_matrix_t *php_matrix = ZVAL_IS_PHP_CAIRO_MATRIX_T(zmatrix)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zmatrix): NULL;
@@ -472,9 +470,9 @@ PHP_FUNCTION(cairo_matrix_init_translate)
     double ty;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(tx)
-        Z_PARAM_DOUBLE(ty)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(tx);
+        Z_PARAM_DOUBLE(ty);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_matrix_t *php_matrix = ZVAL_IS_PHP_CAIRO_MATRIX_T(zmatrix)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zmatrix): NULL;
@@ -495,9 +493,9 @@ PHP_FUNCTION(cairo_matrix_init_scale)
     double sy;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(sx)
-        Z_PARAM_DOUBLE(sy)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(sx);
+        Z_PARAM_DOUBLE(sy);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_matrix_t *php_matrix = ZVAL_IS_PHP_CAIRO_MATRIX_T(zmatrix)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zmatrix): NULL;
@@ -517,8 +515,8 @@ PHP_FUNCTION(cairo_matrix_init_rotate)
     double radians;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(radians)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(radians);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_matrix_t *php_matrix = ZVAL_IS_PHP_CAIRO_MATRIX_T(zmatrix)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zmatrix): NULL;
@@ -539,9 +537,9 @@ PHP_FUNCTION(cairo_matrix_translate)
     double ty;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(tx)
-        Z_PARAM_DOUBLE(ty)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(tx);
+        Z_PARAM_DOUBLE(ty);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_matrix_t *php_matrix = ZVAL_IS_PHP_CAIRO_MATRIX_T(zmatrix)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zmatrix): NULL;
@@ -562,9 +560,9 @@ PHP_FUNCTION(cairo_matrix_scale)
     double sy;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(sx)
-        Z_PARAM_DOUBLE(sy)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(sx);
+        Z_PARAM_DOUBLE(sy);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_matrix_t *php_matrix = ZVAL_IS_PHP_CAIRO_MATRIX_T(zmatrix)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zmatrix): NULL;
@@ -584,8 +582,8 @@ PHP_FUNCTION(cairo_matrix_rotate)
     double radians;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(radians)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(radians);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_matrix_t *php_matrix = ZVAL_IS_PHP_CAIRO_MATRIX_T(zmatrix)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zmatrix): NULL;
@@ -604,7 +602,7 @@ PHP_FUNCTION(cairo_matrix_invert)
     zval *zmatrix;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_matrix_t *php_matrix = ZVAL_IS_PHP_CAIRO_MATRIX_T(zmatrix)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zmatrix): NULL;
@@ -625,9 +623,9 @@ PHP_FUNCTION(cairo_matrix_multiply)
     zval *zb;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_ZVAL_DEREF_EX(zresult, 0, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(za, php_cairo_matrix_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zb, php_cairo_matrix_t_class_entry, 1, 0)
+        Z_PARAM_ZVAL_EX2(zresult, 0, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(za, php_cairo_matrix_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zb, php_cairo_matrix_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_matrix_t *php_result = ZVAL_IS_PHP_CAIRO_MATRIX_T(zresult)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zresult): php_cairo_matrix_t_new();
@@ -653,9 +651,9 @@ PHP_FUNCTION(cairo_matrix_transform_distance)
     zval *zdy;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
-        Z_PARAM_ZVAL_DEREF(zdx)
-        Z_PARAM_ZVAL_DEREF(zdy)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
+        Z_PARAM_ZVAL_EX2(zdx, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zdy, 0, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_matrix_t *php_matrix = ZVAL_IS_PHP_CAIRO_MATRIX_T(zmatrix)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zmatrix): NULL;
@@ -681,9 +679,9 @@ PHP_FUNCTION(cairo_matrix_transform_point)
     zval *zy;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
-        Z_PARAM_ZVAL_DEREF(zx)
-        Z_PARAM_ZVAL_DEREF(zy)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
+        Z_PARAM_ZVAL_EX2(zx, 0, 1, 0);
+        Z_PARAM_ZVAL_EX2(zy, 0, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_matrix_t *php_matrix = ZVAL_IS_PHP_CAIRO_MATRIX_T(zmatrix)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zmatrix): NULL;

@@ -22,40 +22,52 @@
 #include "config.h"
 #endif
 
-#ifndef PHP_CAIRO_STATUS_T_H
-#define PHP_CAIRO_STATUS_T_H
+#ifndef PHP_CAIRO_FORMAT_T_H
+#define PHP_CAIRO_FORMAT_T_H
 
+#if CAIRO_HAS_IMAGE_SURFACE
 
-#define PHP_CAIRO_STATUS_T_FE() \
-    PHP_GTK_FE(cairo_status_to_string,        arginfo_cairo_status_to_string) \
-    PHP_GTK_FE(cairo_debug_reset_static_data, arginfo_cairo_debug_reset_static_data) \
+#if CAIRO_VERSION >= 10600
+#define PHP_CAIRO_FORMAT_T_FE_10600() \
+    PHP_GTK_FE(cairo_format_stride_for_width,       arginfo_cairo_format_stride_for_width)
+#else
+#define PHP_CAIRO_FORMAT_T_FE_10600()
+#endif
 
+#define PHP_CAIRO_FORMAT_T_FE() \
+    PHP_CAIRO_FORMAT_T_FE_10600()
 
-#define PHP_CAIRO_STATUS_T_MINIT_FUNCTION(container_ce, parent_ce) \
-    php_cairo_status_t_class_init(container_ce, parent_ce)
+#define PHP_CAIRO_FORMAT_T_MINIT_FUNCTION(container_ce, parent_ce) \
+    php_cairo_format_t_class_init(container_ce, parent_ce)
 
-#define PHP_CAIRO_STATUS_T_MSHUTDOWN_FUNCTION() { \
+#define PHP_CAIRO_FORMAT_T_MSHUTDOWN_FUNCTION() { \
 }
 
-#define PHP_CAIRO_STATUS_T_RSHUTDOWN_FUNCTION() {\
+#define PHP_CAIRO_FORMAT_T_RSHUTDOWN_FUNCTION() {\
 }
 
 zend_class_entry*
-php_cairo_status_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
+php_cairo_format_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
 
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_status_to_string, 0, ZEND_SEND_BY_VAL, 1)
-    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, status)
+#if CAIRO_VERSION >= 10600
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_format_stride_for_width, 0, ZEND_SEND_BY_VAL, 2)
+    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, format)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, width, IS_LONG, 0)
 ZEND_END_ARG_INFO()
-PHP_FUNCTION(cairo_status_to_string);
+PHP_FUNCTION(cairo_format_stride_for_width);
+#endif
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_debug_reset_static_data, 0, ZEND_SEND_BY_VAL, 0)
-ZEND_END_ARG_INFO()
-PHP_FUNCTION(cairo_debug_reset_static_data);
+#else
 
+#define PHP_CAIRO_FORMAT_T_FE()
+#define PHP_CAIRO_FORMAT_T_MINIT_FUNCTION(container_ce, parent_ce)
+#define PHP_CAIRO_FORMAT_T_MSHUTDOWN_FUNCTION()
+#define PHP_CAIRO_FORMAT_T_RSHUTDOWN_FUNCTION()
 
+#endif /* CAIRO_HAS_IMAGE_SURFACE */
 
-#endif	/* PHP_CAIRO_STATUS_T_H */
+#endif	/* PHP_CAIRO_FORMAT_T_H */
 
 
 

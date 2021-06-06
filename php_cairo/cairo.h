@@ -1,6 +1,6 @@
 /*
 +----------------------------------------------------------------------+
-| PHP Version 7                                                        |
+| PHP Version 8                                                        |
 +----------------------------------------------------------------------+
 | Copyright (c) 1997-2018 The PHP Group                                |
 +----------------------------------------------------------------------+
@@ -18,18 +18,17 @@
 
 /* $Id$ */
 
-#ifndef PHP_CAIRO_T_H
-#define PHP_CAIRO_T_H
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#ifndef PHP_CAIRO_T_H
+#define PHP_CAIRO_T_H
 
 
 #define PHP_CAIRO_T(ptr)           ((php_cairo_t*)(ptr))
 #define PHP_CAIRO_T_CLASS          php_cairo_t_class_entry
 #define PHP_CAIRO_T_OFFSET         (sizeof(php_cairo_t) - sizeof(zend_object))
-#define PHP_CAIRO_T_PTR(obj)       (obj)->ptr
 
 #define ZOBJ_IS_PHP_CAIRO_T(obj)   ((obj)!=NULL && obj->ce == php_cairo_t_class_entry)
 #define ZOBJ_TO_PHP_CAIRO_T(std)   PHP_CAIRO_T( ((void*)(std))-PHP_CAIRO_T_OFFSET )
@@ -37,7 +36,7 @@
 #define ZVAL_IS_PHP_CAIRO_T(val)   ((val)!=NULL && Z_TYPE_P(val)==IS_OBJECT && ZOBJ_IS_PHP_CAIRO_T((val)->value.obj))
 #define ZVAL_GET_PHP_CAIRO_T(val)  (((val)==NULL || ZVAL_IS_NULL(val)) ? NULL : ZOBJ_TO_PHP_CAIRO_T((val)->value.obj))
 
-#define ZVAL_SET_PHP_CAIRO_T(z, o) do {  \
+#define ZVAL_SET_PHP_CAIRO_T(z, o) do {        \
         if (o==NULL) {                              \
             ZVAL_NULL(z);                           \
         } else {                                    \
@@ -48,8 +47,14 @@
         }                                           \
     } while (0)
 
+
+#define PHP_CAIRO_T_PTR(intern)       (intern)->ptr
+
 #define DECL_PHP_CAIRO_T(name) \
     cairo_t *name = php_##name ? PHP_CAIRO_T_PTR(php_##name) : NULL;
+
+
+
 
 #define PHP_CAIRO_T_FE() \
     PHP_GTK_FE(cairo_create,                   arginfo_cairo_create) \
@@ -124,6 +129,7 @@
 
 extern zend_class_entry     *php_cairo_t_class_entry;
 
+
 typedef struct _php_cairo_t php_cairo_t;
 struct _php_cairo_t {
     cairo_t *ptr;
@@ -131,8 +137,11 @@ struct _php_cairo_t {
     zend_object std;
 };
 
-php_cairo_t *php_cairo_new();
-zend_class_entry *php_cairo_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
+zend_class_entry*
+php_cairo_t_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
+
+php_cairo_t *
+php_cairo_t_new();
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_t___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()
@@ -180,7 +189,7 @@ PHP_FUNCTION(cairo_push_group);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_push_group_with_content, 0, ZEND_SEND_BY_VAL, 2)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, content, cairo_content_t, 0)
+    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, content)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_push_group_with_content);
 
@@ -237,7 +246,7 @@ PHP_FUNCTION(cairo_get_source);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_set_antialias, 0, ZEND_SEND_BY_VAL, 2)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, antialias, cairo_antialias_t, 0)
+    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, antialias)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_set_antialias);
 
@@ -248,7 +257,7 @@ PHP_FUNCTION(cairo_get_antialias);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_set_dash, 0, ZEND_SEND_BY_VAL, 4)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, dashes, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, dashes, IS_ARRAY, 0)
     ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, num_dashes, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, offset, IS_DOUBLE, 0)
 ZEND_END_ARG_INFO()
@@ -261,14 +270,14 @@ PHP_FUNCTION(cairo_get_dash_count);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_get_dash, 0, ZEND_SEND_BY_VAL, 3)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, dashes, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, offset, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, dashes, IS_DOUBLE, 1)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, offset, IS_DOUBLE, 1)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_get_dash);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_set_fill_rule, 0, ZEND_SEND_BY_VAL, 2)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, fill_rule, cairo_fill_rule_t, 0)
+    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, fill_rule)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_set_fill_rule);
 
@@ -279,7 +288,7 @@ PHP_FUNCTION(cairo_get_fill_rule);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_set_line_cap, 0, ZEND_SEND_BY_VAL, 2)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, line_cap, cairo_line_cap_t, 0)
+    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, line_cap)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_set_line_cap);
 
@@ -290,7 +299,7 @@ PHP_FUNCTION(cairo_get_line_cap);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_set_line_join, 0, ZEND_SEND_BY_VAL, 2)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, line_join, cairo_line_join_t, 0)
+    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, line_join)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_set_line_join);
 
@@ -323,7 +332,7 @@ PHP_FUNCTION(cairo_get_miter_limit);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_set_operator, 0, ZEND_SEND_BY_VAL, 2)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, op, cairo_operator_t, 0)
+    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, op)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_set_operator);
 
@@ -355,10 +364,10 @@ PHP_FUNCTION(cairo_clip_preserve);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_clip_extents, 0, ZEND_SEND_BY_VAL, 5)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, x1, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, y1, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, x2, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, y2, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, x1, IS_DOUBLE, 1)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, y1, IS_DOUBLE, 1)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, x2, IS_DOUBLE, 1)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, y2, IS_DOUBLE, 1)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_clip_extents);
 
@@ -447,10 +456,10 @@ PHP_FUNCTION(cairo_stroke_preserve);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_stroke_extents, 0, ZEND_SEND_BY_VAL, 5)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, x1, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, y1, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, x2, IS_DOUBLE, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, y2, IS_DOUBLE, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, x1, IS_DOUBLE, 1)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, y1, IS_DOUBLE, 1)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, x2, IS_DOUBLE, 1)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_REF, y2, IS_DOUBLE, 1)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_stroke_extents);
 
@@ -491,14 +500,15 @@ ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_get_user_data);
 
 
-
 #endif	/* PHP_CAIRO_T_H */
 
+
+
 /*
-* Local variables:
-* tab-width: 4
-* c-basic-offset: 4
-* End:
-* vim600: noet sw=4 ts=4 fdm=marker
-* vim<600: noet sw=4 ts=4
-*/
+ * Local variables:
+ * tab-width: 4
+ * c-basic-offset: 4
+ * End:
+ * vim600: noet sw=4 ts=4 fdm=marker
+ * vim<600: noet sw=4 ts=4
+ */
