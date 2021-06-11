@@ -73,7 +73,7 @@ Gtk\Main();
 - [x] cairo_device_type_t
 - [x] cairo_content_t
 - [x] cairo_surface_type_t
-- [x] cairo_format_t
+- [x] cairo_format_t (+ Image Surfaces functions)
 - [x] cairo_status_t
 - [ ] -----------------------------
 - [ ] cairo_t
@@ -90,7 +90,7 @@ Gtk\Main();
 - [ ] cairo_text_extents_t
 - [ ] cairo_font_options_t
 - [ ] cairo_device_t
-- [ ] cairo_surface_t
+- [ ] cairo_surface_t ( Work in progress)
 - [X] cairo_matrix_t
 - [ ] -----------------------------
 - [X] cairo_path_data_t
