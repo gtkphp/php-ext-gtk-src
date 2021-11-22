@@ -11,10 +11,10 @@ $error = g_error_new($quark, 30, "The message is '%s'", "message", NULL);
 var_dump($error);
 
 ?>
---EXPECT--
+--EXPECTF--
 object(GError)#1 (3) {
   ["domain"]=>
-  string(2) "My"
+  int(%d)
   ["code"]=>
   int(30)
   ["message"]=>

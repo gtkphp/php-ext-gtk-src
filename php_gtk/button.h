@@ -56,7 +56,7 @@ extern zend_class_entry *php_gtk_button_class_entry;
     PHP_GTK_FE(gtk_button_new_with_label, arginfo_gtk_button_new_with_label)
 
 #define PHP_GTK_BUTTON_MINIT_FUNCTION(container_ce, parent_ce) \
-    php_gtk_button_class_init(container_ce, parent_ce)
+    php_gtk_button_class_minit(container_ce, parent_ce)
 
 #define PHP_GTK_BUTTON_MSHUTDOWN_FUNCTION() { \
 }
@@ -64,20 +64,12 @@ extern zend_class_entry *php_gtk_button_class_entry;
 #define PHP_GTK_BUTTON_RSHUTDOWN_FUNCTION() {\
 }
 
-typedef struct _php_gtk_button php_gtk_button;
-struct _php_gtk_button {
-    // put here members
-
-    php_gtk_bin parent_instance;
-    // Keep blank
-};
-
-
+typedef php_gtk_bin php_gtk_button;
 
 
 void php_gtk_button_new_with_label(php_gtk_button *self, zend_string *label);
 
-zend_class_entry *php_gtk_button_class_init(zend_class_entry *container_ce, zend_class_entry *ce);
+zend_class_entry *php_gtk_button_class_minit(zend_class_entry *container_ce, zend_class_entry *ce);
 
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_button_new_with_label, 0, 0, 1)
@@ -89,6 +81,31 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_button___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()
 PHP_METHOD(gtk_button, __construct);
 
+
+#define _PHP_GTK_BUTTON_TRAIT() \
+    PhpGtkBinTrait parent_trait; \
+    zend_function *add
+
+typedef struct _PhpGtkButtonTrait {
+    _PHP_GTK_BUTTON_TRAIT();
+} PhpGtkButtonTrait;
+
+typedef struct _PhpGtkButtonClass {
+    GtkButtonClass parent_class;
+    _PHP_GTK_BUTTON_TRAIT();
+} PhpGtkButtonClass;
+
+typedef struct _PhpGtkButton {
+    GtkButton parent_instance;
+} PhpGtkButton;
+
+
+void php_gtk_button_init(PhpGtkButton *widget);
+//void php_gtk_container_class_finalize(PhpGtkContainerClass *klass);
+void php_gtk_button_class_init(PhpGtkButtonClass *klass);
+
+GObject *php_gtk_button_extends(php_gtk_button *widget);
+GType    php_gtk_button_get_type(const char *php_class_name);
 
 #endif	/* PHP_GTK_BUTTON_H */
 

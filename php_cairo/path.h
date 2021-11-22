@@ -226,10 +226,9 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_rectangle, 0, ZEND_SEND_BY_VAL, 5)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_rectangle);
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_glyph_path, 0, ZEND_SEND_BY_VAL, 3)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_glyph_path, 0, ZEND_SEND_BY_VAL, 2)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, cr, cairo_t, 0)
-    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, glyphs, cairo_glyph_t, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, num_glyphs, IS_LONG, 0)
+    ZEND_ARG_ARRAY_INFO(ZEND_SEND_BY_VAL, glyphs, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_glyph_path);
 

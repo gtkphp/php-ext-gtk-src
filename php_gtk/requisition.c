@@ -129,8 +129,10 @@ php_gtk_requisition_setter_width(php_gtk_requisition *intern, zval *value) {
             intern->ptr->width = lval;
             return;
         }
-        zend_string *type = zend_zval_get_type(value);
-        zend_internal_type_error(1, "Cannot assign %s to property \\gtk_requisition::$width of type int,", type->val);
+        //zend_string *type = zend_zval_get_type(value);
+        const char *type = zend_zval_type_name(value);
+
+        zend_error(E_USER_NOTICE, "Cannot assign %s to property \\gtk_requisition::$width of type int,", type);
     }
 }
 
@@ -155,8 +157,10 @@ php_gtk_requisition_setter_height(php_gtk_requisition *intern, zval *value) {
             intern->ptr->height = lval;
             return;
         }
-        zend_string *type = zend_zval_get_type(value);
-        zend_internal_type_error(1, "Cannot assign %s to property \\gtk_requisition::$height of type int,", type->val);
+        //zend_string *type = zend_zval_get_type(value);
+        const char *type = zend_zval_type_name(value);
+        //zend_internal_type_error(1, "Cannot assign %s to property \\gtk_requisition::$height of type int,", type);
+        zend_error(E_USER_NOTICE, "Cannot assign %s to property \\gtk_requisition::$height of type int,", type);
     }
 }
 
@@ -210,10 +214,9 @@ php_gtk_requisition_properties_lookup (const char *str, size_t len)
 
 /* {{{ gtk_read_property */
 static zval*
-php_gtk_requisition_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
+php_gtk_requisition_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv)
 {
-    php_gtk_requisition *intern = ZVAL_GET_PHP_GTK_REQUISITION(object);
-    zend_string *member_str = member->value.str;
+    php_gtk_requisition *intern = ZOBJ_TO_PHP_GTK_REQUISITION(object);
 
     struct PhpGtkRequisitionProperty *cmd = php_gtk_requisition_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
@@ -227,11 +230,10 @@ php_gtk_requisition_read_property(zval *object, zval *member, int type, void **c
 /* }}} */
 
 /* {{{ php_gtk_requisition_write_property */
-static void
-php_gtk_requisition_write_property(zval *object, zval *member, zval *value, void **cache_slot)
+static zval*
+php_gtk_requisition_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot)
 {
-    php_gtk_requisition *intern = ZVAL_GET_PHP_GTK_REQUISITION(object);
-    zend_string *member_str = member->value.str;
+    php_gtk_requisition *intern = ZOBJ_TO_PHP_GTK_REQUISITION(object);
 
     struct PhpGtkRequisitionProperty *cmd = php_gtk_requisition_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
@@ -243,9 +245,9 @@ php_gtk_requisition_write_property(zval *object, zval *member, zval *value, void
 /* }}} */
 
 static HashTable*
-php_gtk_requisition_get_debug_info(zval *object, int *is_temp) /* {{{ */
+php_gtk_requisition_get_debug_info(zend_object *object, int *is_temp) /* {{{ */
 {
-    php_gtk_requisition  *obj =  ZVAL_GET_PHP_GTK_REQUISITION(object);
+    php_gtk_requisition  *obj =  ZOBJ_TO_PHP_GTK_REQUISITION(object);
     HashTable   *debug_info,
     *std_props;
     zend_string *string_key = NULL;
@@ -410,10 +412,11 @@ php_gtk_requisition_get_handlers()
     php_gtk_requisition_handlers.free_obj = php_gtk_requisition_free_object;
     php_gtk_requisition_handlers.read_property = php_gtk_requisition_read_property;
     php_gtk_requisition_handlers.write_property = php_gtk_requisition_write_property;
-    php_gtk_requisition_handlers.unset_property = php_gtk_requisition_unset_property;
+    //php_gtk_requisition_handlers.unset_property = php_gtk_requisition_unset_property;
     //php_gtk_requisition_handlers.get_property_ptr_ptr = php_gtk_requisition_get_property_ptr_ptr;
 
     php_gtk_requisition_handlers.get_debug_info = php_gtk_requisition_get_debug_info;
+/*
     php_gtk_requisition_handlers.get_properties = php_gtk_requisition_get_properties;//get_properties_for TODO php 8.0
     //php_gtk_requisition_handlers.set = php_gtk_requisition_set;
     php_gtk_requisition_handlers.cast_object = php_gtk_requisition_cast_object;
@@ -423,7 +426,7 @@ php_gtk_requisition_get_handlers()
     php_gtk_requisition_handlers.read_dimension = php_gtk_requisition_read_dimension;
     php_gtk_requisition_handlers.unset_dimension = php_gtk_requisition_unset_dimension;
     php_gtk_requisition_handlers.write_dimension = php_gtk_requisition_write_dimension;
-
+*/
 
     return &php_gtk_requisition_handlers;
 }

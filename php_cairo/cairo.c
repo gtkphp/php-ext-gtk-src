@@ -34,14 +34,14 @@
 
 #include "php_cairo/surface.h"
 #include "php_cairo/status.h"
-/*#include "php_cairo/content.h"
+#include "php_cairo/content.h"
 #include "php_cairo/pattern.h"
 #include "php_cairo/antialias.h"
 #include "php_cairo/fill-rule.h"
 #include "php_cairo/line-cap.h"
 #include "php_cairo/line-join.h"
 #include "php_cairo/operator.h"
-#include "php_cairo/rectangle-list.h"*/
+/*#include "php_cairo/rectangle-list.h"*/
 #include "php_cairo/rectangle.h"
 
 #include "php_cairo/cairo.h"
@@ -237,9 +237,10 @@ PHP_FUNCTION(cairo_reference)
 
     cairo_t *ret = cairo_reference(cr);
 
-    zend_object *z_ret = zend_objects_new(php_cairo_t_class_entry);
+
+    zend_object *z_ret = php_cairo_t_create_object(php_cairo_t_class_entry);
     php_cairo_t *php_ret = ZOBJ_TO_PHP_CAIRO_T(z_ret);
-    php_ret->ptr = z_ret;
+    php_ret->ptr = ret;
     RETURN_OBJ(z_ret);
 }/* }}} */
 
@@ -329,9 +330,9 @@ PHP_FUNCTION(cairo_get_target)
 
     cairo_surface_t *ret = cairo_get_target(cr);
 
-    zend_object *z_ret = zend_objects_new(php_cairo_surface_t_class_entry);
-    php_cairo_surface_t *php_ret = ZOBJ_TO_PHP_CAIRO_SURFACE_T(z_ret);
-    php_ret->ptr = z_ret;
+    php_cairo_surface_t *php_ret = php_cairo_surface_t_new();
+    zend_object *z_ret = &php_ret->std;
+    php_ret->ptr = ret;
     RETURN_OBJ(z_ret);
 }/* }}} */
 
@@ -427,9 +428,9 @@ PHP_FUNCTION(cairo_get_group_target)
 
     cairo_surface_t *ret = cairo_get_group_target(cr);
 
-    zend_object *z_ret = zend_objects_new(php_cairo_surface_t_class_entry);
-    php_cairo_surface_t *php_ret = ZOBJ_TO_PHP_CAIRO_SURFACE_T(z_ret);
-    php_ret->ptr = z_ret;
+    php_cairo_surface_t *php_ret = php_cairo_surface_t_new();
+    zend_object *z_ret = &php_ret->std;
+    php_ret->ptr = ret;
     RETURN_OBJ(z_ret);
 }/* }}} */
 
@@ -488,7 +489,6 @@ PHP_FUNCTION(cairo_set_source)
     zval *zcr;
     zval *zsource;
 
-#if 0
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
         Z_PARAM_OBJECT_OF_CLASS_EX(zsource, php_cairo_pattern_t_class_entry, 1, 0);
@@ -501,7 +501,7 @@ PHP_FUNCTION(cairo_set_source)
 
     cairo_set_source(cr, source);
     RETURN_NULL();
-#endif
+
 }/* }}} */
 
 /* {{{ proto void cairo_set_source_surface(php_cairo_t cr, php_cairo_surface_t surface, double x, double y)
@@ -639,7 +639,8 @@ PHP_FUNCTION(cairo_set_dash)
     const double *dashes = zval_get_array_double(zdashes, &num_dashes);
 
     cairo_set_dash(cr, dashes, num_dashes, offset);
-    emalloc(dashes);
+    efree(dashes);
+
     RETURN_NULL();
 }/* }}} */
 

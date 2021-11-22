@@ -142,8 +142,10 @@ php_gtk_requested_size_setter_minimum_size(php_gtk_requested_size *intern, zval 
             intern->ptr->minimum_size = lval;
             return;
         }
-        zend_string *type = zend_zval_get_type(value);
-        zend_internal_type_error(1, "Cannot assign %s to property \\gtk_requested_size::$minimum_size of type int,", type->val);
+        //zend_string *type = zend_zval_get_type(value);
+        const char *type = zend_zval_type_name(value);
+        //zend_internal_type_error(1, "Cannot assign %s to property \\gtk_requested_size::$minimum_size of type int,", type);
+        zend_error(E_USER_NOTICE, "Cannot assign %s to property \\gtk_requested_size::$minimum_size of type int,", type);
     }
 }
 
@@ -168,8 +170,9 @@ php_gtk_requested_size_setter_natural_size(php_gtk_requested_size *intern, zval 
             intern->ptr->natural_size = lval;
             return;
         }
-        zend_string *type = zend_zval_get_type(value);
-        zend_internal_type_error(1, "Cannot assign %s to property \\gtk_requested_size::$natural_size of type int,", type->val);
+        //zend_string *type = zend_zval_get_type(value);
+        const char *type = zend_zval_type_name(value);
+        zend_error(E_USER_NOTICE, "Cannot assign %s to property \\gtk_requested_size::$natural_size of type int,", type);
     }
 }
 
@@ -234,10 +237,9 @@ php_gtk_requested_size_properties_lookup (const char *str, size_t len)
 
 /* {{{ gtk_read_property */
 static zval*
-php_gtk_requested_size_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
+php_gtk_requested_size_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv)
 {
-    php_gtk_requested_size *intern = ZVAL_GET_PHP_GTK_REQUESTED_SIZE(object);
-    zend_string *member_str = member->value.str;
+    php_gtk_requested_size *intern = ZOBJ_TO_PHP_GTK_REQUESTED_SIZE(object);
 
     struct PhpGtkRequestedSizeProperty *cmd = php_gtk_requested_size_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
@@ -251,11 +253,10 @@ php_gtk_requested_size_read_property(zval *object, zval *member, int type, void 
 /* }}} */
 
 /* {{{ php_gtk_requested_size_write_property */
-static void
-php_gtk_requested_size_write_property(zval *object, zval *member, zval *value, void **cache_slot)
+static zval*
+php_gtk_requested_size_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot)
 {
-    php_gtk_requested_size *intern = ZVAL_GET_PHP_GTK_REQUESTED_SIZE(object);
-    zend_string *member_str = member->value.str;
+    php_gtk_requested_size *intern = ZOBJ_TO_PHP_GTK_REQUESTED_SIZE(object);
 
     struct PhpGtkRequestedSizeProperty *cmd = php_gtk_requested_size_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
@@ -267,9 +268,9 @@ php_gtk_requested_size_write_property(zval *object, zval *member, zval *value, v
 /* }}} */
 
 static HashTable*
-php_gtk_requested_size_get_debug_info(zval *object, int *is_temp) /* {{{ */
+php_gtk_requested_size_get_debug_info(zend_object *object, int *is_temp) /* {{{ */
 {
-    php_gtk_requested_size  *obj =  ZVAL_GET_PHP_GTK_REQUESTED_SIZE(object);
+    php_gtk_requested_size  *obj =  ZOBJ_TO_PHP_GTK_REQUESTED_SIZE(object);
     HashTable   *debug_info,
     *std_props;
     zend_string *string_key = NULL;
@@ -438,10 +439,11 @@ php_gtk_requested_size_get_handlers()
     php_gtk_requested_size_handlers.free_obj = php_gtk_requested_size_free_object;
     php_gtk_requested_size_handlers.read_property = php_gtk_requested_size_read_property;
     php_gtk_requested_size_handlers.write_property = php_gtk_requested_size_write_property;
-    php_gtk_requested_size_handlers.unset_property = php_gtk_requested_size_unset_property;
+    //php_gtk_requested_size_handlers.unset_property = php_gtk_requested_size_unset_property;
     //php_gtk_requested_size_handlers.get_property_ptr_ptr = php_gtk_requested_size_get_property_ptr_ptr;
 
     php_gtk_requested_size_handlers.get_debug_info = php_gtk_requested_size_get_debug_info;
+/*
     php_gtk_requested_size_handlers.get_properties = php_gtk_requested_size_get_properties;//get_properties_for TODO php 8.0
     //php_gtk_requested_size_handlers.set = php_gtk_requested_size_set;
     php_gtk_requested_size_handlers.cast_object = php_gtk_requested_size_cast_object;
@@ -451,7 +453,7 @@ php_gtk_requested_size_get_handlers()
     php_gtk_requested_size_handlers.read_dimension = php_gtk_requested_size_read_dimension;
     php_gtk_requested_size_handlers.unset_dimension = php_gtk_requested_size_unset_dimension;
     php_gtk_requested_size_handlers.write_dimension = php_gtk_requested_size_write_dimension;
-
+*/
 
     return &php_gtk_requested_size_handlers;
 }

@@ -1,6 +1,6 @@
 /*
 +----------------------------------------------------------------------+
-| PHP Version 7                                                        |
+| PHP Version 8                                                        |
 +----------------------------------------------------------------------+
 | Copyright (c) 1997-2018 The PHP Group                                |
 +----------------------------------------------------------------------+
@@ -18,12 +18,13 @@
 
 /* $Id$ */
 
-#ifndef PHP_CAIRO_IMAGE_SURFACE_T_H
-#define PHP_CAIRO_IMAGE_SURFACE_T_H
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#ifndef PHP_CAIRO_IMAGE_SURFACE_H
+#define PHP_CAIRO_IMAGE_SURFACE_H
+
 
 #if CAIRO_VERSION >= 10200
 #define PHP_CAIRO_IMAGE_SURFACE_FE_10200() \
@@ -50,6 +51,22 @@
     PHP_CAIRO_IMAGE_SURFACE_FE_10200() \
     PHP_CAIRO_IMAGE_SURFACE_FE_10000()
 
+
+
+
+#define PHP_CAIRO_IMAGE_SURFACE_MINIT_FUNCTION(container_ce, parent_ce) \
+    php_cairo_format_t_class_init(container_ce, parent_ce)
+
+#define PHP_CAIRO_IMAGE_SURFACE_MSHUTDOWN_FUNCTION() { \
+}
+
+#define PHP_CAIRO_IMAGE_SURFACE_RSHUTDOWN_FUNCTION() {\
+}
+
+zend_class_entry*
+php_cairo_image_surface_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
+
+
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_cairo_image_surface_create, ZEND_RETURN_VALUE, 3, cairo_surface_t, 0)
     ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, format, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, width, IS_LONG, 0)
@@ -57,7 +74,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_cairo_image_surface_create, ZEND_
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_image_surface_create);
 ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_cairo_image_surface_create_for_data, ZEND_RETURN_VALUE, 5, cairo_surface_t, 0)
-    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, data, IS_STRING, 0)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, data, cairo_image_data_t, 0)
     ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, format, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, width, IS_LONG, 0)
     ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, height, IS_LONG, 0)
@@ -65,7 +82,7 @@ ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_cairo_image_surface_create_for_da
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_image_surface_create_for_data);
 #if CAIRO_VERSION >= 10200
-ZEND_BEGIN_ARG_WITH_RETURN_TYPE_INFO_EX(arginfo_cairo_image_surface_get_data, ZEND_RETURN_VALUE, 1, IS_STRING, 0)
+ZEND_BEGIN_ARG_WITH_RETURN_OBJ_INFO_EX(arginfo_cairo_image_surface_get_data, ZEND_RETURN_VALUE, 1, cairo_image_data_t, 0)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, surface, cairo_surface_t, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_image_surface_get_data);
@@ -90,7 +107,9 @@ PHP_FUNCTION(cairo_image_surface_get_stride);
 #endif
 
 
-#endif	/* PHP_CAIRO_IMAGE_SURFACE_T_H */
+#endif	/* PHP_CAIRO_IMAGE_SURFACE_H */
+
+
 
 /*
  * Local variables:

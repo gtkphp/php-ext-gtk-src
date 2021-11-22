@@ -29,7 +29,7 @@
 extern zend_module_entry gtk_module_entry;
 #define phpext_gtk_ptr &gtk_module_entry
 
-#define PHP_GTK_VERSION "0.1.0" /* Replace with version number for your extension */
+#define PHP_GTK_VERSION "0.2.0" /* Replace with version number for your extension */
 
 #ifdef PHP_WIN32
 #	define PHP_GTK_API __declspec(dllexport)
@@ -82,6 +82,8 @@ extern zend_module_entry gtk_module_entry;
         ZVAL_DOUBLE((z), dval); \
     }
 
+// @see php_cairo_matrix_t_setter_double( zval *value, zval *dest)
+// TODO: php_zval_get_double( zval *value, zval *dest)
 #define ZVAL_GET_DOUBLE(src, dest) \
     if (IS_DOUBLE==Z_TYPE_P(src)) {\
         dest = Z_DVAL_P(src);\

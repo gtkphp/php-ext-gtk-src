@@ -48,7 +48,7 @@ zend_class_entry *php_cairo_png_t_class_init(zend_class_entry *ce);
 
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_image_surface_create_from_png, 0, ZEND_SEND_BY_VAL, 1)
-    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, filename)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, filename, IS_STRING, 0)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_image_surface_create_from_png);
 

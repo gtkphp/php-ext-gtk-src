@@ -188,31 +188,78 @@ if test "$PHP_GTK" != "no"; then
 
   cairo_sources="php_cairo/cairo.c \
                  php_cairo/status.c \
+                 php_cairo/antialias.c \
+                 php_cairo/content.c \
+                 php_cairo/device-type.c \
+                 php_cairo/extend.c \
+                 php_cairo/fill-rule.c \
+                 php_cairo/filter.c \
+                 php_cairo/font-slant.c \
+                 php_cairo/font-type.c \
+                 php_cairo/font-weight.c \
+                 php_cairo/hint-metrics.c \
+                 php_cairo/hint-style.c \
+                 php_cairo/line-cap.c \
+                 php_cairo/line-join.c \
+                 php_cairo/operator.c \
+                 php_cairo/pattern-type.c \
+                 php_cairo/region-overlap.c \
+                 php_cairo/subpixel-order.c \
+                 php_cairo/surface-type.c \
+                 php_cairo/text-cluster-flags.c \
                  php_cairo/rectangle.c \
+                 php_cairo/rectangle-int.c \
                  php_cairo/path-data-type.c \
                  php_cairo/path-data.c \
                  php_cairo/path.c \
+                 php_cairo/font-options.c \
                  php_cairo/matrix.c \
                  php_cairo/format.c \
+                 php_cairo/device.c \
+                 php_cairo/font-face.c \
+                 php_cairo/font-extents.c \
+                 php_cairo/text-cluster.c \
+                 php_cairo/text-extents.c \
+                 php_cairo/scaled-font.c \
+                 php_cairo/pattern.c \
+                 php_cairo/ft-synthesize.c \
+                 php_cairo/ft.c \
+                 php_cairo/glyph.c \
+                 php_cairo/region.c \
                  php_cairo/surface.c \
+                 php_cairo/transformations.c \
                  php_cairo/image-surface.c \
+                 php_cairo/raster-source.c \
+                 php_cairo/svg.c \
+                 php_cairo/svg-version.c \
+                     php_cairo/image-data.c \
                  php_cairo/png.c "
 
-  doc_sources="php_doc/parser.c \
+
+  doc_sources="php_doc/scanner.c \
+               php_doc/tag.c \
+               php_doc/parameter.c \
+               php_doc/value.c \
                php_doc/comment.c "
 
-  glib_sources="php_glib/list.c \
+  glib_sources="php_glib/str.c \
+                php_glib/hash-table.c \
+                php_glib/list.c \
                 php_glib/quark.c \
-                php_glib/error.c \
-                php_glib/hash-table.c"
+                php_glib/error.c "
 
   gobject_sources="php_gobject/object.c \
+                   php_gobject/object-extends.c \
+                   php_gobject/type.c \
+                   php_gobject/value.c \
+                   php_gobject/paramspecs.c \
                    php_gobject/signal.c"
 
   gdk_sources="php_gdk/pixbuf.c \
                php_gdk/rectangle.c "
 
   gtk_sources="php_gtk/widget.c \
+               php_gtk/widget-extends.c \
                php_gtk/requisition.c \
                php_gtk/requested-size.c \
                php_gtk/container.c \
@@ -222,15 +269,17 @@ if test "$PHP_GTK" != "no"; then
                php_gtk/button.c \
                php_gtk/main.c "
 
-  sources="gtk.c"
+  sources="gtk.c $cairo_sources $glib_sources $doc_sources $gobject_sources $gdk_sources $gtk_sources"
 
   ext_ns=$gtk_namespace
 
-  PHP_NEW_EXTENSION(gtk, gtk.c $cairo_sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DGTK_NS="$ext_ns")
+  PHP_NEW_EXTENSION(gtk, $sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -DGTK_NS="$ext_ns")
   PHP_ADD_BUILD_DIR($ext_builddir/php_doc, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_cairo, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_glib, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_gobject, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_gdk, 1)
   PHP_ADD_BUILD_DIR($ext_builddir/php_gtk, 1)
+  PHP_ADD_MAKEFILE_FRAGMENT()
+
 fi

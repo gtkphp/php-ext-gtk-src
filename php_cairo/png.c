@@ -67,19 +67,20 @@ extern zend_module_entry gtk_module_entry;
 /* {{{ proto mixed cairo_image_surface_create_from_png(mixed filename) */
 PHP_FUNCTION(cairo_image_surface_create_from_png)
 {
-    zval *zfilename = NULL;
+    char *filename;
+    size_t filename_len;
+
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL(zfilename);
+        Z_PARAM_STRING(filename, filename_len);
     ZEND_PARSE_PARAMETERS_END();
-#if 0
-    zval * *__filename = zfilename;
-    php_cairo_png_t *__ret = php_cairo_image_surface_create_from_png(, __filename);
 
-    if(__list)
-        GC_REFCOUNT(&__ret->std)++;
-    RETURN_OBJ(&__ret->std);
-#endif
+    cairo_surface_t *ret = cairo_image_surface_create_from_png(filename);
+    php_cairo_surface_t *php_ret = php_cairo_surface_t_new();
+    php_ret->ptr = ret;
+
+
+    RETURN_OBJ(&php_ret->std);
 }/* }}} */
 
 /* {{{ proto mixed cairo_image_surface_create_from_png_stream(mixed read_func, void closure) */

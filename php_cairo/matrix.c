@@ -131,7 +131,7 @@ php_cairo_matrix_t_setter_double(php_cairo_matrix_t *intern, zval *value, char *
         zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
         const char *type_name = zend_zval_type_name(value);
         if (strict_types) {
-            zend_type_error("Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_matrix_t::$%s of type float,", type_name, name);
+            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_matrix_t::$%s of type float,", type_name, name);
         } else {
             int allow_errors = -1;
             zend_long lval=0;
@@ -367,6 +367,9 @@ php_cairo_matrix_t_get_handlers()
 /*----------------------------------------------------------------------+
  | PHP_MINIT                                                            |
  +----------------------------------------------------------------------*/
+#include "zend_attributes.h"
+#include "zend_observer.h"
+#include "zend_smart_str.h"
 
  /*{{{ php_cairo_matrix_t_class_init */
 zend_class_entry*
@@ -375,6 +378,8 @@ php_cairo_matrix_t_class_init(zend_class_entry *container_ce, zend_class_entry *
     PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "cairo_matrix_t", php_cairo_matrix_t_methods);
     php_cairo_matrix_t_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_cairo_matrix_t_class_entry->create_object = php_cairo_matrix_t_create_object;
+
+
 
     return php_cairo_matrix_t_class_entry;
 }/*}}} */
@@ -623,12 +628,12 @@ PHP_FUNCTION(cairo_matrix_multiply)
     zval *zb;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_ZVAL_EX2(zresult, 0, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zresult, php_cairo_matrix_t_class_entry, 1, 0);
         Z_PARAM_OBJECT_OF_CLASS_EX(za, php_cairo_matrix_t_class_entry, 1, 0);
         Z_PARAM_OBJECT_OF_CLASS_EX(zb, php_cairo_matrix_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
-    php_cairo_matrix_t *php_result = ZVAL_IS_PHP_CAIRO_MATRIX_T(zresult)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zresult): php_cairo_matrix_t_new();
+    php_cairo_matrix_t *php_result = ZVAL_IS_PHP_CAIRO_MATRIX_T(zresult)? ZVAL_GET_PHP_CAIRO_MATRIX_T(zresult): NULL;
     DECL_PHP_CAIRO_MATRIX_T(result);
     php_cairo_matrix_t *php_a = ZVAL_IS_PHP_CAIRO_MATRIX_T(za)? ZVAL_GET_PHP_CAIRO_MATRIX_T(za): NULL;
     DECL_PHP_CAIRO_MATRIX_T(a);

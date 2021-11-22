@@ -58,7 +58,7 @@
 
 
 #define PHP_GTK_WINDOW_MINIT_FUNCTION(container_ce, parent_ce) \
-    php_gtk_window_class_init(container_ce, parent_ce)
+    php_gtk_window_class_minit(container_ce, parent_ce)
 
 #define PHP_GTK_WINDOW_MSHUTDOWN_FUNCTION() { \
 }
@@ -69,17 +69,11 @@
 extern zend_class_entry     *php_gtk_window_class_entry;
 
 
-typedef struct _php_gtk_window php_gtk_window;
-struct _php_gtk_window {
-    // put here members
-
-    php_gtk_bin parent_instance;
-    // Keep blank
-};
+typedef php_gtk_bin php_gtk_window;
 
 void php_gtk_window_new(php_gtk_window *self, zend_long type);
 
-zend_class_entry *php_gtk_window_class_init(zend_class_entry *container_ce, zend_class_entry *ce);
+zend_class_entry *php_gtk_window_class_minit(zend_class_entry *container_ce, zend_class_entry *ce);
 
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_window_new, 0, 0, 1)
@@ -109,6 +103,30 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_window___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()
 PHP_METHOD(gtk_window, __construct);
 
+
+#define _PHP_GTK_WINDOW_TRAIT() \
+    PhpGtkBinTrait parent_trait; \
+    zend_function *add
+
+typedef struct _PhpGtkWindowTrait {
+    _PHP_GTK_WINDOW_TRAIT();
+} PhpGtkWindowTrait;
+
+typedef struct _PhpGtkWindowClass {
+    GtkWindowClass parent_class;
+    _PHP_GTK_WINDOW_TRAIT();
+} PhpGtkWindowClass;
+
+typedef struct _PhpGtkWindow {
+    GtkWindow parent_instance;
+} PhpGtkWindow;
+
+void php_gtk_window_init(PhpGtkWindow *widget);
+//void php_gtk_container_class_finalize(PhpGtkContainerClass *klass);
+void php_gtk_window_class_init(PhpGtkWindowClass *klass);
+
+GObject *php_gtk_window_extends(php_gtk_window *widget);
+GType    php_gtk_window_get_type(const char *php_class_name);
 
 #endif	/* PHP_GTK_WINDOW_H */
 

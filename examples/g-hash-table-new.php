@@ -34,6 +34,7 @@ $key1 = new Key("a");
 $key2 = new Key("b");
 $key3 = new Key("c");
 
+
 $hashTable = g_hash_table_new();
 $added = g_hash_table_add($hashTable, $key1);
 $added = g_hash_table_add($hashTable, $key2);
@@ -42,6 +43,7 @@ $key1->value="aaa";
 
 //var_dump($hashTable[$key1]);
 var_dump($hashTable);
+
 
 /*
 $hashTable = g_hash_table_new();

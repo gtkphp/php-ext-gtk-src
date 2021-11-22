@@ -124,7 +124,7 @@ php_cairo_rectangle_t_setter_double(php_cairo_rectangle_t *intern, zval *value, 
         zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
         const char *type_name = zend_zval_type_name(value);
         if (strict_types) {
-            zend_type_error("Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_rectangle_t::$%s of type float,", type_name, name);
+            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_rectangle_t::$%s of type float,", type_name, name);
         } else {
             int allow_errors = -1;
             zend_long lval=0;

@@ -29,8 +29,13 @@
 
 #include <gtk/gtk.h>
 #include "php_gtk.h"
+#include "php_gobject/type.h"
 #include "php_gobject/object.h"
+#include "php_gobject/object-extends.h"
 
+#include "widget.h"
+#include "widget-extends.h"
+#include "container.h"
 #include "bin.h"
 
 extern HashTable         classes;
@@ -40,6 +45,16 @@ extern zend_module_entry gtk_module_entry;
 zend_class_entry     *php_gtk_bin_class_entry;
 //HashTable             php_gtk_bin_prop_handlers;
 zend_object_handlers  php_gtk_bin_handlers;
+
+PHP_GOBJECT_DEFINE_TYPE(PhpGtkBin, php_gtk_bin, GTK_TYPE_BIN)
+
+void php_gtk_bin_init(PhpGtkBin *widget) {
+
+}
+//static void php_gtk_bin_class_finalize(PhpGtkBinClass *klass);
+void php_gtk_bin_class_init(PhpGtkBinClass *klass) {
+
+}
 
 //#define TRACE(format, string, option) php_printf(format, string, option)
 #define TRACE(format, string, option)
@@ -57,8 +72,8 @@ static const zend_function_entry php_gtk_bin_methods[] = {
  | Zend Handler                                                         |
  +----------------------------------------------------------------------*/
 static void  php_gtk_bin_unset_property(zval *object, zval *member, void **cache_slot);
-static void  php_gtk_bin_write_property(zval *object, zval *member, zval *value, void **cache_slot);
-static zval* php_gtk_bin_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv);
+static zval *php_gtk_bin_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot);
+static zval* php_gtk_bin_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv);
 static char* php_gtk_bin_dump(php_gtk_bin *list, int tab);
 
 static void
@@ -167,9 +182,9 @@ php_gtk_bin_get_properties(zval *object){
 }
 
 static HashTable*
-php_gtk_bin_get_debug_info(zval *object, int *is_temp) /* {{{ */
+php_gtk_bin_get_debug_info(zend_object *object, int *is_temp) /* {{{ */
 {
-    php_gtk_bin  *obj =  ZVAL_GET_PHP_GTK_BIN(object);
+    php_gtk_bin  *obj =  ZOBJ_TO_PHP_GTK_BIN(object);
     php_gobject_object *gobject =  PHP_GOBJECT_OBJECT(obj);
     HashTable   *debug_info,
                 *std_props;
@@ -213,29 +228,26 @@ php_gtk_bin_unset_property(zval *object, zval *member, void **cache_slot) {
 }
 
 /* {{{ php_gtk_bin_write_property */
-static void
-php_gtk_bin_write_property(zval *object, zval *member, zval *value, void **cache_slot)
+static zval *php_gtk_bin_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot)
 {
-    php_gtk_bin *obj = ZVAL_GET_PHP_GTK_BIN(object);
-    zend_string *member_str = zval_get_string(member);
-    TRACE("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    php_gtk_bin *obj = ZOBJ_TO_PHP_GTK_BIN(object);
+    TRACE("%s(%s)\n", __FUNCTION__, member_str->val);
 
     zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    std_hnd->write_property(object, member, value, cache_slot);
+    return std_hnd->write_property(object, member_str, value, cache_slot);
 
-    zend_string_release(member_str);
+    //zend_string_release(member_str);
 }
 /* }}} */
 
 static zval zval_ret;
 /* {{{ gtk_read_property */
 static zval*
-php_gtk_bin_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
+php_gtk_bin_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv)
 {
-    php_gtk_bin *obj = ZVAL_GET_PHP_GTK_BIN(object);
-    zend_string *member_str = zval_get_string(member);
+    php_gtk_bin *obj = ZOBJ_TO_PHP_GTK_BIN(object);
     zval *retval;
-    TRACE("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    TRACE("%s(%s)\n", __FUNCTION__, member_str->val);
 
     /*
     if (zend_string_equals_literal(member_str, "next")) {
@@ -261,9 +273,9 @@ php_gtk_bin_read_property(zval *object, zval *member, int type, void **cache_slo
     */
 
     zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    retval = std_hnd->read_property(object, member, type, cache_slot, rv);
+    retval = std_hnd->read_property(object, member_str, type, cache_slot, rv);
 
-    zend_string_release(member_str);
+    //zend_string_release(member_str);
     return retval;
 }
 /* }}} */
@@ -324,19 +336,21 @@ php_gtk_bin_dtor_object(zend_object *obj) {
 static zend_object*
 php_gtk_bin_create_object(zend_class_entry *class_type)
 {
-    php_gtk_bin *intern = ecalloc(1, sizeof(php_gtk_bin) + zend_object_properties_size(class_type));
-    php_gobject_object *gobject =  PHP_GOBJECT_OBJECT(intern);
+    php_gtk_bin *intern = zend_object_alloc(sizeof(php_gtk_bin), class_type);
+    zend_object_std_init(&intern->std, class_type);
+    object_properties_init(&intern->std, class_type);
 
-    zend_object_std_init(&gobject->std, class_type);
-    object_properties_init(&gobject->std, class_type);
+    intern->properties = NULL;
 
-    gobject->ptr = NULL;//g_object_new(G_TYPE_OBJECT, NULL);// new GObject ?
-    gobject->properties = NULL;
+    intern->std.handlers = &php_gtk_bin_handlers;
 
-    gobject->std.handlers = &php_gtk_bin_handlers;
+    //GType type = php_gtk_widget_get_type(class_type);
+    //gobject->ptr = php_gtk_widget_new(type, NULL);
+    //gobject->ptr = php_gtk_widget_factory(intern);
+    intern->ptr = php_gtk_bin_extends(intern);// after handlers
 
-    TRACE("php_gtk_bin_create_object(%p) / %d\n", &gobject->std, gobject->std.gc.refcount);
-    return &gobject->std;
+    TRACE("php_gtk_bin_create_object(%p) / %d\n", &intern->std, intern->std.gc.refcount);
+    return &intern->std;
 }
 /* }}} php_gtk_bin_create_object */
 
@@ -360,10 +374,11 @@ php_gtk_bin_get_handlers()
     php_gtk_bin_handlers.free_obj = php_gtk_bin_free_object;
     php_gtk_bin_handlers.read_property = php_gtk_bin_read_property;
     php_gtk_bin_handlers.write_property = php_gtk_bin_write_property;
-    php_gtk_bin_handlers.unset_property = php_gtk_bin_unset_property;
+    //php_gtk_bin_handlers.unset_property = php_gtk_bin_unset_property;
     //php_gtk_bin_handlers.get_property_ptr_ptr = php_gtk_bin_get_property_ptr_ptr;
-
     php_gtk_bin_handlers.get_debug_info = php_gtk_bin_get_debug_info;
+
+/*
     php_gtk_bin_handlers.get_properties = php_gtk_bin_get_properties;//get_properties_for TODO php 8.0
     //php_gtk_bin_handlers.set = php_gtk_bin_set;
     php_gtk_bin_handlers.cast_object = php_gtk_bin_cast_object;
@@ -373,7 +388,7 @@ php_gtk_bin_get_handlers()
     php_gtk_bin_handlers.read_dimension = php_gtk_bin_read_dimension;
     php_gtk_bin_handlers.unset_dimension = php_gtk_bin_unset_dimension;
     php_gtk_bin_handlers.write_dimension = php_gtk_bin_write_dimension;
-
+*/
 
     return &php_gtk_bin_handlers;
 }
@@ -385,11 +400,14 @@ php_gtk_bin_get_handlers()
 +----------------------------------------------------------------------*/
 /*{{{ php_gtk_bin_class_init */
 zend_class_entry*
-php_gtk_bin_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
+php_gtk_bin_class_minit(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_gtk_bin_get_handlers();
     PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "GtkBin", php_gtk_bin_methods);
     php_gtk_bin_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_gtk_bin_class_entry->create_object = php_gtk_bin_create_object;
+    //php_gtk_bin_class_entry->ce_flags = ZEND_ACC_PUBLIC;ERROR!!!
+    php_gtk_bin_class_entry->ce_flags |= ZEND_ACC_ABSTRACT;
+
     //ce->serialize;
     /*
     zend_hash_init(&php_gtk_bin_prop_handlers, 0, NULL, php_gtk_bin_dtor_prop_handler, 1);

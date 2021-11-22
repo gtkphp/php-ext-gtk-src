@@ -72,10 +72,11 @@ zend_class_entry *php_gdk_pixbuf_class_init(zend_class_entry *container_ce, zend
 
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_gdk_pixbuf_new_from_file, 0, 0, 1)
-    ZEND_ARG_INFO(0, filename)
-    ZEND_ARG_INFO(1, error)
+    ZEND_ARG_INFO(ZEND_SEND_BY_VAL, filename)
+    ZEND_ARG_INFO(ZEND_SEND_BY_REF, error)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(gdk_pixbuf_new_from_file);
+
 
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_gdk_pixbuf___construct, 0, 0, 0)

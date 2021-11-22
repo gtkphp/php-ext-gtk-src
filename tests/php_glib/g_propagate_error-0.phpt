@@ -12,7 +12,7 @@ function my_quark():int {
     return $q;
 }
 
-$src=null;
+$src = new GError;
 g_set_error($src, my_quark(), 403, "'%s' do not exist", "Application", null);
 
 $error=null;
@@ -22,10 +22,10 @@ var_dump($error);
 
 
 ?>
---EXPECT--
+--EXPECTF--
 object(GError)#2 (3) {
   ["domain"]=>
-  string(2) "MY"
+  int(%d)
   ["code"]=>
   int(403)
   ["message"]=>

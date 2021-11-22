@@ -1,14 +1,37 @@
+<?php
+function on_button_quit($buttonQuit, $user_data):void {
+    $_GLOBAL['window']->hide();
+}
+
+class Foo extends GTKML\Element {
+    function render() {
+    }
+}
+GTKML::Register("widget", Foo::class);
+// see : http://gtk.php.net/examples/sec-custom-widgets/my.dtd
+
+?>
 <application id="net.php.gtk"
+    xmlns="http://gtk.php.net/gtkml.dtd"
     xmlns:my="http://gtk.php.net/examples/sec-custom-widgets/my.dtd">
+    <route title="Ressource">
+        *, /, /index.php,
+        [a-z]+ {
+            name: api_post_show
+            path: /api/posts/{id}
+            controller: App\Controller\BlogApiController::show
+            methods:    GET|HEAD
+        }
+    </route>
+    <style type="text/css">
+        buttonbox {
+            pack: SHRINK;
+        }
+    </style>
     <window title="Custom Widget example" height="400" width="200" style="border-width:6;">
-        <?script
-            function on_button_quit($buttonQuit, $user_data):void {
-                $_GLOBAL['window']->hide();
-            }
-        ?>
         <box>
             <my:widget />
-            <buttonbox pack="SHRINK">
+            <buttonbox>
                 <button label="Quit" clicked="on_button_quit()"/>
             </buttonbox>
         </box>

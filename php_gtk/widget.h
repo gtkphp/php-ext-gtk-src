@@ -327,7 +327,7 @@ extern zend_class_entry* php_gtk_widget_class_entry;
 
 
 #define PHP_GTK_WIDGET_MINIT_FUNCTION(container_ce, parent_ce) \
-    php_gtk_widget_class_init(container_ce, parent_ce)
+    php_gtk_widget_class_minit(container_ce, parent_ce)
 
 #define PHP_GTK_WIDGET_MSHUTDOWN_FUNCTION() { \
 }
@@ -335,16 +335,13 @@ extern zend_class_entry* php_gtk_widget_class_entry;
 #define PHP_GTK_WIDGET_RSHUTDOWN_FUNCTION() {\
 }
 
-typedef struct _php_gtk_widget php_gtk_widget;
-struct _php_gtk_widget {
-    // put here members
+typedef php_gobject_object php_gtk_widget;
 
-    php_gobject_object parent_instance;
-    // Keep blank
-};
+// PhpGtkWidget -> GtkWidget;
 
+GObject *php_gtk_widget_create(php_gtk_widget *intern);
 
-zend_class_entry *php_gtk_widget_class_init(zend_class_entry *container_ce, zend_class_entry *ce);
+zend_class_entry *php_gtk_widget_class_minit(zend_class_entry *container_ce, zend_class_entry *ce);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_widget___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()

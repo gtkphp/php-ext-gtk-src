@@ -370,8 +370,8 @@ php_cairo_path_data_t_create_header(php_cairo_path_data_t*intern, cairo_path_dat
     std_class = zend_objects_new(zend_standard_class_def);
     ZVAL_OBJ(rv, std_class);
 
-    zend_std_write_property(rv, &member_type, &ztype, NULL);
-    zend_std_write_property(rv, &member_length, &zlength, NULL);
+    zend_std_write_property(std_class, member_type_str, &ztype, NULL);
+    zend_std_write_property(std_class, member_length_str, &zlength, NULL);
 
     zend_string_delref(member_type_str);
     zend_string_delref(member_length_str);
@@ -397,8 +397,8 @@ php_cairo_path_data_t_create_point(php_cairo_path_data_t *intern, cairo_path_dat
     ZVAL_OBJ(rv, std_class);
 
 
-    zend_std_write_property(rv, &member_x, &zx, NULL);
-    zend_std_write_property(rv, &member_y, &zy, NULL);
+    zend_std_write_property(std_class, member_x_str, &zx, NULL);
+    zend_std_write_property(std_class, member_y_str, &zy, NULL);
 
     zend_string_delref(member_x_str);
     zend_string_delref(member_y_str);

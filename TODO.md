@@ -4,11 +4,70 @@ This file show all technical debt.
 By continuously improving the design of code, we make it easier and easier to work with.
 Service : Support, consulting, training, certification
 
+## Notice for Generator
+gtk_cairo_transform_to_window is part of GtkWidget( make a strategy to clean object method/function)
+
+## Documentation
+https://github.com/ToshioCP/Gobject-tutorial/blob/main/gfm/sec4.md
+
+
 ## Priority
 
-TODO: do not use zend_objects_new, use php_object_new instead
+TODO: safe-thread PHP_GOBJECT_DEFINE_TYPE do wait while(!g_array_find())
+TODO: PHP_FUNCTION(g_signal_emit_by_name)
+TODO: php_gobject_signal_connect utilise g_cclosure_new au lieu de g_cclosure_new_swap
+Pourquoi le callback est appelé deux fois ? ( la derniere sans paramètre)
+
+TODO: php_gtk_widget_free_object( ref_sink vs ref_counted)
+TODO: php_gtk_widget_class_init( use user_function)
+
+NB: Two strategy for implementing G Structurs
+    - Use ptr to GStructure
+    - Use own ZendObject Structure to reflet implementation of G and create/copy/free function
+
+TODO: remove php_gobject_signal{property_name}
+TODO: remove occurence zend_internal_type_error
+TODO: php_gobject_get_user_method
+TODO: check #define ZOBJ_IS_PHP_G***(obj) use instanceof_function( see php_gtk/widget.h)
+TODO: fix -Warning, memory leaks
+
+TODO: signal
++ modifier php_gobject_object_marshaler_INT__POINTER
+
+
++ tester le retour du callback( g_signal_emit(..., &ret)
+
++ g_signal_new
+
++ g_object_connect
+   -> php_g_signal_connect_object
+   normalize_signal_detail "signal::notify::property"
+
++ php_doc_expression_t and eval
++ php_doc_string_t, php_doc_array_t and php_doc_json_t
+
++ simple php_doc_tag_t + description = bug
++ FIXME : @style "Ma description" generate corruption memory
+
++ TODO : php_gobject/paramspecs.h make all types
++ TODO : php_gobject/value.h make all types
+
+TODO: test
+ - scaled_font
+
+TODO: cairo_raster_source_pattern_set_finish, probleme avec le callback qui est efree(intern->callback); dans php_cairo_pattern_t_free_object avant que set_finish soit appelé
+TODO: dans les fonction cairo_surface, si : undefinied variable $surface: Le programme s'est terminé subitement.
+
+TODO: in php_cairo/path ::properties_ptr_ptr => get status|num_data forbiden / readonly
+
+TODO: do not use zend_objects_new, use php_my_object_new instead or ce->create_object(ce)
 
 cairo_text_path use utf-8 ; what need to do ?
+
+TODO: Fix Zend
+$x = 5.0;// bug if $x=5
+$y = 3.0;
+cairo_user_to_device_distance($cr, $x, $y);
 
 
 In php_glist use Z_SET_REFCOUNT/Z_DELREF_P/Z_ADDREF_P/Z_REFCOUNT_P

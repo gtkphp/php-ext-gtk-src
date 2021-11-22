@@ -30,7 +30,6 @@
 
 #include <cairo/cairo.h>
 
-#if CAIRO_HAS_IMAGE_SURFACE
 
 #include "php_gtk.h"
 #include "php_cairo/format.h"
@@ -108,7 +107,6 @@ PHP_FUNCTION(cairo_format_stride_for_width)
 }/* }}} */
 #endif
 
-#endif /* CAIRO_HAS_IMAGE_SURFACE */
 
 /*
  * Local variables:

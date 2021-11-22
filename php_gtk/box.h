@@ -54,7 +54,7 @@
     PHP_GTK_FE(gtk_box_new, arginfo_gtk_box_new)
 
 #define PHP_GTK_BOX_MINIT_FUNCTION(container_ce, parent_ce) \
-    php_gtk_box_class_init(container_ce, parent_ce)
+    php_gtk_box_class_minit(container_ce, parent_ce)
 
 #define PHP_GTK_BOX_MSHUTDOWN_FUNCTION() { \
 }
@@ -62,18 +62,12 @@
 #define PHP_GTK_BOX_RSHUTDOWN_FUNCTION() {\
 }
 
-typedef struct _php_gtk_box php_gtk_box;
-struct _php_gtk_box {
-    // put here members
-
-    php_gtk_widget parent_instance;
-    // Keep blank
-};
+typedef php_gtk_bin php_gtk_box;
 
 void php_gtk_box_add(php_gtk_box *list, zval *data);
-void php_gtk_box_new(php_gtk_box *self, zend_long orientation, zend_long spacing);
 
-zend_class_entry *php_gtk_box_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
+
+zend_class_entry *php_gtk_box_class_minit(zend_class_entry *container_ce, zend_class_entry *parent_ce);
 
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_box_new, 0, 0, 2)
@@ -86,6 +80,31 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_box___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()
 PHP_METHOD(gtk_box, __construct);
 
+
+#define _PHP_GTK_BOX_TRAIT() \
+    PhpGtkBinTrait parent_trait; \
+    zend_function *add
+
+typedef struct _PhpGtkBoxTrait {
+    _PHP_GTK_BOX_TRAIT();
+} PhpGtkBoxTrait;
+
+typedef struct _PhpGtkBoxClass {
+    GtkBinClass parent_class;
+    _PHP_GTK_BOX_TRAIT();
+} PhpGtkBoxClass;
+
+typedef struct _PhpGtkBox {
+    GtkBox parent_instance;
+} PhpGtkBox;
+
+
+void php_gtk_box_init(PhpGtkBox *widget);
+//void php_gtk_container_class_finalize(PhpGtkContainerClass *klass);
+void php_gtk_box_class_init(PhpGtkBoxClass *klass);
+
+GObject *php_gtk_box_extends(php_gtk_box *widget);
+GType    php_gtk_box_get_type(const char *php_class_name);
 
 #endif	/* PHP_GTK_BOX_H */
 

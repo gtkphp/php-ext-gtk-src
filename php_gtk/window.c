@@ -29,8 +29,14 @@
 
 #include <gtk/gtk.h>
 #include "php_gtk.h"
+#include "php_gobject/type.h"
 #include "php_gobject/object.h"
+#include "php_gobject/object-extends.h"
 
+#include "widget.h"
+#include "widget-extends.h"
+#include "container.h"
+#include "bin.h"
 #include "window.h"
 
 #include "php_gdk/pixbuf.h"
@@ -42,6 +48,17 @@ extern zend_module_entry gtk_module_entry;
 zend_class_entry     *php_gtk_window_class_entry;
 //HashTable             php_gtk_window_prop_handlers;
 zend_object_handlers  php_gtk_window_handlers;
+
+
+PHP_GOBJECT_DEFINE_TYPE(PhpGtkWindow, php_gtk_window, GTK_TYPE_WINDOW)
+
+void php_gtk_window_init(PhpGtkWindow *widget) {
+
+}
+//static void php_gtk_bin_class_finalize(PhpGtkBinClass *klass);
+void php_gtk_window_class_init(PhpGtkWindowClass *klass) {
+
+}
 
 //#define TRACE(format, string, option) php_printf(format, string, option)
 #define TRACE(format, string, option)
@@ -59,8 +76,8 @@ static const zend_function_entry php_gtk_window_methods[] = {
  | Zend Handler                                                         |
  +----------------------------------------------------------------------*/
 static void  php_gtk_window_unset_property(zval *object, zval *member, void **cache_slot);
-static void  php_gtk_window_write_property(zval *object, zval *member, zval *value, void **cache_slot);
-static zval* php_gtk_window_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv);
+static zval *php_gtk_window_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot);
+static zval* php_gtk_window_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv);
 static char* php_gtk_window_dump(php_gtk_window *list, int tab);
 
 static void
@@ -170,9 +187,9 @@ php_gtk_window_get_properties(zval *object){
 }
 
 static HashTable*
-php_gtk_window_get_debug_info(zval *object, int *is_temp) /* {{{ */
+php_gtk_window_get_debug_info(zend_object *object, int *is_temp) /* {{{ */
 {
-    php_gtk_window  *obj =  ZVAL_GET_PHP_GTK_WINDOW(object);
+    php_gtk_window  *obj =  ZOBJ_TO_PHP_GTK_WINDOW(object);
     php_gobject_object *gobject =  PHP_GOBJECT_OBJECT(obj);
     HashTable   *debug_info,
                 *std_props;
@@ -216,29 +233,26 @@ php_gtk_window_unset_property(zval *object, zval *member, void **cache_slot) {
 }
 
 /* {{{ php_gtk_window_write_property */
-static void
-php_gtk_window_write_property(zval *object, zval *member, zval *value, void **cache_slot)
+static zval*
+php_gtk_window_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot)
 {
-    php_gtk_window *obj = ZVAL_GET_PHP_GTK_WINDOW(object);
-    zend_string *member_str = zval_get_string(member);
-    TRACE("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    php_gtk_window *obj = ZOBJ_TO_PHP_GTK_WINDOW(object);
+    TRACE("%s(%s)\n", __FUNCTION__, member_str->val);
 
     zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    std_hnd->write_property(object, member, value, cache_slot);
+    std_hnd->write_property(object, member_str, value, cache_slot);
 
-    zend_string_release(member_str);
 }
 /* }}} */
 
 static zval zval_ret;
 /* {{{ gtk_read_property */
 static zval*
-php_gtk_window_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
+php_gtk_window_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv)
 {
-    php_gtk_window *obj = ZVAL_GET_PHP_GTK_WINDOW(object);
-    zend_string *member_str = zval_get_string(member);
+    php_gtk_window *obj = ZOBJ_TO_PHP_GTK_WINDOW(object);
     zval *retval;
-    TRACE("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    TRACE("%s(%s)\n", __FUNCTION__, member_str->val);
 
     /*
     if (zend_string_equals_literal(member_str, "next")) {
@@ -264,9 +278,8 @@ php_gtk_window_read_property(zval *object, zval *member, int type, void **cache_
     */
 
     zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    retval = std_hnd->read_property(object, member, type, cache_slot, rv);
+    retval = std_hnd->read_property(object, member_str, type, cache_slot, rv);
 
-    zend_string_release(member_str);
     return retval;
 }
 /* }}} */
@@ -364,10 +377,11 @@ php_gtk_window_get_handlers()
     php_gtk_window_handlers.free_obj = php_gtk_window_free_object;
     php_gtk_window_handlers.read_property = php_gtk_window_read_property;
     php_gtk_window_handlers.write_property = php_gtk_window_write_property;
-    php_gtk_window_handlers.unset_property = php_gtk_window_unset_property;
+    //php_gtk_window_handlers.unset_property = php_gtk_window_unset_property;
     //php_gtk_window_handlers.get_property_ptr_ptr = php_gtk_window_get_property_ptr_ptr;
 
     php_gtk_window_handlers.get_debug_info = php_gtk_window_get_debug_info;
+    /*
     php_gtk_window_handlers.get_properties = php_gtk_window_get_properties;//get_properties_for TODO php 8.0
     //php_gtk_window_handlers.set = php_gtk_window_set;
     php_gtk_window_handlers.cast_object = php_gtk_window_cast_object;
@@ -377,7 +391,7 @@ php_gtk_window_get_handlers()
     php_gtk_window_handlers.read_dimension = php_gtk_window_read_dimension;
     php_gtk_window_handlers.unset_dimension = php_gtk_window_unset_dimension;
     php_gtk_window_handlers.write_dimension = php_gtk_window_write_dimension;
-
+*/
 
     return &php_gtk_window_handlers;
 }
@@ -389,7 +403,7 @@ php_gtk_window_get_handlers()
 +----------------------------------------------------------------------*/
 /*{{{ php_gtk_window_class_init */
 zend_class_entry*
-php_gtk_window_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
+php_gtk_window_class_minit(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_gtk_window_get_handlers();
     //INIT_NS_CLASS_ENTRY((*ce), "Gnome\\G", "Object", php_gtk_window_methods);
     INIT_CLASS_ENTRY((*container_ce), "GtkWindow", php_gtk_window_methods);
@@ -447,9 +461,11 @@ php_gtk_window_new(php_gtk_window *self, zend_long type) {
     g_print("%d\n", G_OBJECT(icon_32)->ref_count);
 #endif
 
-    gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/my.png", NULL);
+    //gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/my.png", NULL);
     //gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/flex.png", NULL);
     //gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/php-icon.png", NULL);
+    gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/logo-gtk-php-2_48.png", NULL);
+
     /*
     gtk_window_set_icon_from_file(GTK_WINDOW(window), "/home/dev/Images/vigne/vigne-transparent.png", NULL);
 
@@ -457,39 +473,37 @@ php_gtk_window_new(php_gtk_window *self, zend_long type) {
     g_print("list: %p, %d\n", list, g_list_length(list));
     */
 
-#if 0
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
 
+#if 0
     GtkWidget *titlebar = gtk_header_bar_new();
     gtk_window_set_titlebar (window, titlebar);
     gtk_widget_show(titlebar);
-    //gtk_widget_set_visible(titlebar, FALSE);
+    gtk_widget_set_visible(titlebar, FALSE);
+    //gtk_window_set_decorated(GTK_WINDOW(window), FALSE); do not use shadow
 
-    char *css = "window, window.background, *>.titlebar, >* {"
-                "border-radius: 30px;"
-            "}"
-            ;
-
-    GtkCssProvider *provider = gtk_css_provider_new();
-    GdkDisplay *display = gdk_display_get_default();
-    GdkScreen *screen = gdk_display_get_default_screen (display);
-    gtk_style_context_add_provider_for_screen (screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_USER);
-    //gtk_css_provider_load_from_path(GTK_CSS_PROVIDER(provider),"styles.css",NULL);
-    gtk_css_provider_load_from_data(GTK_CSS_PROVIDER(provider), css, strlen(css), NULL);
+    GtkCssProvider *provider = gtk_css_provider_new ();
+    char *css = "window, window.background, .titlebar, *>*  {"
+                "border-radius: 20px;"
+                "}";
+    gtk_css_provider_load_from_data(provider, css, strlen(css), NULL);
 
     GtkStyleContext *context;
-    context = gtk_widget_get_style_context(window);
-    gtk_style_context_add_class(context,"my");
-
-    gtk_window_set_interactive_debugging (TRUE);
+            context = gtk_widget_get_style_context(window);
+    gtk_style_context_add_provider (context,
+                                        GTK_STYLE_PROVIDER(provider),
+                                        GTK_STYLE_PROVIDER_PRIORITY_USER);
 #endif
+
+    //gtk_window_set_interactive_debugging (TRUE);
+
 }
 
 
 
 /*----------------------------------------------------------------------+
-| PHP_METHOD                                                           |
-+----------------------------------------------------------------------*/
+ | PHP_METHOD                                                           |
+ +----------------------------------------------------------------------*/
 
 /* {{{ GObject::__construct() */
 PHP_METHOD(gtk_window, __construct)
@@ -504,8 +518,8 @@ PHP_METHOD(gtk_window, __construct)
 /* }}} */
 
 /*----------------------------------------------------------------------+
-| PHP_FUNCTION                                                         |
-+----------------------------------------------------------------------*/
+ | PHP_FUNCTION                                                         |
+ +----------------------------------------------------------------------*/
 
 /* {{{ proto GObject gtk_window_new(GObject list, mixed data) */
 PHP_FUNCTION(gtk_window_new)
@@ -568,11 +582,13 @@ PHP_FUNCTION(gtk_window_get_icon_list)
             php_gdk_pixbuf *zpixbuf = php_gdk_pixbuf_create(pixbuf);
             g_object_ref(zpixbuf->ptr);
             g_object_set_data(G_OBJECT(pixbuf), "zend_object", &zpixbuf->std);
-            GC_REFCOUNT(&zpixbuf->std)--;//php_glib_list_new() ++
+            //GC_REFCOUNT(&zpixbuf->std)--;//php_g_list_new() ++
+            zend_object_release(&zpixbuf->std);
+
         }
     }
 
-    php_glib_list *zlist = php_glib_list_new(list);
+    php_g_list *zlist = php_g_list_new(list);
     RETURN_OBJ(&zlist->std);
 }/* }}} */
 
@@ -588,9 +604,10 @@ PHP_FUNCTION(gtk_window_set_icon_list)
     ZEND_PARSE_PARAMETERS_END();
 
     php_gtk_window *window = ZVAL_IS_PHP_GTK_WINDOW(zwindow) ? ZVAL_GET_PHP_GTK_WINDOW(zwindow) : NULL;
-    php_glib_list *list = ZVAL_IS_PHP_GLIB_LIST(zlist) ? ZVAL_GET_PHP_GLIB_LIST(zlist) : NULL;
+    php_g_list *list = ZVAL_IS_PHP_G_LIST(zlist) ? ZVAL_GET_PHP_G_LIST(zlist) : NULL;
+    GList *glist = php_g_list_export(list);
 
-    GtkWindow *gtk_window = GTK_WINDOW(window->parent_instance.parent_instance.parent_instance.ptr);
-    gtk_window_set_icon_list(gtk_window, list->ptr);
+    GtkWindow *gtk_window = GTK_WINDOW(window->ptr);
+    gtk_window_set_icon_list(gtk_window, glist);
 
 }/* }}} */

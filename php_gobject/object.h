@@ -47,18 +47,23 @@
         }                                           \
     } while (0)
 
+//#define Z_PHP_GOBJECT_OBJECT_P(zval) PHP_GOBJECT_OBJECT( ZOBJ_TO_PHP_GOBJECT_OBJECT((zval)->value.obj) )
+//#define Z_PHP_GOBJECT_OBJECT(zval) Z_PHP_GOBJECT_OBJECT_P(&zval)
+
 extern zend_class_entry *php_gobject_object_class_entry;
 
 #define PHP_GOBJECT_OBJECT_FE() \
-    PHP_GTK_FE(g_object_connect, arginfo_g_object_connect) \
-    PHP_GTK_FE(g_object_ref, arginfo_g_object_ref) \
-    PHP_GTK_FE(g_object_unref, arginfo_g_object_unref) \
+    PHP_GTK_FE(g_object_set_property, arginfo_g_object_set_property) \
+    PHP_GTK_FE(g_object_connect,      arginfo_g_object_connect) \
+    PHP_GTK_FE(g_object_ref,          arginfo_g_object_ref) \
+    PHP_GTK_FE(g_object_unref,        arginfo_g_object_unref) \
 
 
 #define PHP_GOBJECT_OBJECT_MINIT_FUNCTION(container_ce, parent_ce) \
-    php_gobject_object_class_init(container_ce, parent_ce)
+    php_gobject_object_class_minit(container_ce, parent_ce)
 
 #define PHP_GOBJECT_OBJECT_MSHUTDOWN_FUNCTION() { \
+ \
 }
 
 #define PHP_GOBJECT_OBJECT_RSHUTDOWN_FUNCTION() {\
@@ -72,12 +77,21 @@ struct _php_gobject_object {
     zend_object std;
 };
 
+void push_zend(zend_object *zob);
+zend_object *pop_zend();
 
 php_gobject_object *php_gobject_object_connect(php_gobject_object *list, zval *data);
 php_gobject_object *php_gobject_object_new(GObject *object);
 
-zend_class_entry *php_gobject_object_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
+zend_class_entry *php_gobject_object_class_minit(zend_class_entry *container_ce, zend_class_entry *parent_ce);
 zend_function    *php_gobject_get_user_method(zend_object *zobject, char *name);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_object_set_property, 0, 0, 3)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, object, GObject, 0)
+    ZEND_ARG_TYPE_INFO(0, property_name, IS_STRING, 0)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, value, GValue, 0)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(g_object_set_property);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_g_object_connect, 0, 0, 4)
     ZEND_ARG_INFO(0, object)

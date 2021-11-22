@@ -48,13 +48,14 @@
     } while (0)
 
 
+//(dest)->xx = zval_get_double(&src->xx);
 #define PHP_CAIRO_MATRIX_T_COPY(src, dest) \
-    ZVAL_GET_DOUBLE(&src->xx, (dest)->xx) \
-    ZVAL_GET_DOUBLE(&src->yx, (dest)->yx) \
-    ZVAL_GET_DOUBLE(&src->xy, (dest)->xy) \
-    ZVAL_GET_DOUBLE(&src->yy, (dest)->yy) \
-    ZVAL_GET_DOUBLE(&src->x0, (dest)->x0) \
-    ZVAL_GET_DOUBLE(&src->y0, (dest)->y0)
+    (dest)->xx = zval_get_double(&src->xx); \
+    (dest)->yx = zval_get_double(&src->yx); \
+    (dest)->xy = zval_get_double(&src->xy); \
+    (dest)->yy = zval_get_double(&src->yy); \
+    (dest)->x0 = zval_get_double(&src->x0); \
+    (dest)->y0 = zval_get_double(&src->y0);
 
 #define PHP_CAIRO_MATRIX_T_SET(dest, src) \
     ZVAL_SET_DOUBLE(&(dest)->xx, (src)->xx) \
@@ -186,7 +187,7 @@ ZEND_END_ARG_INFO()
 PHP_FUNCTION(cairo_matrix_invert);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_cairo_matrix_multiply, 0, ZEND_SEND_BY_VAL, 3)
-    ZEND_ARG_INFO(ZEND_SEND_BY_REF, result)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, result, cairo_matrix_t, 0)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, a, cairo_matrix_t, 0)
     ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, b, cairo_matrix_t, 0)
 ZEND_END_ARG_INFO()

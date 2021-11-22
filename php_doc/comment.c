@@ -27,150 +27,192 @@
 #include <zend_interfaces.h>
 #include <ext/standard/info.h>
 
+#include <string.h>
 
+#include "parameter.h"
 #include "tag.h"
 #include "comment.h"
-
+//#include "parser.h"
 #include "scanner.h"
-#include "parser.h"
 
-#include <glib.h>
-
-
-/* {{{ php_doc_comment_create */
-php_doc_block*
-php_doc_comment_create(char *comment) {
-    php_doc_block *doc_block = g_new(php_doc_block, 1);
-    char status = parseDocBlock(&comment, doc_block);
-
-    if (status!=SUCCESS) {
-        // TODO free tags
-        g_free(doc_block);
-        doc_block = NULL;
-    }
-
-    return doc_block;
+php_doc_comment*
+php_doc_comment_new()
+{
+    php_doc_comment *intern = ecalloc(1, sizeof(php_doc_comment));
+    zend_hash_init(&intern->tags, 1, NULL, php_doc_tag_free, 0);//php_doc_tag_free
+    return intern;
 }
+zend_array*
+php_doc_comment_get_tags_by_name(php_doc_comment *comment, char *name)
+{
+    zend_array *tags;// = emalloc(sizeof(zend_array));
+    ALLOC_HASHTABLE(tags);
+    zend_hash_init(tags, 1, NULL, NULL, 1);
 
-php_doc_tag*
-php_doc_comment_get_tag_by_name(php_doc_block *doc_block, char *tag_name) {
-    php_doc_tag *tag = NULL;
-    int i = 0;
-    if (doc_block && doc_block->tags)
-    while (NULL!=doc_block->tags[i]) {
-        tag = doc_block->tags[i];
-        if (0==g_strcmp0(tag->name, tag_name)) {
-            break;
+    php_doc_tag *tag;
+    ZEND_HASH_FOREACH_PTR(&comment->tags, tag) {
+        if (0==strcmp(tag->name->val, name)) {
+            zend_hash_next_index_insert_ptr(tags, tag);
         }
-        tag = NULL;
-        i++;
-    }
+    } ZEND_HASH_FOREACH_END();
 
-    return tag;
+    return tags;
 }
+zend_array*
+php_doc_comment_get_tags_by_names(php_doc_comment *comment, const char *names[])
+{
+    zend_array *tags;// = malloc(sizeof(zend_array));
+    ALLOC_HASHTABLE(tags);
+    zend_hash_init(tags, 1, NULL, NULL, 1);
 
-void
-php_doc_comment_free(php_doc_block *comment) {
-    int i;
-
-    if (NULL!=comment) {
-
-        for (i = 0; NULL!=comment->tags[i]; i++) {
-            if (NULL!=comment->tags[i]->description) {
-                g_free(comment->tags[i]->description);
+    php_doc_tag *tag;
+    ZEND_HASH_FOREACH_PTR(&comment->tags, tag) {
+        for(int index=0; names[index]!=NULL; index++){
+            if (0==strcmp(tag->name->val, names[index])) {
+                zend_hash_next_index_insert_ptr(tags, tag);
             }
-            if (NULL!=comment->tags[i]->name) {
-                g_free(comment->tags[i]->name);
-            }
-            if (NULL!=comment->tags[i]->value) {
-                g_free(comment->tags[i]->value);
-            }
-            g_free(comment->tags[i]);
         }
-        if (NULL!=comment->tags) {
-            g_free(comment->tags);
-        }
-        if (NULL!=comment->description) {
-            g_free(comment->description);
-        }
+    } ZEND_HASH_FOREACH_END();
 
-        g_free(comment);
-    }
-
+    return tags;
 }
 
-
-/* }}} */
-
-
-#if 0
-
-
-class A {
-    /**
-     * Description courte
-     *
-     * Ceci est `du code en ligne` %null, %false, #StdClass, $name
-     *
-     * Ceci est une description longue
-     *
-     *     Ceci est aussi un bloc de code sur plusieurs lignes.
-     *     Il faut une ligne vide et une indentation d'au moins 4 espaces.
-     *
-     * ```c
-     * GtkWidget *label = gtk_label_new ("Gorgeous!");
-     * ```
-     *      ```PHP
-     *      $label = gtk_label_new("Gorgeous!");
-     *      ```
-     *      ```PHP8>
-     *      $label = new Gtk\Label(label: "Gorgeous!");
-     *      ```
-     *      ```PHP7>
-     *      $label = new Gtk\Label(['label'=> "Gorgeous!"]);
-     *      ```
-     *      ```PHP5>
-     *      $label = new Gtk\Label("Gorgeous!");
-     *      ```
-     *      ```GTKML
-     *      &lt;gtk:label text="Gorgeous!" lang="fr"/&gt;
-     *      ```
-     * @api
-     * @see chemin()
-     * @link http://www.spip.net/...
-     * @param int|string|null $var description/comment
-     * @return bool|string
-     *     - int Nombre de lignes,
-     *     - false en cas d'erreur.
-     */
-    function test() {
-
+php_doc_callable*
+php_doc_callable_new() {
+    php_doc_callable *cb = emalloc(sizeof(php_doc_callable));
+    return cb;
+}
+void php_doc_callable_free(php_doc_callable *cb)
+{
+    if (cb->context) {
+        zend_string_release(cb->context);
     }
+    if (cb->name) {
+        zend_string_release(cb->name);
+    }
+    efree(cb);
 }
 
+int php_doc_comment_tests_suite() {
 
-$reflector = new ReflectionClass('Magicien');
-$methods = $reflector->getMethods();
-foreach($methods as $method) {
-    $string = $method->getDocComment();
-    $doc_reflector = new ReflectionDoc($string);
-    $tag = $doc_reflector->getTag('return');
-    $tags = $doc_reflector->getTags();
-    foreach($tags as $tag) {
-        $tag->getName();// @param
-        $tag->getComment();// string
+#if 1
+
+
+    const char *dataset[] = {
+        /// 0...9
+        "/***/",
+        "/** */",
+        "/** \n * */",
+        "/** \n **/",
+        "/** \n* */",
+        "/** \n**/",
+        "/** \n*/",
+        "/**@poi*/",
+        "/**@poi */",
+        "/** @poi*/",
+        /// 10...19
+        "/** @poi */",
+        "/** @My\\Ns\\Poi */",
+        "/** @poi() */",
+        "/** @poi(123) */",
+        "/** @poi(1, 2, 3) */",
+        "/** @My\\Ns\\Poi(1, 2) */",
+        "/** @poi Ma description*/",
+        "/** @poi(123) Ma description\n*/",
+        "/** @poi(123) Ma description\n */",
+        "/** @poi(123) Ma description\n * */",
+        /// 20...29
+        "/** @poi(123) Ma description\n*****/",
+        "/** @poi(123) Ma description\n* *** */",
+        "/** @poi(123) Ma description\n * multi line\n * extra.\n * @aze*/",
+        "/** @poi(123) Ma description\n * multilines\n * \n * Hello World\n * @aze\n * @qer*/",
+        "/** @poi({}) */",
+        "/** @poi ( { } ) */",
+        "/** @poi({a:1,b:{c:2}}) Description*/",
+        "/** @poi(1, {a:2,b:{c:3}}) Description */",
+        "/** @poi ( 1 , { a : 2 , b : { c : 3 } } ) Description */",
+        "/** @poi(named: 1, 2, xav: 3) */",
+
+        /// 30...39
+        "/** {@example /} */",
+        "/** {@example filename     } */",
+        "/** {@example filename.txt} */",
+        "/** {@example path/file.txt} */",
+        "/** {@example #idname} */",
+        "/** {@example http://127.0.0.1/path/file.txt} */",
+        "/** {@example http://user:pws@www.example.com/path/file.txt?foo=bar#idname} */",
+        "/** @poi(named: 'Hello world !\\n') */",
+        "/** @poi( \"Hello world !\" ) */",
+        "/** @poi( [1, 2, 3] ) */",
+
+        /// 40...49
+        "/** @poi( {a: [1, 2, .4]} ) */",
+        "/** @poi( {a: []} ) */",
+        "/** @poi( {a: [ ] } ) */",
+
+        "/** \n * Hello \n * World !\n * @style Ma description */",
+
+        NULL
+    };
+    const char *error[] = {
+        "/** {@example } */",/// Error: Empty URI. {@example URI}
+
+        "/** @poi(named: \" \\x0010 \\n \") */",
+        "/**!re2c Rule: A | B; */",
+        "/**!phpunit */",
+        "/**!php-unit */",
+        "/**!php-doc */",
+        "/**TODO: varnish */",
+        "/**TODO: zval/php_doc_node */",
+        NULL
+    };
+    const char *dataset__[] = {
+        ///"/** @poi(1, {a:2,b:{c:3}}) Description */",
+
+        "/** @param(7) hello wordl*/",
+        "/** @param(7, G_PARAM_CONSTRUCT) hello wordl*/",
+        "/** @param(7, G_PARAM_CONSTRUCT | G_PARAM_READWRITE) */",
+
+        ///"/** @g_override GObjectClass.set_property */",
+        ///"/** @override GObject::set_property */",
+
+        ///"/** @dataProvider provider */",
+        ///"/** @dataProvider My::provider(1)*/",
+        ///"/** @dataProvider [1, 'a']\n *                 [2, 'b'] [3, 'c'] */",
+        NULL
+    };
+    // Phpdoc\Tag::registry("dataProvider", "Array");
+
+    char **data = dataset__;
+    //const char *str = "/** @poi({a:321}) Xy\n * \n * My desc\n * multi line\n * @aze\n */";
+    for (int i=0; data[i]!=NULL; i++) {
+        const char *str = data[i];
+
+        char *end = NULL;
+        php_doc_comment *doc_comment;
+        if (doc_comment = php_doc_comment_parse(str, &end)) {
+            //php_printf("description = %s\n", doc_comment->description->val);
+            php_doc_tag *tag;
+            ZEND_HASH_FOREACH_PTR(&doc_comment->tags, tag) {
+                //php_printf("@%s %s\n", tag->name->val, tag->description->val);
+                if (0==strcmp(tag->name->val, "g_override")) {
+                    //php_printf("@%s %s\n", tag->name->val, tag->description->val);
+                    //php_printf("%s\n", tag->description->val);
+                }
+            } ZEND_HASH_FOREACH_END();
+            //printf("OK = %p, ", doc_comment);
+
+            zval ptr; ZVAL_PTR(&ptr, doc_comment);
+            php_doc_comment_free(&ptr);
+        } else {
+            php_printf("Error %d\n", i);
+        }
     }
-    $description = $doc_reflector->getDescription();// Comment
-    $blocks = $description->getBlocks();
-    foreach($blocks as $block) {
-        $block->isCode();
-        $block->isText();
-        $block->isConstant();
-        $block->isVariable();
-        $block->isFunction();
-        $block->isMethod();
-        $block->isClass();
-    }
-}
+    //printf("\n");
+
+
 
 #endif
+
+    return SUCCESS;// FAILURE
+}

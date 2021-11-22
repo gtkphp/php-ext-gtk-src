@@ -27,11 +27,26 @@
 
 
 typedef struct _php_doc_tag php_doc_tag;
+
 struct _php_doc_tag {
-    char *name;
-    char *value;
-    char *description;
+    zend_string *name;
+    zend_array   parameters;// of php_doc_parameter(type hint|var)
+    zend_string *description;
+
+    // zend_object std;
 };
+
+php_doc_tag       *php_doc_tag_new(char *name, size_t len);
+void               php_doc_tag_set_description(php_doc_tag *tag, zend_string *description);
+void               php_doc_tag_free(zval *val);
+zend_array        *php_doc_tag_get_parameters_by_name(php_doc_tag *tag, char *name);
+php_doc_parameter *php_doc_tag_get_parameter_at(php_doc_tag *tag, int index);
+//char* php_doc_tag_get_name(php_doc_tag *tag);
+//char* php_doc_tag_get_summary(php_doc_tag *tag);
+//char* php_doc_tag_get_description(php_doc_tag *tag);
+//php_doc_parameter** php_doc_tag_get_parameters(php_doc_tag *tag);
+//php_doc_parameter*  php_doc_tag_get_parameter(php_doc_tag *tag, int pos);
+//php_doc_parameter*  php_doc_tag_get_parameter_by_name(php_doc_tag *tag, const char *name);
 
 
 #endif	/* PHP_DOC_TAG_H */

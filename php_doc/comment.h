@@ -26,21 +26,32 @@
 #endif
 
 
-//TODO: rename by php_doc_comment
-typedef struct _php_doc_block php_doc_block;
-struct _php_doc_block {
-    char *section;
-    char *description;
-    php_doc_tag **tags;// null-termineted
+typedef struct _php_doc_callable            php_doc_callable;
+struct _php_doc_callable {
+    zend_string *name;
+    zend_string *context;
+};
+php_doc_callable   *php_doc_callable_new();
+void                php_doc_callable_free(php_doc_callable *cb);
+
+typedef struct _php_doc_comment             php_doc_comment;
+
+struct _php_doc_comment {
+    //int sha_bang;
+    zend_string *summary;
+    zend_string *description;
+    zend_array   tags;// of php_doc_tag
 };
 
+php_doc_comment   *php_doc_comment_new();
+//void             php_doc_comment_set_summary(php_doc_comment *comment, zend_string *summary);
+//void             php_doc_comment_set_description(php_doc_comment *comment, zend_string *description);
+//void             php_doc_comment_set_tags(php_doc_comment *comment, void *tags);
+zend_array        *php_doc_comment_get_tags_by_name(php_doc_comment *comment, char *name);
+zend_array        *php_doc_comment_get_tags_by_names(php_doc_comment *comment, const char *names[]);
 
-php_doc_block* php_doc_comment_create(char *comment);
-void           php_doc_comment_free(php_doc_block *comment);
-
-php_doc_tag*//array null-terminated
-php_doc_comment_get_tag_by_name(php_doc_block *comment, char *tag_name);
-
+// speed up php tests
+int php_doc_comment_tests_suite(void);
 
 
 #endif	/* PHP_DOC_COMMENT_H */

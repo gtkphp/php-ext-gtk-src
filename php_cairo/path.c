@@ -32,7 +32,7 @@
 
 #include "php_gtk.h"
 #include "php_cairo/cairo.h"
-//#include "php_cairo/glyph.h"
+#include "php_cairo/glyph.h"
 #include "php_cairo/path-data.h"
 #include "php_cairo/path-data-type.h"
 
@@ -132,7 +132,7 @@ php_cairo_path_t_setter_int(php_cairo_path_t *intern, zval *value, char *name, z
         zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
         const char *type_name = zend_zval_type_name(value);
         if (strict_types) {
-            zend_type_error("Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_path_t::$%s of type float,", type_name, name);
+            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_path_t::$%s of type float,", type_name, name);
         } else {
             int allow_errors = -1;
             zend_long lval=0;
@@ -285,12 +285,12 @@ php_cairo_path_t_get_property_ptr_ptr(zend_object *object, zend_string *member_s
     if (cmd) {
         switch(cmd->code) {
         case PHP_CAIRO_PATH_T_STATUS:
-            return &intern->status;
+            return &intern->status;// forbiden
         case PHP_CAIRO_PATH_T_DATA:
             return &intern->data;
         case PHP_CAIRO_PATH_T_NUM_DATA:
             php_cairo_path_t_update_num_data(intern);
-            return &intern->num_data;
+            return &intern->num_data;// forbiden
         }
     } else {
         // Error
@@ -448,16 +448,16 @@ php_cairo_path_t_get_ptr(php_cairo_path_t *php_path){
             //zval *ret = std_hnd->read_property(value, &member_point, IS_OBJECT, &cache_slot, &rv);
             if (path_data->union_type==1/*PHP_CAIRO_PATH_DATA_T_HEADER*/) {
                 zval *zheader = &path_data->header;
-                ztype = std_hnd->read_property(zheader, &member_type, IS_LONG, NULL, NULL);
-                zlength = std_hnd->read_property(zheader, &member_length, IS_LONG, NULL, NULL);
+                ztype = std_hnd->read_property(zheader->value.obj, member_type_str, IS_LONG, NULL, NULL);
+                zlength = std_hnd->read_property(zheader->value.obj, member_length_str, IS_LONG, NULL, NULL);
                 type = ztype->value.lval;
                 length = zlength->value.lval;
                 count = 0;
             } else {
                 zval *zpoint;
                 zpoint = &path_data->point;
-                zx = std_hnd->read_property(zpoint, &member_x, IS_DOUBLE, NULL, NULL);
-                zy = std_hnd->read_property(zpoint, &member_y, IS_DOUBLE, NULL, NULL);
+                zx = std_hnd->read_property(zpoint->value.obj, member_x_str, IS_DOUBLE, NULL, NULL);
+                zy = std_hnd->read_property(zpoint->value.obj, member_y_str, IS_DOUBLE, NULL, NULL);
                 points[0+count][0] = zx->value.dval;
                 points[0+count][1] = zy->value.dval;
                 count++;
@@ -860,28 +860,56 @@ PHP_FUNCTION(cairo_rectangle)
     cairo_rectangle(cr, x, y, width, height);
     RETURN_NULL();
 }/* }}} */
+
+static size_t
+php_cairo_glyph_path_get_glyphs_array (zend_array *arr, cairo_glyph_t **glyphs) {
+
+    uint32_t size = zend_array_count(arr);
+    cairo_glyph_t *array = emalloc(sizeof(cairo_glyph_t)*size);
+    php_cairo_glyph_t *php_glyph;
+    int i=0;
+    int j=0;
+    zval *value;
+    ZEND_HASH_FOREACH_VAL(arr, value) {
+        if (Z_TYPE_P(value)==IS_OBJECT) {
+            if (instanceof_function(value->value.obj, php_cairo_glyph_t_class_entry)) {
+                php_glyph = ZOBJ_TO_PHP_CAIRO_GLYPH_T(value->value.obj);
+                PHP_CAIRO_GLYPH_T_COPY(php_glyph, &array[i]);
+                i++;
+            } else {
+                php_printf("Error type: array[%d] is not glyph\n", j);
+            }
+        } else {
+            php_printf("Error type: array[%d] is not glyph\n", j);
+        }
+        j++;
+    } ZEND_HASH_FOREACH_END();
+
+    *glyphs = array;
+    return i;
+}
+
 /* {{{ proto void cairo_glyph_path(php_cairo_t cr, php_cairo_glyph_t glyphs, int num_glyphs)
    Adds closed paths for the glyphs to the current path. */
 PHP_FUNCTION(cairo_glyph_path)
 {
     zval *zcr;
     zval *zglyphs;
-    zend_long num_glyphs;
-#if 0
-    ZEND_PARSE_PARAMETERS_START(3, 3)
+    cairo_glyph_t *glyphs;
+    size_t num_glyphs;
+
+    ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
-        Z_PARAM_OBJECT_OF_CLASS_EX(zglyphs, php_cairo_glyph_t_class_entry, 1, 0);
-        Z_PARAM_LONG(num_glyphs);
+        Z_PARAM_ARRAY(zglyphs);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
     DECL_PHP_CAIRO_T(cr);
-    php_cairo_glyph_t *php_glyphs = ZVAL_IS_PHP_CAIRO_GLYPH_T(zglyphs)? ZVAL_GET_PHP_CAIRO_GLYPH_T(zglyphs): NULL;
-    DECL_PHP_CAIRO_GLYPH_T(glyphs);
+    num_glyphs = php_cairo_glyph_path_get_glyphs_array (zglyphs->value.arr, &glyphs);
+
 
     cairo_glyph_path(cr, glyphs, num_glyphs);
     RETURN_NULL();
-#endif
 }/* }}} */
 /* {{{ proto void cairo_text_path(php_cairo_t cr, char utf8)
    Adds closed paths for text to the current path. */
@@ -889,7 +917,7 @@ PHP_FUNCTION(cairo_text_path)
 {
     zval *zcr;
     char *utf8;
-    int utf8_len;
+    size_t utf8_len;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);

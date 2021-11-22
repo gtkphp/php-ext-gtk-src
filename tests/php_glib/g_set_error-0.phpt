@@ -16,12 +16,17 @@ $error=null;
 g_set_error($error, my_quark(), 403, "'%s' do not exist", "Application", null);
 var_dump($error);
 
+$error=new GError();
+g_set_error($error, my_quark(), 403, "'%s' do not exist", "Application", null);
+var_dump($error);
+
 
 ?>
---EXPECT--
+--EXPECTF--
+NULL
 object(GError)#1 (3) {
   ["domain"]=>
-  string(2) "MY"
+  int(%d)
   ["code"]=>
   int(403)
   ["message"]=>

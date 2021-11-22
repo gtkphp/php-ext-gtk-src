@@ -1,6 +1,6 @@
 /*
 +----------------------------------------------------------------------+
-| PHP Version 7                                                        |
+| PHP Version 8                                                        |
 +----------------------------------------------------------------------+
 | Copyright (c) 1997-2018 The PHP Group                                |
 +----------------------------------------------------------------------+
@@ -50,8 +50,18 @@ extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
 
 
-zend_class_entry     *php_cairo_glyph_t_class_entry;
+zend_class_entry     *php_cairo_glyph_t_class_entry;// struct
 zend_object_handlers  php_cairo_glyph_t_handlers;
+
+
+
+
+enum _php_cairo_glyph_t_properties {
+    PHP_CAIRO_GLYPH_T_INDEX = 1,
+    PHP_CAIRO_GLYPH_T_X = 2,
+    PHP_CAIRO_GLYPH_T_Y = 3
+};
+//typedef enum php_cairo_glyph_t_properties php_cairo_glyph_t_properties;
 
 
 
@@ -73,8 +83,7 @@ php_cairo_glyph_t_methods[] = {
 static zend_object*
 php_cairo_glyph_t_create_object(zend_class_entry *class_type)
 {
-    php_cairo_glyph_t *intern = ecalloc(1, sizeof(php_cairo_glyph_t) + zend_object_properties_size(class_type));
-
+    php_cairo_glyph_t *intern = zend_object_alloc(sizeof(php_cairo_glyph_t), class_type);
     zend_object_std_init(&intern->std, class_type);
     object_properties_init(&intern->std, class_type);
 
@@ -92,7 +101,7 @@ php_cairo_glyph_t_create_object(zend_class_entry *class_type)
 
 static void
 php_cairo_glyph_t_dtor_object(zend_object *obj) {
-    php_cairo_glyph_t *intern = ZOBJ_TO_PHP_CAIRO_GLYPH_T(obj);
+    //php_cairo_glyph_t *intern = ZOBJ_TO_PHP_CAIRO_GLYPH_T(obj);
 
 }
 
@@ -112,6 +121,7 @@ php_cairo_glyph_t_free_object(zend_object *object)
 
 
 
+
 /** TODO: implement all the types */
 /** rename it by : php_gtkml_setter_[double|long|string] */
 static void
@@ -120,9 +130,9 @@ php_cairo_glyph_t_setter_int(php_cairo_glyph_t *intern, zval *value, char *name,
         ZVAL_SET_LONG(dest, value->value.lval);
     } else {
         zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
-        zend_string *type = zend_zval_get_type(value);
+        const char *type_name = zend_zval_type_name(value);
         if (strict_types) {
-            zend_internal_type_error(1, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_glyph_t::$%s of type float,", type->val, name);
+            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_glyph_t::$%s of type float,", type_name, name);
         } else {
             int allow_errors = -1;
             zend_long lval=0;
@@ -131,11 +141,11 @@ php_cairo_glyph_t_setter_int(php_cairo_glyph_t *intern, zval *value, char *name,
                 zend_uchar z_type = is_numeric_string(Z_STRVAL_P(value), Z_STRLEN_P(value), &lval, &dval, allow_errors);
                 if (z_type==IS_LONG) {
                     ZVAL_SET_LONG(dest, lval);
-                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to int(%d) convertion,", type->val, value->value.str->val, lval);
+                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to int(%d) convertion,", type_name, value->value.str->val, lval);
                     return;
                 } else if(z_type==IS_DOUBLE) {
                     ZVAL_SET_LONG(dest, (int)dval);
-                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to int(%d) convertion,", type->val, value->value.str->val, (int)dval);
+                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to int(%d) convertion,", type_name, value->value.str->val, (int)dval);
                     return;
                 }
             }
@@ -144,10 +154,11 @@ php_cairo_glyph_t_setter_int(php_cairo_glyph_t *intern, zval *value, char *name,
                 zend_error(E_USER_WARNING, "Implicite float(%f) to int(%d) convertion,", value->value.dval, (int)value->value.dval);
                 return;
             }
-            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_glyph_t::$%s of type int,", type->val, name);
+            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_glyph_t::$%s of type int,", type_name, name);
         }
     }
 }
+
 
 
 
@@ -159,9 +170,9 @@ php_cairo_glyph_t_setter_double(php_cairo_glyph_t *intern, zval *value, char *na
         ZVAL_SET_DOUBLE(dest, value->value.dval);
     } else {
         zend_bool strict_types = ZEND_CALL_USES_STRICT_TYPES(EG(current_execute_data));
-        zend_string *type = zend_zval_get_type(value);
+        const char *type_name = zend_zval_type_name(value);
         if (strict_types) {
-            zend_internal_type_error(1, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_glyph_t::$%s of type float,", type->val, name);
+            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_glyph_t::$%s of type float,", type_name, name);
         } else {
             int allow_errors = -1;
             zend_long lval=0;
@@ -170,33 +181,26 @@ php_cairo_glyph_t_setter_double(php_cairo_glyph_t *intern, zval *value, char *na
                 zend_uchar z_type = is_numeric_string(Z_STRVAL_P(value), Z_STRLEN_P(value), &lval, &dval, allow_errors);
                 if (z_type==IS_LONG) {
                     ZVAL_SET_DOUBLE(dest, (double)lval);
-                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to float(%f) convertion,", type->val, value->value.str->val, (double)lval);
+                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to float(%f) convertion,", type_name, value->value.str->val, (double)lval);
                     return;
                 } else if(z_type==IS_DOUBLE) {
                     ZVAL_SET_DOUBLE(dest, dval);
-                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to float(%f) convertion,", type->val, value->value.str->val, dval);
+                    zend_error(E_USER_NOTICE, "Implicite %s(%s) to float(%f) convertion,", type_name, value->value.str->val, dval);
                     return;
                 }
             }
             if (Z_TYPE_P(value)==IS_LONG) {
                 ZVAL_SET_DOUBLE(dest, (double)value->value.lval);
-                zend_error(E_USER_NOTICE, "Implicite int(%d) to float(%f) convertion,", value->value.lval, (double)value->value.lval);
+                zend_error(E_USER_NOTICE, "Implicite int(%d) to float(%f) convertion,", (int)value->value.lval, (double)value->value.lval);
                 return;
             }
-            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_glyph_t::$%s of type float,", type->val, name);
+            zend_error(E_USER_NOTICE, "Cannot assign %s to property "GTK_NS_QUOTE(GTK_NS)"\\cairo_glyph_t::$%s of type float,", type_name, name);
         }
     }
 }
 
 
 
-
-enum _php_cairo_glyph_t_properties {
-    PHP_CAIRO_GLYPH_T_INDEX = 1,
-    PHP_CAIRO_GLYPH_T_X = 2,
-    PHP_CAIRO_GLYPH_T_Y = 3
-};
-//typedef enum php_cairo_glyph_t_properties php_cairo_glyph_t_properties;
 
 struct PhpCairoGlyphTProperty {
   const char *name;
@@ -231,25 +235,28 @@ php_cairo_glyph_t_properties_lookup (const char *str, size_t len)
 
 /* {{{ php_cairo_glyph_t_read_property */
 static zval*
-php_cairo_glyph_t_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
+php_cairo_glyph_t_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv)
 {
-    php_cairo_glyph_t *intern = ZVAL_GET_PHP_CAIRO_GLYPH_T(object);
-    zend_string *member_str = member->value.str;
+    php_cairo_glyph_t *intern = ZOBJ_TO_PHP_CAIRO_GLYPH_T(object);
 
-    struct PhpCairoGlyphTProperty *cmd = php_cairo_glyph_t_properties_lookup(member_str->val, member_str->len);
+    const struct PhpCairoGlyphTProperty *cmd = php_cairo_glyph_t_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
         switch(cmd->code) {
         case PHP_CAIRO_GLYPH_T_INDEX:
             ZVAL_COPY(rv, &intern->index);
+            return rv;
             break;
         case PHP_CAIRO_GLYPH_T_X:
             ZVAL_COPY(rv, &intern->x);
+            return rv;
             break;
         case PHP_CAIRO_GLYPH_T_Y:
             ZVAL_COPY(rv, &intern->y);
+            return rv;
             break;
         default:
-            zend_internal_type_error(1, "Internal bug,");
+            //zend_internal_type_error(1, "Internal bug,");
+            //zend_error(E_USER_NOTICE, "Internal bug,");
             break;
         }
     } else {
@@ -261,14 +268,12 @@ php_cairo_glyph_t_read_property(zval *object, zval *member, int type, void **cac
 /* }}} */
 
 /* {{{ php_cairo_glyph_t_write_property */
-static void
-php_cairo_glyph_t_write_property(zval *object, zval *member, zval *value, void **cache_slot)
+static zval*
+php_cairo_glyph_t_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot)
 {
-    php_cairo_glyph_t *intern = ZVAL_GET_PHP_CAIRO_GLYPH_T(object);
-    zend_string *member_str = member->value.str;
-
+    php_cairo_glyph_t *intern = ZOBJ_TO_PHP_CAIRO_GLYPH_T(object);
     // struct
-    struct PhpCairoGlyphTProperty *cmd = php_cairo_glyph_t_properties_lookup(member_str->val, member_str->len);
+    const struct PhpCairoGlyphTProperty *cmd = php_cairo_glyph_t_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
         switch(cmd->code) {
         case PHP_CAIRO_GLYPH_T_INDEX:
@@ -284,18 +289,18 @@ php_cairo_glyph_t_write_property(zval *object, zval *member, zval *value, void *
     } else {
         // property not found
     }
+    return value;
 }
 /* }}} */
 
 /* {{{ php_cairo_glyph_t_get_property_ptr_ptr */
-static zval *
-php_cairo_glyph_t_get_property_ptr_ptr(zval *object, zval *member, int type, void **cache_slot) {
-    php_cairo_glyph_t  *intern = ZVAL_GET_PHP_CAIRO_GLYPH_T(object);
-    zend_string *member_str = member->value.str;
-    char *str = member_str->val;
+static zval*
+php_cairo_glyph_t_get_property_ptr_ptr(zend_object *object, zend_string *member_str, int type, void **cache_slot)
+{
+    php_cairo_glyph_t *intern = ZOBJ_TO_PHP_CAIRO_GLYPH_T(object);
     zval *retval = NULL;
 
-    struct PhpCairoGlyphTProperty *cmd = php_cairo_glyph_t_properties_lookup(member_str->val, member_str->len);
+    const struct PhpCairoGlyphTProperty *cmd = php_cairo_glyph_t_properties_lookup(member_str->val, member_str->len);
     if (cmd) {
         switch(cmd->code) {
         case PHP_CAIRO_GLYPH_T_INDEX:
@@ -318,9 +323,9 @@ php_cairo_glyph_t_get_property_ptr_ptr(zval *object, zval *member, int type, voi
 
 /* {{{ php_cairo_glyph_t_get_debug_info */
 static HashTable*
-php_cairo_glyph_t_get_debug_info(zval *object, int *is_temp)
+php_cairo_glyph_t_get_debug_info(zend_object *object, int *is_temp)
 {
-    php_cairo_glyph_t  *intern = ZVAL_GET_PHP_CAIRO_GLYPH_T(object);
+    php_cairo_glyph_t  *intern = ZOBJ_TO_PHP_CAIRO_GLYPH_T(object);
     HashTable   *debug_info,
     *std_props;
 
@@ -391,8 +396,8 @@ php_cairo_glyph_t_class_init(zend_class_entry *container_ce, zend_class_entry *p
  /* {{{ cairo_glyph_t::__construct() */
 PHP_METHOD(cairo_glyph_t, __construct)
 {
-    zend_object *zobj = Z_OBJ_P(getThis());
-    php_cairo_glyph_t *self = ZOBJ_TO_PHP_CAIRO_GLYPH_T(zobj);
+    //zend_object *zobj = Z_OBJ_P(getThis());
+    //php_cairo_glyph_t *self = ZOBJ_TO_PHP_CAIRO_GLYPH_T(zobj);
 
 
 }
@@ -402,34 +407,32 @@ PHP_METHOD(cairo_glyph_t, __construct)
  | PHP_FUNCTION                                                         |
  +----------------------------------------------------------------------*/
 
-/* {{{ proto void cairo_select_font_face(php_cairo_t cr, string family, int slant, int weight)
+#if CAIRO_VERSION >= 10000
+/* {{{ proto void cairo_select_font_face(php_cairo_t cr, char family, int slant, int weight)
    Note: The cairo_select_font_face() function call is part of what the ... */
 PHP_FUNCTION(cairo_select_font_face)
 {
     zval *zcr;
     char *family;
-    int family_len;
-    zval *zslant;
-    zval *zweight;
+    size_t family_len;
+    zend_long zslant;
+    zend_long zweight;
 
     ZEND_PARSE_PARAMETERS_START(4, 4)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_STRING(family, family_len)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zslant, php_cairo_font_slant_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zweight, php_cairo_font_weight_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_STRING(family, family_len);
+        Z_PARAM_LONG(zslant);
+        Z_PARAM_LONG(zweight);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
     DECL_PHP_CAIRO_T(cr);
-    php_cairo_font_slant_t *php_slant = ZVAL_IS_PHP_CAIRO_FONT_SLANT_T(zslant)? ZVAL_GET_PHP_CAIRO_FONT_SLANT_T(zslant): NULL;
-    DECL_PHP_CAIRO_FONT_SLANT_T(slant);
-    php_cairo_font_weight_t *php_weight = ZVAL_IS_PHP_CAIRO_FONT_WEIGHT_T(zweight)? ZVAL_GET_PHP_CAIRO_FONT_WEIGHT_T(zweight): NULL;
-    DECL_PHP_CAIRO_FONT_WEIGHT_T(weight);
+    cairo_font_slant_t slant = zslant;
+    cairo_font_weight_t weight = zweight;
 
     cairo_select_font_face(cr, family, slant, weight);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_set_font_size(php_cairo_t cr, double size)
    Sets the current font matrix to a scale by a factor of size , replaci... */
 PHP_FUNCTION(cairo_set_font_size)
@@ -438,8 +441,8 @@ PHP_FUNCTION(cairo_set_font_size)
     double size;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_DOUBLE(size)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_DOUBLE(size);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -448,7 +451,6 @@ PHP_FUNCTION(cairo_set_font_size)
     cairo_set_font_size(cr, size);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_set_font_matrix(php_cairo_t cr, php_cairo_matrix_t matrix)
    Sets the current font matrix to matrix . */
 PHP_FUNCTION(cairo_set_font_matrix)
@@ -457,8 +459,8 @@ PHP_FUNCTION(cairo_set_font_matrix)
     zval *zmatrix;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -469,7 +471,6 @@ PHP_FUNCTION(cairo_set_font_matrix)
     cairo_set_font_matrix(cr, matrix);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_get_font_matrix(php_cairo_t cr, php_cairo_matrix_t matrix)
    Stores the current font matrix into matrix . See cairo_set_font_matrix(). */
 PHP_FUNCTION(cairo_get_font_matrix)
@@ -478,8 +479,8 @@ PHP_FUNCTION(cairo_get_font_matrix)
     zval *zmatrix;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zmatrix, php_cairo_matrix_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -490,7 +491,6 @@ PHP_FUNCTION(cairo_get_font_matrix)
     cairo_get_font_matrix(cr, matrix);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_set_font_options(php_cairo_t cr, php_cairo_font_options_t options)
    Sets a set of custom font rendering options for the cairo_t. */
 PHP_FUNCTION(cairo_set_font_options)
@@ -499,8 +499,8 @@ PHP_FUNCTION(cairo_set_font_options)
     zval *zoptions;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zoptions, php_cairo_font_options_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zoptions, php_cairo_font_options_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -511,7 +511,6 @@ PHP_FUNCTION(cairo_set_font_options)
     cairo_set_font_options(cr, options);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_get_font_options(php_cairo_t cr, php_cairo_font_options_t options)
    Retrieves font rendering options set via cairo_set_font_options. */
 PHP_FUNCTION(cairo_get_font_options)
@@ -520,8 +519,8 @@ PHP_FUNCTION(cairo_get_font_options)
     zval *zoptions;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zoptions, php_cairo_font_options_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zoptions, php_cairo_font_options_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -532,7 +531,6 @@ PHP_FUNCTION(cairo_get_font_options)
     cairo_get_font_options(cr, options);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_set_font_face(php_cairo_t cr, php_cairo_font_face_t font_face)
    Replaces the current cairo_font_face_t object in the cairo_t with fon... */
 PHP_FUNCTION(cairo_set_font_face)
@@ -541,8 +539,8 @@ PHP_FUNCTION(cairo_set_font_face)
     zval *zfont_face;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zfont_face, php_cairo_font_face_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zfont_face, php_cairo_font_face_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -553,7 +551,6 @@ PHP_FUNCTION(cairo_set_font_face)
     cairo_set_font_face(cr, font_face);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto php_cairo_font_face_t cairo_get_font_face(php_cairo_t cr)
    Gets the current font face for a cairo_t. */
 PHP_FUNCTION(cairo_get_font_face)
@@ -561,17 +558,21 @@ PHP_FUNCTION(cairo_get_font_face)
     zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
     DECL_PHP_CAIRO_T(cr);
 
     cairo_font_face_t *ret = cairo_get_font_face(cr);
+    php_cairo_font_face_t *php_ret = php_cairo_font_face_t_new();
+    zend_object *z_ret = &php_ret->std;
+    php_ret->ptr = ret;
 
     RETURN_OBJ(z_ret);
 }/* }}} */
-
+#endif
+#if CAIRO_VERSION >= 10200
 /* {{{ proto void cairo_set_scaled_font(php_cairo_t cr, php_cairo_scaled_font_t scaled_font)
    Replaces the current font face, font matrix, and font options in the ... */
 PHP_FUNCTION(cairo_set_scaled_font)
@@ -580,8 +581,8 @@ PHP_FUNCTION(cairo_set_scaled_font)
     zval *zscaled_font;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zscaled_font, php_cairo_scaled_font_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zscaled_font, php_cairo_scaled_font_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -592,7 +593,8 @@ PHP_FUNCTION(cairo_set_scaled_font)
     cairo_set_scaled_font(cr, scaled_font);
     RETURN_NULL();
 }/* }}} */
-
+#endif
+#if CAIRO_VERSION >= 10400
 /* {{{ proto php_cairo_scaled_font_t cairo_get_scaled_font(php_cairo_t cr)
    Gets the current scaled font for a cairo_t. */
 PHP_FUNCTION(cairo_get_scaled_font)
@@ -600,28 +602,32 @@ PHP_FUNCTION(cairo_get_scaled_font)
     zval *zcr;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
     DECL_PHP_CAIRO_T(cr);
 
     cairo_scaled_font_t *ret = cairo_get_scaled_font(cr);
+    php_cairo_scaled_font_t *php_ret = php_cairo_scaled_font_t_new();
+    zend_object *z_ret = &php_ret->std;
+    php_ret->ptr = ret;
 
     RETURN_OBJ(z_ret);
 }/* }}} */
-
-/* {{{ proto void cairo_show_text(php_cairo_t cr, string utf8)
+#endif
+#if CAIRO_VERSION >= 10000
+/* {{{ proto void cairo_show_text(php_cairo_t cr, char utf8)
    A drawing operator that generates the shape from a string of UTF-8 ch... */
 PHP_FUNCTION(cairo_show_text)
 {
     zval *zcr;
     char *utf8;
-    int utf8_len;
+    size_t utf8_len;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_STRING(utf8, utf8_len)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_STRING(utf8, utf8_len);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -630,7 +636,6 @@ PHP_FUNCTION(cairo_show_text)
     cairo_show_text(cr, utf8);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_show_glyphs(php_cairo_t cr, php_cairo_glyph_t glyphs, int num_glyphs)
    A drawing operator that generates the shape from an array of glyphs, ... */
 PHP_FUNCTION(cairo_show_glyphs)
@@ -640,9 +645,9 @@ PHP_FUNCTION(cairo_show_glyphs)
     zend_long num_glyphs;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zglyphs, php_cairo_glyph_t_class_entry, 1, 0)
-        Z_PARAM_LONG(num_glyphs)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zglyphs, php_cairo_glyph_t_class_entry, 1, 0);
+        Z_PARAM_LONG(num_glyphs);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -653,45 +658,43 @@ PHP_FUNCTION(cairo_show_glyphs)
     cairo_show_glyphs(cr, glyphs, num_glyphs);
     RETURN_NULL();
 }/* }}} */
-
-/* {{{ proto void cairo_show_text_glyphs(php_cairo_t cr, string utf8, int utf8_len, php_cairo_glyph_t glyphs, int num_glyphs, php_cairo_text_cluster_t clusters, int num_clusters, int cluster_flags)
+#endif
+#if CAIRO_VERSION >= 10800
+/* {{{ proto void cairo_show_text_glyphs(php_cairo_t cr, char utf8, int utf8_len, php_cairo_glyph_t glyphs, int num_glyphs, php_cairo_text_cluster_t clusters, int num_clusters, int cluster_flags)
    This operation has rendering effects similar to cairo_show_glyphs() b... */
 PHP_FUNCTION(cairo_show_text_glyphs)
 {
     zval *zcr;
     char *utf8;
-    int utf8_len;
-    zend_long utf8_len;
+    size_t utf8_len;
     zval *zglyphs;
-    zend_long num_glyphs;
+    size_t num_glyphs;
     zval *zclusters;
-    zend_long num_clusters;
-    zval *zcluster_flags;
+    size_t num_clusters;
+    zend_long zcluster_flags;
 
-    ZEND_PARSE_PARAMETERS_START(8, 8)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_STRING(utf8, utf8_len)
-        Z_PARAM_LONG(utf8_len)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zglyphs, php_cairo_glyph_t_class_entry, 1, 0)
-        Z_PARAM_LONG(num_glyphs)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zclusters, php_cairo_text_cluster_t_class_entry, 1, 0)
-        Z_PARAM_LONG(num_clusters)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcluster_flags, php_cairo_text_cluster_flags_t_class_entry, 1, 0)
+    ZEND_PARSE_PARAMETERS_START(5, 5)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_STRING(utf8, utf8_len);
+        Z_PARAM_ARRAY(zglyphs);
+        Z_PARAM_ARRAY(zclusters);
+        Z_PARAM_LONG(zcluster_flags);
     ZEND_PARSE_PARAMETERS_END();
-
+#if 0
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
     DECL_PHP_CAIRO_T(cr);
     php_cairo_glyph_t *php_glyphs = ZVAL_IS_PHP_CAIRO_GLYPH_T(zglyphs)? ZVAL_GET_PHP_CAIRO_GLYPH_T(zglyphs): NULL;
     DECL_PHP_CAIRO_GLYPH_T(glyphs);
     php_cairo_text_cluster_t *php_clusters = ZVAL_IS_PHP_CAIRO_TEXT_CLUSTER_T(zclusters)? ZVAL_GET_PHP_CAIRO_TEXT_CLUSTER_T(zclusters): NULL;
     DECL_PHP_CAIRO_TEXT_CLUSTER_T(clusters);
-    php_cairo_text_cluster_flags_t *php_cluster_flags = ZVAL_IS_PHP_CAIRO_TEXT_CLUSTER_FLAGS_T(zcluster_flags)? ZVAL_GET_PHP_CAIRO_TEXT_CLUSTER_FLAGS_T(zcluster_flags): NULL;
-    DECL_PHP_CAIRO_TEXT_CLUSTER_FLAGS_T(cluster_flags);
+    cairo_text_cluster_flags_t cluster_flags = zcluster_flags;
 
     cairo_show_text_glyphs(cr, utf8, utf8_len, glyphs, num_glyphs, clusters, num_clusters, cluster_flags);
+#endif
     RETURN_NULL();
 }/* }}} */
-
+#endif
+#if CAIRO_VERSION >= 10000
 /* {{{ proto void cairo_font_extents(php_cairo_t cr, php_cairo_font_extents_t extents)
    Gets the font extents for the currently selected font. */
 PHP_FUNCTION(cairo_font_extents)
@@ -700,8 +703,8 @@ PHP_FUNCTION(cairo_font_extents)
     zval *zextents;
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zextents, php_cairo_font_extents_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zextents, php_cairo_font_extents_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -712,20 +715,19 @@ PHP_FUNCTION(cairo_font_extents)
     cairo_font_extents(cr, extents);
     RETURN_NULL();
 }/* }}} */
-
-/* {{{ proto void cairo_text_extents(php_cairo_t cr, string utf8, php_cairo_text_extents_t extents)
+/* {{{ proto void cairo_text_extents(php_cairo_t cr, char utf8, php_cairo_text_extents_t extents)
    Gets the extents for a string of text. */
 PHP_FUNCTION(cairo_text_extents)
 {
     zval *zcr;
     char *utf8;
-    int utf8_len;
+    size_t utf8_len;
     zval *zextents;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_STRING(utf8, utf8_len)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zextents, php_cairo_text_extents_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_STRING(utf8, utf8_len);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zextents, php_cairo_text_extents_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -736,7 +738,6 @@ PHP_FUNCTION(cairo_text_extents)
     cairo_text_extents(cr, utf8, extents);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto void cairo_glyph_extents(php_cairo_t cr, php_cairo_glyph_t glyphs, int num_glyphs, php_cairo_text_extents_t extents)
    Gets the extents for an array of glyphs. */
 PHP_FUNCTION(cairo_glyph_extents)
@@ -747,10 +748,10 @@ PHP_FUNCTION(cairo_glyph_extents)
     zval *zextents;
 
     ZEND_PARSE_PARAMETERS_START(4, 4)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zglyphs, php_cairo_glyph_t_class_entry, 1, 0)
-        Z_PARAM_LONG(num_glyphs)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zextents, php_cairo_text_extents_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zcr, php_cairo_t_class_entry, 1, 0);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zglyphs, php_cairo_glyph_t_class_entry, 1, 0);
+        Z_PARAM_LONG(num_glyphs);
+        Z_PARAM_OBJECT_OF_CLASS_EX(zextents, php_cairo_text_extents_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_t *php_cr = ZVAL_IS_PHP_CAIRO_T(zcr)? ZVAL_GET_PHP_CAIRO_T(zcr): NULL;
@@ -763,50 +764,51 @@ PHP_FUNCTION(cairo_glyph_extents)
     cairo_glyph_extents(cr, glyphs, num_glyphs, extents);
     RETURN_NULL();
 }/* }}} */
-
-/* {{{ proto php_cairo_font_face_t cairo_toy_font_face_create(string family, int slant, int weight)
+#endif
+#if CAIRO_VERSION >= 10800
+/* {{{ proto php_cairo_font_face_t cairo_toy_font_face_create(char family, int slant, int weight)
    Creates a font face from a triplet of family, slant, and weight. */
 PHP_FUNCTION(cairo_toy_font_face_create)
 {
     char *family;
-    int family_len;
-    zval *zslant;
-    zval *zweight;
+    size_t family_len;
+    zend_long zslant;
+    zend_long zweight;
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
-        Z_PARAM_STRING(family, family_len)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zslant, php_cairo_font_slant_t_class_entry, 1, 0)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zweight, php_cairo_font_weight_t_class_entry, 1, 0)
+        Z_PARAM_STRING(family, family_len);
+        Z_PARAM_LONG(zslant);
+        Z_PARAM_LONG(zweight);
     ZEND_PARSE_PARAMETERS_END();
 
-    php_cairo_font_slant_t *php_slant = ZVAL_IS_PHP_CAIRO_FONT_SLANT_T(zslant)? ZVAL_GET_PHP_CAIRO_FONT_SLANT_T(zslant): NULL;
-    DECL_PHP_CAIRO_FONT_SLANT_T(slant);
-    php_cairo_font_weight_t *php_weight = ZVAL_IS_PHP_CAIRO_FONT_WEIGHT_T(zweight)? ZVAL_GET_PHP_CAIRO_FONT_WEIGHT_T(zweight): NULL;
-    DECL_PHP_CAIRO_FONT_WEIGHT_T(weight);
+    cairo_font_slant_t slant = zslant;
+    cairo_font_weight_t weight = zweight;
 
     cairo_font_face_t *ret = cairo_toy_font_face_create(family, slant, weight);
+    php_cairo_font_face_t *php_ret = php_cairo_font_face_t_new();
+    zend_object *z_ret = &php_ret->std;
+    php_ret->ptr = ret;
 
     RETURN_OBJ(z_ret);
 }/* }}} */
-
-/* {{{ proto string cairo_toy_font_face_get_family(php_cairo_font_face_t font_face)
+/* {{{ proto char cairo_toy_font_face_get_family(php_cairo_font_face_t font_face)
    Gets the family name of a toy font. */
 PHP_FUNCTION(cairo_toy_font_face_get_family)
 {
     zval *zfont_face;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zfont_face, php_cairo_font_face_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zfont_face, php_cairo_font_face_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_font_face_t *php_font_face = ZVAL_IS_PHP_CAIRO_FONT_FACE_T(zfont_face)? ZVAL_GET_PHP_CAIRO_FONT_FACE_T(zfont_face): NULL;
     DECL_PHP_CAIRO_FONT_FACE_T(font_face);
 
-    char ret = cairo_toy_font_face_get_family(font_face);
+    const char *ret = cairo_toy_font_face_get_family(font_face);
+    zend_string *z_ret = zend_string_init(ret, strlen(ret), 0);
 
-    RETURN_STRING(z_ret);
+    RETURN_STR(z_ret);
 }/* }}} */
-
 /* {{{ proto int cairo_toy_font_face_get_slant(php_cairo_font_face_t font_face)
    Gets the slant a toy font. */
 PHP_FUNCTION(cairo_toy_font_face_get_slant)
@@ -814,17 +816,16 @@ PHP_FUNCTION(cairo_toy_font_face_get_slant)
     zval *zfont_face;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zfont_face, php_cairo_font_face_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zfont_face, php_cairo_font_face_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_font_face_t *php_font_face = ZVAL_IS_PHP_CAIRO_FONT_FACE_T(zfont_face)? ZVAL_GET_PHP_CAIRO_FONT_FACE_T(zfont_face): NULL;
     DECL_PHP_CAIRO_FONT_FACE_T(font_face);
 
-    cairo_font_slant_t ret = cairo_toy_font_face_get_slant(font_face);
+    int ret = cairo_toy_font_face_get_slant(font_face);
 
     RETURN_LONG(ret);
 }/* }}} */
-
 /* {{{ proto int cairo_toy_font_face_get_weight(php_cairo_font_face_t font_face)
    Gets the weight a toy font. */
 PHP_FUNCTION(cairo_toy_font_face_get_weight)
@@ -832,17 +833,16 @@ PHP_FUNCTION(cairo_toy_font_face_get_weight)
     zval *zfont_face;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zfont_face, php_cairo_font_face_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zfont_face, php_cairo_font_face_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_font_face_t *php_font_face = ZVAL_IS_PHP_CAIRO_FONT_FACE_T(zfont_face)? ZVAL_GET_PHP_CAIRO_FONT_FACE_T(zfont_face): NULL;
     DECL_PHP_CAIRO_FONT_FACE_T(font_face);
 
-    cairo_font_weight_t ret = cairo_toy_font_face_get_weight(font_face);
+    int ret = cairo_toy_font_face_get_weight(font_face);
 
     RETURN_LONG(ret);
 }/* }}} */
-
 /* {{{ proto php_cairo_glyph_t cairo_glyph_allocate(int num_glyphs)
    Allocates an array of cairo_glyph_t's. */
 PHP_FUNCTION(cairo_glyph_allocate)
@@ -850,14 +850,16 @@ PHP_FUNCTION(cairo_glyph_allocate)
     zend_long num_glyphs;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_LONG(num_glyphs)
+        Z_PARAM_LONG(num_glyphs);
     ZEND_PARSE_PARAMETERS_END();
 
     cairo_glyph_t *ret = cairo_glyph_allocate(num_glyphs);
+    zend_object *z_ret = php_cairo_glyph_t_create_object(php_cairo_glyph_t_class_entry);
+    php_cairo_glyph_t *php_ret = ZOBJ_TO_PHP_CAIRO_GLYPH_T(z_ret);
+    PHP_CAIRO_GLYPH_T_SET(php_ret, ret);
 
     RETURN_OBJ(z_ret);
 }/* }}} */
-
 /* {{{ proto void cairo_glyph_free(php_cairo_glyph_t glyphs)
    Frees an array of cairo_glyph_t's allocated using cairo_glyph_allocat... */
 PHP_FUNCTION(cairo_glyph_free)
@@ -865,7 +867,7 @@ PHP_FUNCTION(cairo_glyph_free)
     zval *zglyphs;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zglyphs, php_cairo_glyph_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zglyphs, php_cairo_glyph_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_glyph_t *php_glyphs = ZVAL_IS_PHP_CAIRO_GLYPH_T(zglyphs)? ZVAL_GET_PHP_CAIRO_GLYPH_T(zglyphs): NULL;
@@ -874,7 +876,6 @@ PHP_FUNCTION(cairo_glyph_free)
     cairo_glyph_free(glyphs);
     RETURN_NULL();
 }/* }}} */
-
 /* {{{ proto php_cairo_text_cluster_t cairo_text_cluster_allocate(int num_clusters)
    Allocates an array of cairo_text_cluster_t's. */
 PHP_FUNCTION(cairo_text_cluster_allocate)
@@ -882,14 +883,16 @@ PHP_FUNCTION(cairo_text_cluster_allocate)
     zend_long num_clusters;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_LONG(num_clusters)
+        Z_PARAM_LONG(num_clusters);
     ZEND_PARSE_PARAMETERS_END();
 
     cairo_text_cluster_t *ret = cairo_text_cluster_allocate(num_clusters);
+    php_cairo_text_cluster_t *php_ret = php_cairo_text_cluster_t_new();
+    zend_object *z_ret = &php_ret->std;
+    PHP_CAIRO_TEXT_CLUSTER_T_SET(php_ret, ret);
 
     RETURN_OBJ(z_ret);
 }/* }}} */
-
 /* {{{ proto void cairo_text_cluster_free(php_cairo_text_cluster_t clusters)
    Frees an array of cairo_text_cluster's allocated using cairo_text_clu... */
 PHP_FUNCTION(cairo_text_cluster_free)
@@ -897,7 +900,7 @@ PHP_FUNCTION(cairo_text_cluster_free)
     zval *zclusters;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_OBJECT_OF_CLASS_EX(zclusters, php_cairo_text_cluster_t_class_entry, 1, 0)
+        Z_PARAM_OBJECT_OF_CLASS_EX(zclusters, php_cairo_text_cluster_t_class_entry, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_cairo_text_cluster_t *php_clusters = ZVAL_IS_PHP_CAIRO_TEXT_CLUSTER_T(zclusters)? ZVAL_GET_PHP_CAIRO_TEXT_CLUSTER_T(zclusters): NULL;
@@ -906,7 +909,7 @@ PHP_FUNCTION(cairo_text_cluster_free)
     cairo_text_cluster_free(clusters);
     RETURN_NULL();
 }/* }}} */
-
+#endif
 
 /*
  * Local variables:

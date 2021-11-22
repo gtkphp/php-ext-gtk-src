@@ -5,14 +5,17 @@
 --FILE--
 <?php
 
+
 $list = Null;
 $list = g_list_append($list, "value0");
-$list = g_list_append($list, "value");
-$list = g_list_append($list, "value");
+$list = g_list_append($list, "value1");
+$list = g_list_append($list, "value2");
 
 g_list_free($list);
+// unset($list);
 
 var_dump($list);
+
 
 
 ?>

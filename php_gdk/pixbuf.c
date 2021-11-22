@@ -59,8 +59,8 @@ static const zend_function_entry php_gdk_pixbuf_methods[] = {
  | Zend Handler                                                         |
  +----------------------------------------------------------------------*/
 static void  php_gdk_pixbuf_unset_property(zval *object, zval *member, void **cache_slot);
-static void  php_gdk_pixbuf_write_property(zval *object, zval *member, zval *value, void **cache_slot);
-static zval* php_gdk_pixbuf_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv);
+static zval* php_gdk_pixbuf_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot);
+static zval* php_gdk_pixbuf_read_property(zend_object *object, zend_string *member, int type, void **cache_slot, zval *rv);
 static char* php_gdk_pixbuf_dump(php_gdk_pixbuf *list, int tab);
 
 static void
@@ -221,66 +221,34 @@ php_gdk_pixbuf_unset_property(zval *object, zval *member, void **cache_slot) {
     zend_string *member_str = zval_get_string(member);
     TRACE("%s(%s)\n", __FUNCTION__, member->value.str->val);
 
-    if (zend_string_equals_literal(member->value.str, "next")
-     || zend_string_equals_literal(member->value.str, "prev")
-     || zend_string_equals_literal(member->value.str, "data") ) {
-#if 0
-        if (ZVAL_IS_PHP_GDK_PIXBUF(value)) {
-            // do unset(object->next) and php_gdk_pixbuf_insert(object, value, 0);
-        } else {
-            zend_string *type = zend_zval_get_type(value);
-            zend_error(E_USER_WARNING, "Cannot assign %s to property GObject::$next of type GObject", type->val);
-        }
-#else
-        zend_error(E_USER_WARNING, "Readonly property GObject::$%s", member->value.str->val);
-#endif
-        return;
-    }
     zend_object_handlers *std_hnd = zend_get_std_object_handlers();
     std_hnd->unset_property(object, member, cache_slot);
 
-    zend_string_release(member_str);
+    //zend_string_release(member_str);
 }
 
 /* {{{ php_gdk_pixbuf_write_property */
-static void
-php_gdk_pixbuf_write_property(zval *object, zval *member, zval *value, void **cache_slot)
+static zval*
+php_gdk_pixbuf_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot)
 {
-    php_gdk_pixbuf *obj = ZVAL_GET_PHP_GDK_PIXBUF(object);
-    zend_string *member_str = zval_get_string(member);
-    TRACE("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    php_gdk_pixbuf *obj = ZOBJ_TO_PHP_GDK_PIXBUF(object);
+    TRACE("%s(%s)\n", __FUNCTION__, member_str->val);
 
-    if (zend_string_equals_literal(member->value.str, "next")
-     || zend_string_equals_literal(member->value.str, "prev")
-     || zend_string_equals_literal(member->value.str, "data") ) {
-#if 0
-        if (ZVAL_IS_PHP_GDK_PIXBUF(value)) {
-            // do unset(object->next) and php_gdk_pixbuf_insert(object, value, 0);
-        } else {
-            zend_string *type = zend_zval_get_type(value);
-            zend_error(E_USER_WARNING, "Cannot assign %s to property GObject::$next of type GObject", type->val);
-        }
-#else
-        zend_error(E_USER_WARNING, "Readonly property GObject::$%s", member->value.str->val);
-#endif
-        return;
-    }
     zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    std_hnd->write_property(object, member, value, cache_slot);
+    std_hnd->write_property(object, member_str, value, cache_slot);
 
-    zend_string_release(member_str);
+    //zend_string_release(member_str);
 }
 /* }}} */
 
 static zval zval_ret;
 /* {{{ gtk_read_property */
 static zval*
-php_gdk_pixbuf_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
+php_gdk_pixbuf_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv)
 {
-    php_gdk_pixbuf *obj = ZVAL_GET_PHP_GDK_PIXBUF(object);
-    zend_string *member_str = zval_get_string(member);
+    php_gdk_pixbuf *obj = ZOBJ_TO_PHP_GDK_PIXBUF(object);
     zval *retval;
-    TRACE("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    TRACE("%s(%s)\n", __FUNCTION__, member_str->val);
 
     /*
     if (zend_string_equals_literal(member_str, "next")) {
@@ -306,7 +274,7 @@ php_gdk_pixbuf_read_property(zval *object, zval *member, int type, void **cache_
     */
 
     zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    retval = std_hnd->read_property(object, member, type, cache_slot, rv);
+    retval = std_hnd->read_property(object, member_str, type, cache_slot, rv);
 
     zend_string_release(member_str);
     return retval;
@@ -404,6 +372,7 @@ php_gdk_pixbuf_get_handlers()
     php_gdk_pixbuf_handlers.free_obj = php_gdk_pixbuf_free_object;
     php_gdk_pixbuf_handlers.read_property = php_gdk_pixbuf_read_property;
     php_gdk_pixbuf_handlers.write_property = php_gdk_pixbuf_write_property;
+/*
     php_gdk_pixbuf_handlers.unset_property = php_gdk_pixbuf_unset_property;
     //php_gdk_pixbuf_handlers.get_property_ptr_ptr = php_gdk_pixbuf_get_property_ptr_ptr;
 
@@ -417,7 +386,7 @@ php_gdk_pixbuf_get_handlers()
     php_gdk_pixbuf_handlers.read_dimension = php_gdk_pixbuf_read_dimension;
     php_gdk_pixbuf_handlers.unset_dimension = php_gdk_pixbuf_unset_dimension;
     php_gdk_pixbuf_handlers.write_dimension = php_gdk_pixbuf_write_dimension;
-
+*/
 
     return &php_gdk_pixbuf_handlers;
 }
@@ -471,7 +440,7 @@ php_gdk_pixbuf_new_from_file(zend_string *filename, zval *error) {
     GError *err = NULL;
     GdkPixbuf *pixbuf = gdk_pixbuf_new_from_file(filename->val, &err);
     if (err) {
-        php_glib_error *e = php_glib_error_create(err);
+        php_g_error *e = php_g_error_new(err);
         ZVAL_OBJ(error, &e->std);
         zend_object_release(obj);
         return NULL;
@@ -519,7 +488,7 @@ PHP_FUNCTION(gdk_pixbuf_new_from_file)
     ZEND_PARSE_PARAMETERS_START(1, 2)
         Z_PARAM_ZVAL(zfilename)
         Z_PARAM_OPTIONAL
-        Z_PARAM_ZVAL_DEREF(zerror)
+        Z_PARAM_ZVAL_EX2(zerror, 0, 1, 0)
     ZEND_PARSE_PARAMETERS_END();
 
     zend_string *filename = Z_TYPE_P(zfilename)==IS_STRING ? zfilename->value.str : NULL;

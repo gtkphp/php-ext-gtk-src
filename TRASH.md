@@ -1,4 +1,295 @@
+#!php -----------------------------------------------------------------------------------
 <?php
+
+//namespace All;
+
+if (!extension_loaded("gtk")) die("Gtk+ not loaded");
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+
+// https://gtk.developpez.com/doc/en/gobject/ch07s02.html
+
+function this_is_my_callback(MyObject $object, $param, $user_data):int{
+    echo "\e[0;31m this_is_my_callback \e[0m", PHP_EOL;
+    //echo "this_is_my_callback (".get_class($object).", ".$param.", ".$user_data.")\n";
+    //throw new Exception();//TODO: add g_signal_emit in the trace
+    return 8;
+}
+
+function my_destroy($object, $param, $user_data) {
+}
+
+define("g_signal_new_id", 1);
+define("g_param_spec_new_id", 1);
+
+define('G_SIGNAL_RUN_LAST', 1);
+define('G_TYPE_NONE', 0);
+define('G_TYPE_INT', 0);
+define('G_TYPE_UINT', 28);
+define('G_TYPE_POINTER', 0);
+define('G_TYPE_DOUBLE', 0);
+
+
+/** hello */
+
+class ApiObject extends \GObject {
+    public function setProperty(string $property_name,
+                                GValue $value
+    ) {
+        echo get_class($this)."::setProperty($property_name)\n";
+        echo "\t \e[1;32m use zend_call_method instead of zend_call_function \e[0m \n";
+        echo "\t".self::ZOOMED."\n";
+        // intern->ptr == 0x00 Why ?
+
+        g_object_set_property($this, $property_name, $value);
+    }
+
+    /**
+     * The MyObject::changed signal will be emitted.
+     *
+     * A paragraphe of text
+     * on multi line.
+     *
+     * @g_signal_new("changed",
+     *               G_TYPE_OBJECT,
+     *               G_SIGNAL_RUN_LAST, MyObject::accumulatorChanged,
+     *               NULL, NULL,
+     *               G_TYPE_INT, 1, G_TYPE_INT)
+     *
+     */
+     const CHANGED = g_signal_new_id;
+
+    /**
+     * How to specify style property ?
+     * @style
+     * @g_param_spec_uint("zoomed",
+     *                    "Maman construct prop",
+     *                    "Set maman's name",
+     *                    0, 100,
+     *                    51,
+     *                    G_PARAM_CONSTRUCT_ONLY)
+     */
+    const ZOOMED = g_param_spec_new_id;// enum
+
+    /**
+     * @g_property(self::ZOOMED) $zoomed
+     */
+    public int $zoomed=61;
+
+    /** @g_override GObjectClass.set_property */
+    private function set_property(int        $prop_id,
+                                  GValue     $value,
+                                  GParamSpec $pspec)
+    {
+        echo "call of set_property($prop_id, ".self::ZOOMED.")\n";
+        switch ($prop_id) {
+            case self::ZOOMED: $this->zoomed = g_value_get_uint ($value);          break;
+            default:           g_object_set_property($this, $pspec->name, $value); break;
+            //default: parent::set_property($prop_id, $value, $pspec); break;
+        };
+    }
+
+    /** @g_override GObjectClass.get_property */
+    private function get_property(int        $prop_id,
+                                 GValue     $value,
+                                 GParamSpec $pspec)
+    {
+        echo "call of getProperty()\n";
+        /*
+        match ($prop_id) {
+            self::ZOOMED => g_value_set_double ($value, 1.1),
+            default      => g_object_get_property($this, $prop_id, $value, $pspec),
+        };
+        */
+    }
+}
+
+class MyObject extends ApiObject {
+
+    /**
+     * @style
+     * @g_param_spec_uint("att",
+     *                    "Tata construct prop",
+     *                    "Set tata's name",
+     *                    0, 100,
+     *                    49,
+     *                    G_PARAM_CONSTRUCT_ONLY)
+     */
+    const ATT = g_param_spec_new_id;
+
+    /**
+     * @g_property(self::ATT) $att
+     */
+    public int $att=63;
+
+    /** @g_override GObjectClass.set_property */
+    private function set_property(int        $prop_id,
+                                 GValue     $value,
+                                 GParamSpec $pspec)
+    {
+        echo "call 2 ".get_class($this).".set_property($prop_id, ".self::ZOOMED.")\n";
+        switch ($prop_id) {
+            case self::ATT: g_value_get_uint ($value);          break;
+            default:        parent::setProperty("zoomed", $value);       break;
+        };
+    }
+
+}
+
+
+// g_object_class_override("get_property", MyObject::getProperty);
+// g_signal_new("zoomed", MyObject, );
+// define _TYPE_MY_OBJECT for interopérability
+//define("_TYPE_MY_OBJECT", g_type_from_name(MyObject::class));// if class exist and zend_object is instanceof GObject return GType
+
+// MyObject::$ZOOMED=g_signal_new("zoomed", MyObject::class, G_SIGNAL_RUN_LAST, null, null, null, G_TYPE_INT, 1, G_TYPE_POINTER);
+//   static initialization : install signals, properties, etc..
+//     1er probleme : MyObject::$ZOOMED peut être modifier par l'utilisateur.
+//     2eme probleme : l'utilisateur peut créer plusieur fois le même signal
+//     3eme probleme : L'utilisateur peu créer un signal après avoir instancier la class MyObject
+
+
+$object = new MyObject();
+
+/*
+g_object_connect($object,
+                  "signal::changed", "this_is_my_callback", "my_data",
+                  "notify::zoomed", "this_is_my_callback", "my_data",
+                  "notify::att", "this_is_my_callback", "my_data",
+                  NULL);
+*/
+
+//$ret = g_signal_emit($object, MyObject::CHANGED, g_quark_from_static_string("changed"), 3);
+//var_dump($ret);
+//echo MyObject::CHANGED.PHP_EOL;//2
+//echo ApiObject::ZOOMED.PHP_EOL;//2
+//echo MyObject::ATT.PHP_EOL;//1
+
+$value = new GValue(G_TYPE_UINT);
+g_value_set_uint($value, 47);
+//g_object_set_property($object, "zoomed", $value); // call $object->set_property(...);
+//$object->setProperty("zoomed", $value);
+//$object->setProperty("att", $value);
+
+/*
+//$object->zoomed = 43;// callback this_is_my_callback
+*/
+
+
+// ------------------------------------------------
+/*
+$id = g_signal_connect_data($object, "notify::zoomed", "this_is_my_callback", NULL, "my_destroy", 0);
+*/
+
+
+
+
+
+
+
+
+/*
+$pspec = new GParamSpec();
+var_dump($pspec);
+
+$val = new GValue(G_TYPE_UINT);
+//g_value_init ($val, G_TYPE_UINT);
+g_value_set_uint ($val, 11);
+//var_dump($val);
+
+$var = new GValue(G_VALUE_INIT);//TODO...
+g_value_init ($val, G_TYPE_UINT);
+g_value_set_char ($val, 11);
+g_object_set_property ($object, "zoom-level", $val);
+
+
+$object["qdata::bar"] = "bar";// g_object_set_qdata(..., "bar");
+$object["data::foo"] = "bar";// g_object_set_data(..., "foo");
+$object["signal-name::detail"] = $val;// g_signal_lookup
+$object["zoom-level"] = $val;// g_object_set_property(..., "zoom-level"); g_object_set(...)
+$object->zoom_level = "hello";
+
+$id = g_signal_connect_data($object, "notify::zoom-level", "this_is_my_callback", NULL, "my_destroy", 0);
+g_signal_emit(MyObject::PROP_ZOOM_LEVEL);
+*/
+
+//var_dump($object);
+
+//g_object_unref($object);
+
+var_dump($object);
+
+echo "TODO: \$myObject->setProperty()\n";
+echo "TODO: override methode(setProperty, getProperty)\n";
+echo "TODO: php_gobject_object_install_style_property\n";
+echo "TODO: php_doc_object|array|expression_\n";
+
+
+#! Makefile.frag -----------------------------------------------------------------------------------
+
+$(srcdir)/php_doc/parser.c: $(srcdir)/php_doc/comment_parser.y
+        echo "Here we are -****************************"
+        $(RE2C) $(RE2C_FLAGS) -t $(srcdir)/php_doc/comment_scanner_defs.h --no-generation-date --case-inverted -cbdF -o $(srcdir)/php_doc/comment_scanner.c $(srcdir)/php_doc/comment_scanner.l
+        $(YACC) $(YFLAGS) --verbose --defines -l $(srcdir)/php_doc/comment_parser.y -o $(srcdir)/php_doc/comment_parser.tab.c
+
+
+
+
+
+<?php
+#!
+
+
+
+// -------------------------------------------------------------------
+// Equivalent
+// -------------------------------------------------------------------
+/**
+ * @signal("changed")
+ * @first
+ * @last
+ g_signal_set_va_marshaller (widget_signals[WINDOW_STATE_EVENT], G_TYPE_FROM_CLASS (klass),
+                              _gtk_marshal_BOOLEAN__BOXEDv);
+
+ * @param MyObject $object the object which received the signal.
+ * @param float $value the new value which triggered
+ *   this signal.
+ * @return bool %TRUE to stop other handlers from being invoked for the event.
+ *   %FALSE to propagate the event further.
+ */
+ static function changed(MyObject $object, float $old_value):bool {
+     return false;
+ }
+
+ static function accumulatorChanged(GSignalInvocationHint *ihint,
+                                    GValue                *return_accu,
+                                    const GValue          *handler_return,
+                                    gpointer               data):bool {
+
+    return TRUE;
+ }
+
+/**
+ * A function than emit signal who is listeneable.
+ *
+ * @throw Error::Exception
+ */
+public function setChange(MyObject $object, float $new_value) {
+    $old_value = $this->value;
+    if ($new_value != $old_value) {
+        $this->value = $new_value;
+        g_signal_emit_by_name($this, "changed", $ret, $old_value);
+
+        // g_signal_emit($this, self::CHANGED, $old_value);
+    }
+
+}
+//-----------------------------------------------------------------------------
+
+
 
 declare(strict_types=0);
 //declare(fatal_warnings=1);

@@ -23,3 +23,18 @@ $ make clean
 $ cd ../php-ext-gtk-src
 $ phpize --clean
 
+
+
+
+
+
+
+
+
+
+
+
+remove /php-build
+touch comment_parser.y
+touch parser.c
+

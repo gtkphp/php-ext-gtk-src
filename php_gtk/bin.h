@@ -25,7 +25,6 @@
 #include "config.h"
 #endif
 
-#include "container.h"
 
 #define PHP_GTK_BIN(ptr)           ((php_gtk_bin*)(ptr))
 #define PHP_GTK_BIN_CLASS          php_gtk_bin_class_entry
@@ -54,7 +53,7 @@
     PHP_GTK_FE(gtk_bin_add, arginfo_gtk_bin_add)
 
 #define PHP_GTK_BIN_MINIT_FUNCTION(container_ce, parent_ce) \
-    php_gtk_bin_class_init(container_ce, parent_ce)
+    php_gtk_bin_class_minit(container_ce, parent_ce)
 
 #define PHP_GTK_BIN_MSHUTDOWN_FUNCTION() { \
 }
@@ -62,17 +61,14 @@
 #define PHP_GTK_BIN_RSHUTDOWN_FUNCTION() {\
 }
 
-typedef struct _php_gtk_bin php_gtk_bin;
-struct _php_gtk_bin {
-    // put here members
+typedef php_gtk_widget php_gtk_bin;
 
-    php_gtk_widget parent_instance;
-    // Keep blank
-};
+GObject *php_gtk_bin_extends(php_gtk_bin *widget);
+GType    php_gtk_bin_get_type(const char *php_class_name);
 
 void php_gtk_bin_add(php_gtk_bin *list, zval *data);
 
-zend_class_entry *php_gtk_bin_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce);
+zend_class_entry *php_gtk_bin_class_minit(zend_class_entry *container_ce, zend_class_entry *parent_ce);
 
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_bin_add, 0, 0, 1)
@@ -84,6 +80,32 @@ PHP_FUNCTION(gtk_bin_add);
 ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_bin___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()
 PHP_METHOD(gtk_bin, __construct);
+
+
+#define _PHP_GTK_BIN_TRAIT() \
+    PhpGtkContainerTrait parent_trait; \
+    zend_function *add
+
+typedef struct _PhpGtkBinTrait {
+    _PHP_GTK_BIN_TRAIT();
+} PhpGtkBinTrait;
+
+typedef struct _PhpGtkBinClass {
+    GtkBinClass parent_class;
+    _PHP_GTK_BIN_TRAIT();
+} PhpGtkBinClass;
+
+typedef struct _PhpGtkBin {
+    GtkBin parent_instance;
+} PhpGtkBin;
+
+
+void php_gtk_bin_init(PhpGtkBin *widget);
+//void php_gtk_container_class_finalize(PhpGtkContainerClass *klass);
+void php_gtk_bin_class_init(PhpGtkBinClass *klass);
+
+GObject *php_gtk_bin_extends(php_gtk_bin *widget);
+GType    php_gtk_bin_get_type(const char *php_class_name);
 
 
 #endif	/* PHP_GTK_BIN_H */

@@ -5,10 +5,18 @@
 --FILE--
 <?php
 
-
-class A extends GObject {
-    /** @override GObjectClass.get_property */
-    function get_property($name) {
+/**
+ * GLib-GObject-WARNING **: 20:59:09.237: type name 'A' is too short
+ * try with Ab => same warning
+ * try with Abc => OK
+ * @g_param_spec_uint("zoom-level", "Zoom level", "Zoom level to view the file at.", 0, 10, 2, G_PARAM_READWRITE) property
+ */
+/*
+class Abc extends GObject {
+    /**
+     * @g_override GObjectClass.get_property
+     * /
+    function getProperty($name) {
         if ($name=='zend_object') {
             // throw new Error('Access denied');
             return NULL;
@@ -17,8 +25,11 @@ class A extends GObject {
     }
 }
 
-$a = new A;
+$a = new Abc;
 //var_dump($a['zend_object']);
+*/
+
+confirm_gtk_compiled("");
 
 
 ?>

@@ -31,9 +31,14 @@
 #include "php_gtk.h"
 
 #include "php_gobject/object.h"
+#include "php_gobject/type.h"
+#include "php_gobject/object-extends.h"
+#include "php_cairo/cairo.h"
 #include "php_gdk/rectangle.h"
 
 #include "widget.h"
+
+#include "widget-extends.h"
 
 extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
@@ -58,8 +63,8 @@ static const zend_function_entry php_gtk_widget_methods[] = {
  | Zend Handler                                                         |
  +----------------------------------------------------------------------*/
 static void  php_gtk_widget_unset_property(zval *object, zval *member, void **cache_slot);
-static void  php_gtk_widget_write_property(zval *object, zval *member, zval *value, void **cache_slot);
-static zval* php_gtk_widget_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv);
+static zval *php_gtk_widget_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot);
+static zval* php_gtk_widget_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv);
 static char* php_gtk_widget_dump(php_gtk_widget *list, int tab);
 
 static void
@@ -169,9 +174,9 @@ php_gtk_widget_get_properties(zval *object){
 }
 
 static HashTable*
-php_gtk_widget_get_debug_info(zval *object, int *is_temp) /* {{{ */
+php_gtk_widget_get_debug_info(zend_object *object, int *is_temp) /* {{{ */
 {
-    php_gtk_widget  *obj =  ZVAL_GET_PHP_GTK_WIDGET(object);
+    php_gtk_widget  *obj =  ZOBJ_TO_PHP_GTK_WIDGET(object);
     php_gobject_object *gobject =  PHP_GOBJECT_OBJECT(obj);
     HashTable   *debug_info,
                 *std_props;
@@ -230,30 +235,15 @@ php_gtk_widget_unset_property(zval *object, zval *member, void **cache_slot) {
 }
 
 /* {{{ php_gtk_widget_write_property */
-static void
-php_gtk_widget_write_property(zval *object, zval *member, zval *value, void **cache_slot)
+static zval*
+php_gtk_widget_write_property(zend_object *object, zend_string *member_str, zval *value, void **cache_slot)
 {
-    php_gtk_widget *obj = ZVAL_GET_PHP_GTK_WIDGET(object);
-    zend_string *member_str = zval_get_string(member);
-    TRACE("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    php_gtk_widget *obj = ZOBJ_TO_PHP_GTK_WIDGET(object);
+    TRACE("%s(%s)\n", __FUNCTION__, member_str->val);
 
-    if (zend_string_equals_literal(member->value.str, "next")
-     || zend_string_equals_literal(member->value.str, "prev")
-     || zend_string_equals_literal(member->value.str, "data") ) {
-#if 0
-        if (ZVAL_IS_PHP_GTK_WIDGET(value)) {
-            // do unset(object->next) and php_gtk_widget_insert(object, value, 0);
-        } else {
-            zend_string *type = zend_zval_get_type(value);
-            zend_error(E_USER_WARNING, "Cannot assign %s to property GObject::$next of type GObject", type->val);
-        }
-#else
-        zend_error(E_USER_WARNING, "Readonly property GObject::$%s", member->value.str->val);
-#endif
-        return;
-    }
+
     zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    std_hnd->write_property(object, member, value, cache_slot);
+    std_hnd->write_property(object, member_str, value, cache_slot);
 
     zend_string_release(member_str);
 }
@@ -262,12 +252,11 @@ php_gtk_widget_write_property(zval *object, zval *member, zval *value, void **ca
 static zval zval_ret;
 /* {{{ gtk_read_property */
 static zval*
-php_gtk_widget_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
+php_gtk_widget_read_property(zend_object *object, zend_string *member_str, int type, void **cache_slot, zval *rv)
 {
-    php_gtk_widget *obj = ZVAL_GET_PHP_GTK_WIDGET(object);
-    zend_string *member_str = zval_get_string(member);
+    php_gtk_widget *obj = ZOBJ_TO_PHP_GTK_WIDGET(object);
     zval *retval;
-    TRACE("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    TRACE("%s(%s)\n", __FUNCTION__, member_str->val);
 
     /*
     if (zend_string_equals_literal(member_str, "next")) {
@@ -293,9 +282,9 @@ php_gtk_widget_read_property(zval *object, zval *member, int type, void **cache_
     */
 
     zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    retval = std_hnd->read_property(object, member, type, cache_slot, rv);
+    retval = std_hnd->read_property(object, member_str, type, cache_slot, rv);
 
-    zend_string_release(member_str);
+    //zend_string_release(member_str);
     return retval;
 }
 /* }}} */
@@ -308,9 +297,18 @@ php_gtk_widget_free_object(zend_object *object)
     php_gobject_object *gobject =  PHP_GOBJECT_OBJECT(intern);
     TRACE("php_gtk_widget_free_object(\"%s\") / %d\n", intern->data.value.str->val, object->gc.refcount);
 
+    /**
+     * GtkWidget are floating ref, GObject are counted ref
+     * When main_quit() => GtkWidgets's are free by Gtk and
+     * zend can't release zval of $widget
+     */
     if (gobject->ptr) {
-        //g_free(gobject->ptr);
-        gobject->ptr = NULL;
+        /*
+        if (g_object_is_floating(gobject->ptr)) {
+            g_object_ref_sink(gobject->ptr);
+        }
+        g_clear_object(&gobject->ptr);
+        */
     }
 
     if (gobject->properties!=NULL) {
@@ -356,6 +354,8 @@ php_gtk_widget_dtor_object(zend_object *obj) {
 //GtkWidgetClass *l;
 GHashTable *gtk_widget_classes=NULL;
 
+
+#if 0
 GtkWidget my_widget;
 GtkWidgetClass my_widget_classes;
 
@@ -521,15 +521,15 @@ php_gtk_widget_override_get_preferred_width(GtkWidget *widget,
        GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_widget_klass);
        klass->get_preferred_width(widget, minimum_width, natural_width);
     }
-
 }
-#include "php_cairo/cairo.h"
+
 extern zend_class_entry *php_cairo_t_class_entry;
 static gboolean
 php_gtk_widget_override_draw(GtkWidget *widget,
                              cairo_t *cr) {
     static GList *recursive_widget = NULL;
     zend_object *zobject = g_object_get_data(G_OBJECT(widget), "zend_object");
+    //php_printf("php_gtk_widget_override_draw\n");
 
     zend_function *func = NULL;
     zend_bool is_override = FALSE;
@@ -537,17 +537,20 @@ php_gtk_widget_override_draw(GtkWidget *widget,
     g_list_find(recursive_widget, widget);
 
     if (NULL==zobject) {
-       g_print(" UNLIKELY REACHED 1\n");
+       php_printf(" UNLIKELY REACHED 1\n");
        //GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_widget_klass);// <---------------------------
        GtkWidgetClass *klass = GTK_WIDGET_GET_CLASS(widget);
        return klass->draw(widget, cr);
     }
 
     if (!is_recursive) {
+        //php_printf(" isn't recursive\n");
         // try to find override user_function
-        func = php_gobject_get_user_method(zobject, "GtkWidget::draw");//<-------------
+        func = php_gobject_object_get_user_method(zobject, "GtkWidgetClass.draw");//<-------------
+
         if (func) {
             is_override = TRUE;
+            //php_printf(" is_override\n");
         }
         zend_execute_data *current_execute = EG(current_execute_data);
         zend_execute_data *execute = NULL;
@@ -556,26 +559,27 @@ php_gtk_widget_override_draw(GtkWidget *widget,
         }// else on est mode GTKML
 
         if (func && execute && execute->func->common.function_name) {
-            g_print("... %s\n", current_execute->func->common.function_name->val);// TODO
-            g_print("Same object ? %d\n", zobject == execute->This.value.obj);// TODO
+            //php_printf("... %s\n", current_execute->func->common.function_name->val);// TODO
+            //php_printf("Same object ? %d\n", zobject == execute->This.value.obj);// TODO
             if (0==g_strcmp0(execute->func->common.function_name->val, func->common.function_name->val)) {
                 if (ZVAL_IS_PHP_GTK_WIDGET(&execute->This)) {
                     is_override = FALSE;
                 }
             }
         }
-        //g_print("Call is not recusive\n");
+        //php_printf("Call is not recusive\n");
     } else {
-        //g_print("Call is recusive\n");
+        //php_printf("Call is recusive\n");
     }
 
     zval retval; ZVAL_TRUE(&retval);
     if (is_override) {
-        //g_print("  call override function\n");
+        //php_printf("  call override function\n");
         recursive_widget =
         g_list_append(recursive_widget, widget);
 
         char *function_name = func->common.function_name->val;
+        char *function_name_len = func->common.function_name->len;
 #if 0
         zval zwidget; ZVAL_OBJ(&zwidget, zobject);
         zval zcr;
@@ -594,7 +598,37 @@ php_gtk_widget_override_draw(GtkWidget *widget,
         zend_object_std_dtor(z_cr);
         //zend_objects_destroy_object(z_cr);
 
+#elif 1
+
+        zend_fcall_info_cache fci_cache;
+        fci_cache.function_handler = func;
+        fci_cache.object = zobject;
+        fci_cache.called_scope = zobject->ce;
+
+        int result;
+        zend_fcall_info fci;
+        zval zcairo;
+        php_cairo_t *zcr = php_cairo_t_new(); zcr->ptr = cr;
+        ZVAL_OBJ(&zcairo, &zcr->std);
+        cairo_reference(cr);
+
+        zval params[1];
+        ZVAL_COPY_VALUE(&params[0], &zcairo);
+
+        fci.size = sizeof(fci);
+        fci.object = zobject;//Z_OBJ_P(zwidget);
+        fci.retval = &retval;
+        fci.param_count = 1;
+        fci.params = params;
+        fci.named_params = 0;
+        ZVAL_STRINGL(&fci.function_name, function_name, function_name_len);
+            result = zend_call_function(&fci, &fci_cache);
+        zval_ptr_dtor(&fci.function_name);
+
+        zend_object_release(&zcr->std);
+
 #else
+
         int result;
         zend_fcall_info fci;
         php_cairo_t *php_cr = php_cairo_new();
@@ -622,11 +656,14 @@ php_gtk_widget_override_draw(GtkWidget *widget,
         php_cr->ptr = NULL;
         zend_object_release(z_cr);
 
+
 #endif
 
         recursive_widget =
         g_list_remove(recursive_widget, widget);
     } else {
+        php_printf("   OK\n");
+
         GtkWidgetClass *klass = GTK_WIDGET_CLASS(&php_gtk_widget_klass);
         return klass->draw(widget, cr);
     }
@@ -642,9 +679,9 @@ static void
 php_gtk_widget_class_init_override(GType type) {
     GtkWidgetClass *widget_klass = g_type_class_peek(type);
 
-    if (NULL==G_TYPE_FROM_CLASS(&php_gtk_widget_klass)) {
+    if (G_TYPE_INVALID==php_gtk_widget_klass.parent_class.g_type_class.g_type) {
         memcpy(&php_gtk_widget_klass, widget_klass, sizeof(GtkWidgetClass));
-        G_TYPE_FROM_CLASS(&php_gtk_widget_klass) = type;
+        php_gtk_widget_klass.parent_class.g_type_class.g_type = type;
 
         // TODO: browse PHP class method...
         widget_klass->get_preferred_width = php_gtk_widget_override_get_preferred_width;
@@ -682,6 +719,7 @@ php_gtk_widget_register()
 
     return type;
 }
+#endif
 
 /// ######################################################################
 
@@ -689,31 +727,17 @@ php_gtk_widget_register()
 static zend_object*
 php_gtk_widget_create_object(zend_class_entry *class_type)
 {
-    php_gtk_widget *intern = ecalloc(1, sizeof(php_gtk_widget) + zend_object_properties_size(class_type));
-    php_gobject_object *gobject =  PHP_GOBJECT_OBJECT(intern);
+    php_gtk_widget *intern = zend_object_alloc(sizeof(php_gtk_widget), class_type);
+    zend_object_std_init(&intern->std, class_type);
+    object_properties_init(&intern->std, class_type);
 
-    zend_object_std_init(&gobject->std, class_type);
-    object_properties_init(&gobject->std, class_type);
-
-    gobject->ptr = NULL;// new GObject ?
-    gobject->properties = NULL;
-
-    gobject->std.handlers = &php_gtk_widget_handlers;
-
-    char *key = class_type->name->val;// use prefix 'php__' My\Ns\Widget
-    g_print("ce: %s\n", key);
-    GType type = g_type_from_name(key);
-    if (type==G_TYPE_INVALID) {
-        GType type = my_widget_get_type(key);
-        gobject->ptr = gtk_widget_new(type, NULL);
-        php_gtk_widget_class_init_override(type);
-        g_object_set_data(G_OBJECT(gobject->ptr), "zend_object", &gobject->std);
-
-    }
+    intern->properties = NULL;
+    intern->std.handlers = &php_gtk_widget_handlers;
+    intern->ptr = php_gtk_widget_extends(intern);
 
 
     TRACE("php_gtk_widget_create_object(%p) / %d\n", &gobject->std, gobject->std.gc.refcount);
-    return &gobject->std;
+    return &intern->std;
 }
 /* }}} php_gtk_widget_create_object */
 
@@ -737,10 +761,11 @@ php_gtk_widget_get_handlers()
     php_gtk_widget_handlers.free_obj = php_gtk_widget_free_object;
     php_gtk_widget_handlers.read_property = php_gtk_widget_read_property;
     php_gtk_widget_handlers.write_property = php_gtk_widget_write_property;
-    php_gtk_widget_handlers.unset_property = php_gtk_widget_unset_property;
+    //php_gtk_widget_handlers.unset_property = php_gtk_widget_unset_property;
     //php_gtk_widget_handlers.get_property_ptr_ptr = php_gtk_widget_get_property_ptr_ptr;
 
     php_gtk_widget_handlers.get_debug_info = php_gtk_widget_get_debug_info;
+/*
     php_gtk_widget_handlers.get_properties = php_gtk_widget_get_properties;//get_properties_for TODO php 8.0
     //php_gtk_widget_handlers.set = php_gtk_widget_set;
     php_gtk_widget_handlers.cast_object = php_gtk_widget_cast_object;
@@ -750,25 +775,25 @@ php_gtk_widget_get_handlers()
     php_gtk_widget_handlers.read_dimension = php_gtk_widget_read_dimension;
     php_gtk_widget_handlers.unset_dimension = php_gtk_widget_unset_dimension;
     php_gtk_widget_handlers.write_dimension = php_gtk_widget_write_dimension;
-
+*/
 
     return &php_gtk_widget_handlers;
 }
 
 
-
 /*----------------------------------------------------------------------+
 | PHP_MINIT                                                            |
 +----------------------------------------------------------------------*/
-/*{{{ php_gtk_widget_class_init */
+/*{{{ zend_gtk_widget_class_minit */
 zend_class_entry*
-php_gtk_widget_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
+php_gtk_widget_class_minit(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_gtk_widget_get_handlers();
     //INIT_NS_CLASS_ENTRY((*ce), "Gnome\\G", "Object", php_gtk_widget_methods);
     INIT_CLASS_ENTRY((*container_ce), "GtkWidget", php_gtk_widget_methods);
     php_gtk_widget_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
     php_gtk_widget_class_entry->create_object = php_gtk_widget_create_object;
-    php_gtk_widget_class_entry->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
+    ///php_gtk_widget_class_entry->ce_flags |= ZEND_ACC_EXPLICIT_ABSTRACT_CLASS;
+    php_gtk_widget_class_entry->ce_flags |= ZEND_ACC_ABSTRACT;
 
     zend_register_long_constant("GTK_WIDGET_HELP_TOOLTIP", sizeof("GTK_WIDGET_HELP_TOOLTIP")-1,
         GTK_WIDGET_HELP_TOOLTIP, CONST_CS | CONST_PERSISTENT, gtk_module_entry.module_number);
@@ -3728,7 +3753,8 @@ PHP_FUNCTION(gtk_widget_get_allocation)
 
     ZEND_PARSE_PARAMETERS_START(2, 2)
         Z_PARAM_OBJECT_OF_CLASS_EX(zwidget, php_gtk_widget_class_entry, 1, 0)
-        Z_PARAM_ZVAL_DEREF(zallocation)
+        Z_PARAM_ZVAL_EX2(zallocation, 0, 1, 0)
+        //Z_PARAM_ZVAL_DEREF(zallocation)
         //Z_PARAM_OBJECT_OF_CLASS_EX2(zallocation, php_gdk_rectangle_class_entry, 0, 1, 0)
         //Z_PARAM_OBJECT_OF_CLASS_EX(zallocation, php_gtk_allocation_class_entry, 1, 0)
     ZEND_PARSE_PARAMETERS_END();
@@ -4729,8 +4755,8 @@ PHP_FUNCTION(gtk_widget_get_preferred_width)
 
     ZEND_PARSE_PARAMETERS_START(3, 3)
         Z_PARAM_OBJECT_OF_CLASS_EX(zwidget, php_gtk_widget_class_entry, 1, 0)
-        Z_PARAM_ZVAL_DEREF(zminimum_width)
-        Z_PARAM_ZVAL_DEREF(znatural_width)
+        Z_PARAM_ZVAL_EX2(zminimum_width, 0, 1, 0)
+        Z_PARAM_ZVAL_EX2(znatural_width, 0, 1, 0)
     ZEND_PARSE_PARAMETERS_END();
 
     php_gtk_widget *widget = ZVAL_IS_PHP_GTK_WIDGET(zwidget) ? ZVAL_GET_PHP_GTK_WIDGET(zwidget) : NULL;

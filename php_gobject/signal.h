@@ -48,8 +48,11 @@
     } while (0)
 
 #define PHP_GOBJECT_SIGNAL_FE() \
+    PHP_GTK_FE(g_signal_new,                           arginfo_g_signal_new) \
     PHP_GTK_FE(g_signal_connect,                       arginfo_g_signal_connect) \
-    PHP_GTK_FE(g_signal_connect_data,                  arginfo_g_signal_connect_data)
+    PHP_GTK_FE(g_signal_connect_data,                  arginfo_g_signal_connect_data) \
+    PHP_GTK_FE(g_signal_emit,                          arginfo_g_signal_emit) \
+    PHP_GTK_FE(g_signal_emit_by_name,                  arginfo_g_signal_emit_by_name) \
 
 
 #define PHP_GOBJECT_SIGNAL_MINIT_FUNCTION(container_ce, parent_ce) \
@@ -107,6 +110,37 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_g_signal_connect, 0, 0, 0)
     ZEND_ARG_INFO(0, zdata)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(g_signal_connect);
+
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_signal_new, 0, 0, 8)
+    ZEND_ARG_TYPE_INFO(0, signal_name, IS_STRING, 0)
+    ZEND_ARG_INFO(0, itype) //string|int
+    ZEND_ARG_TYPE_INFO(0, signal_flags, IS_LONG, 0)
+    ZEND_ARG_INFO(0, class_offset)
+    ZEND_ARG_INFO(0, accumulator) // ZEND_ARG_CALLABLE_INFO
+    ZEND_ARG_INFO(0, accu_data)
+    ZEND_ARG_TYPE_INFO(0, return_type, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, n_params, IS_LONG, 0)
+    ZEND_ARG_VARIADIC_INFO(0, params)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(g_signal_new);
+//PHP_FUNCTION(g_signal_newv);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_signal_emit, 0, 0, 4)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, instance, GObject, 0)
+    ZEND_ARG_TYPE_INFO(0, signal_id, IS_LONG, 0)
+    ZEND_ARG_TYPE_INFO(0, detail, IS_STRING, 0)
+    ZEND_ARG_VARIADIC_INFO(0, params)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(g_signal_emit);
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_g_signal_emit_by_name, 0, 0, 2)
+    ZEND_ARG_OBJ_INFO(ZEND_SEND_BY_VAL, instance, GObject, 0)
+    ZEND_ARG_TYPE_INFO(ZEND_SEND_BY_VAL, signal_detail, IS_STRING, 0)
+    ZEND_ARG_VARIADIC_INFO(ZEND_SEND_BY_VAL, params)
+    ZEND_ARG_INFO(ZEND_SEND_BY_REF, return_value)
+ZEND_END_ARG_INFO()
+PHP_FUNCTION(g_signal_emit_by_name);
 
 
 #endif	/* PHP_GOBJECT_SIGNAL_H */

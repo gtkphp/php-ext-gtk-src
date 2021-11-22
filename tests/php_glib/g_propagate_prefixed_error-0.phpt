@@ -12,6 +12,7 @@ function my_quark():int {
     return $q;
 }
 
+$error = new GError;
 g_set_error($error, my_quark(), 403, "'%s' do not exist", "Application", null);
 
 g_propagate_prefixed_error($err, $error, "GTKML:%s:", "GLIB", null);
@@ -19,10 +20,10 @@ g_propagate_prefixed_error($err, $error, "GTKML:%s:", "GLIB", null);
 var_dump($err);
 
 ?>
---EXPECT--
+--EXPECTF--
 object(GError)#2 (3) {
   ["domain"]=>
-  string(2) "MY"
+  int(%d)
   ["code"]=>
   int(403)
   ["message"]=>

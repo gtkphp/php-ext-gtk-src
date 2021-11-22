@@ -26,6 +26,130 @@ echo g_list_length($list), PHP_EOL;
 
 
 
+var_dump(g_str_equal("extension", "extension"));
+var_dump(g_str_equal("zend", "extension"));
+
+var_dump(g_str_hash("extension"));
+
+//int(2064964834)
+
+
+/**
+$list = new GList();
+$list->data = "data-0";
+
+$list->next = new GList();
+$list->next->data = "data-1";
+$list->next->prev = $list;
+
+$list->next->next = new GList();
+$list->next->next->data = "data-2";
+$list->next->next->prev = $list->next;
+
+var_dump($list);
+*/
+
+
+/**
+$list = new GList();
+$list->data = "data-0";
+
+$list->prev = new GList();
+$list->prev->data = "data-1";
+$list->prev->next = $list;
+
+$list->prev->prev = new GList();
+$list->prev->prev->data = "data-2";
+$list->prev->prev->next = $list->prev;
+
+var_dump($list);
+**/
+
+
+/*
+$list = null;
+$start = g_list_prepend($list, "data-0");
+$list = g_list_prepend($start, "data-1");
+$list = g_list_prepend($start, "data-2");
+//unset($start);
+//var_dump($list);
+
+$first = g_list_first($list);
+var_dump($first);
+*/
+
+/*
+function my_prepend($list, $data):GList {
+    $node = new GList;
+    $node->data = $data;
+    $node->next = $list;
+
+    if($list) {
+        $node->prev = $list->prev;
+        if ($list->prev) {
+            $list->prev->next = $node;
+        }
+        $list->prev = $node;
+    }
+    return $node;
+}
+
+
+$start = my_prepend(null, "data-0");
+$node1 = my_prepend($start, "data-1");
+$node2 = my_prepend($node1, "data-2");
+
+var_dump($start);
+*/
+
+/*
+//$list = g_list_prepend(null, "data-0");
+$list = g_list_insert(null, "data-0", 0);
+$list = g_list_insert($list, "data-1", 0);
+$list = g_list_insert($list, "data-2", 0);
+$list = g_list_insert($list, "data-3", 0);
+
+var_dump($list);
+*/
+
+/*
+$list = null;
+$list = g_list_prepend($list, "data-0");
+$list1 = g_list_prepend($list, "data-1");
+$list2 = g_list_prepend($list, "data-2");
+$list3 = g_list_prepend($list, "data-3");
+var_dump($list);
+*/
+
+/*
+$list = null;
+$list = g_list_append($list, "data-0");
+$list = g_list_append($list, "data-1");
+$list = g_list_append($list, "data-2");
+$list = g_list_append($list, "data-3");
+var_dump($list);
+*/
+
+/*
+$item = new GList;
+$item->data = "data-1";
+$list = new GList;
+$list->data = "data-0";
+$list->next = $item;
+$item->prev = $list;
+var_dump($list);
+*/
+
+/*
+$list = new GList;
+$list->data = "data-0";
+$list->next = new GList;
+$list->next->data = "data-1";
+$list->next->prev = $list;
+var_dump($list);
+*/
+
+
 
 /*
 function on_destroy($data) {
@@ -189,12 +313,12 @@ var_dump($list);
 
 
 /*
-$list = g_list_insert_before(Null, Null, "val1");
-$list = g_list_insert_before($list, $list, "val2");
-$list = g_list_insert_before($list, $list, "val3");
-$list = g_list_insert_before($list, $list, "val4");
-//var_dump($list);
-g_list_dump($list);
+$list = g_list_insert_before(null, null, "val1");
+$list = g_list_insert_before($list, null, "val2");
+//$list = g_list_insert_before($list, $list, "val3");
+//$list = g_list_insert_before($list, $list, "val4");
+var_dump($list);
+//g_list_dump($list);
 */
 
 

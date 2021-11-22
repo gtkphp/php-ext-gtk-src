@@ -25,13 +25,11 @@
 #include "config.h"
 #endif
 
-#include "widget.h"
+
 
 #define PHP_GTK_CONTAINER(ptr)           ((php_gtk_container*)(ptr))
 #define PHP_GTK_CONTAINER_CLASS          php_gtk_container_class_entry
 #define PHP_GTK_CONTAINER_OFFSET         (sizeof(php_gtk_container) - sizeof(zend_object))
-
-#define PHP_GTK_CONTAINER_TO_PHP_G_OBJECT(ptr)   PHP_GOBJECT_OBJECT(ptr)
 
 #define ZOBJ_IS_PHP_GTK_CONTAINER(obj)   ((obj)!=NULL && instanceof_function(obj->ce, php_gtk_container_class_entry))
 #define ZOBJ_TO_PHP_GTK_CONTAINER(std)   PHP_GTK_CONTAINER( ((void*)(std))-PHP_GTK_CONTAINER_OFFSET )
@@ -50,13 +48,18 @@
         }                                           \
     } while (0)
 
+#if 1
+#define PHP_GTK_CONTAINER_FE() \
+    PHP_GTK_FE(gtk_container_add,          arginfo_gtk_container_add)
+#else
 #define PHP_GTK_CONTAINER_FE() \
     PHP_GTK_FE(gtk_container_add,          arginfo_gtk_container_add) \
     PHP_GTK_FE(gtk_container_get_children, arginfo_gtk_container_get_children)
+#endif
 
 
 #define PHP_GTK_CONTAINER_MINIT_FUNCTION(container_ce, parent_ce) \
-    php_gtk_container_class_init(container_ce, parent_ce)
+    php_gtk_container_class_minit(container_ce, parent_ce)
 
 #define PHP_GTK_CONTAINER_MSHUTDOWN_FUNCTION() { \
 }
@@ -64,18 +67,16 @@
 #define PHP_GTK_CONTAINER_RSHUTDOWN_FUNCTION() {\
 }
 
-typedef struct _php_gtk_container php_gtk_container;
-struct _php_gtk_container {
-    // put here members
+typedef php_gtk_widget php_gtk_container;
 
-    php_gtk_widget parent_instance;
-    // Keep blank
-};
 
 void php_gtk_container_add(php_gtk_container *list, zval *data);
 
-zend_class_entry *php_gtk_container_class_init(zend_class_entry *container_ce, zend_class_entry *ce);
+zend_class_entry *php_gtk_container_class_minit(zend_class_entry *container_ce, zend_class_entry *ce);
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_container___construct, 0, 0, 0)
+ZEND_END_ARG_INFO()
+PHP_METHOD(gtk_container, __construct);
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_container_add, 0, 0, 2)
     ZEND_ARG_INFO(0, container)
@@ -83,14 +84,38 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_container_add, 0, 0, 2)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(gtk_container_add);
 
+#if 0
 ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_container_get_children, 0, 0, 1)
     ZEND_ARG_INFO(0, container)
 ZEND_END_ARG_INFO()
 PHP_FUNCTION(gtk_container_get_children);
+#endif
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_gtk_container___construct, 0, 0, 0)
-ZEND_END_ARG_INFO()
-PHP_METHOD(gtk_container, __construct);
+
+#define _PHP_GTK_CONTAINER_TRAIT() \
+    PhpGtkWidgetTrait parent_trait; \
+    zend_function *add
+
+typedef struct _PhpGtkContainerTrait {
+    _PHP_GTK_CONTAINER_TRAIT();
+} PhpGtkContainerTrait;
+
+typedef struct _PhpGtkContainerClass {
+    GtkContainerClass parent_class;
+    _PHP_GTK_CONTAINER_TRAIT();
+} PhpGtkContainerClass;
+
+typedef struct _PhpGtkContainer {
+    GtkContainer parent_instance;
+} PhpGtkContainer;
+
+
+void php_gtk_container_init(PhpGtkContainer *widget);
+//void php_gtk_container_class_finalize(PhpGtkContainerClass *klass);
+void php_gtk_container_class_init(PhpGtkContainerClass *klass);
+
+GObject *php_gtk_container_extends(php_gtk_container *widget);
+GType    php_gtk_container_get_type(const char *php_class_name);
 
 
 #endif	/* PHP_GTK_CONTAINER_H */

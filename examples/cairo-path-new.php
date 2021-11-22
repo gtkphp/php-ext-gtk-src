@@ -10,10 +10,28 @@ error_reporting(E_ALL);
 
 //confirm_gtk_compiled("");
 
+$surface1 = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 250, 80);
+$cr1 = cairo_create ($surface1);
+cairo_rectangle ($cr1, 10.0, 10.0, 21.0, 29.7);
+$path1 = cairo_copy_path ($cr1);
+
+
+$surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 250, 80);
+$cr = cairo_create ($surface);
+
+cairo_rectangle ($cr, 0.0, 0.0, 21.0, 29.7);
+cairo_append_path ($cr, $path1);
+
+$path = cairo_copy_path ($cr);
+var_dump($path);
+
+/*
 $rect = new cairo_rectangle_t();
 $rect->x = 10.0;
 $rect->x = "hello";
 var_dump($rect);
+*/
+
 
 /*
 $surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 250, 80);

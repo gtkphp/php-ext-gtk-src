@@ -30,9 +30,9 @@
 #include <glib-object.h>
 #include "php_gtk.h"
 #include "object.h"
+#include "object-extends.h"
+#include "signal.h"
 
-#include "php_doc/tag.h";
-#include "php_doc/comment.h";
 
 extern HashTable         classes;
 extern zend_module_entry gtk_module_entry;
@@ -41,6 +41,15 @@ extern zend_module_entry gtk_module_entry;
 zend_class_entry     *php_gobject_object_class_entry;
 //HashTable             php_gobject_object_prop_handlers;
 zend_object_handlers  php_gobject_object_handlers;
+
+//extern zend_object *php_gobject_hack_dirty_bad_smel;
+static zend_object *php_gobject_hack_dirty_bad_smel=0;
+void push_zend(zend_object *zob){
+    php_gobject_hack_dirty_bad_smel = zob;
+}
+zend_object *pop_zend(){
+    return php_gobject_hack_dirty_bad_smel;
+}
 
 //#define TRACE(format, string, option) php_printf(format, string, option)
 #define TRACE(format, string, option)
@@ -58,8 +67,9 @@ static const zend_function_entry php_gobject_object_methods[] = {
  | Zend Handler                                                         |
  +----------------------------------------------------------------------*/
 static void  php_gobject_object_unset_property(zval *object, zval *member, void **cache_slot);
-static void  php_gobject_object_write_property(zval *object, zval *member, zval *value, void **cache_slot);
-static zval* php_gobject_object_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv);
+static zval *php_gobject_object_write_property(zend_object *zobj, zend_string *member, zval *value, void **cache_slot);
+static zval *php_gobject_object_read_property(zend_object *object, zend_string *member, int type, void **cache_slot, zval *rv);
+
 static char* php_gobject_object_dump(php_gobject_object *list, int tab);
 
 static void
@@ -87,7 +97,7 @@ php_gobject_object_write_dimension(zval *object, zval *offset, zval *value)
     void *cache = NULL;
     zval member;
     ZVAL_COPY(&member, offset);
-    php_gobject_object_write_property(object, &member, value, &cache);
+    //php_gobject_object_write_property(object, &member, value, &cache);
 }
 
 static zval*
@@ -130,9 +140,9 @@ php_gobject_object_count_elements(zval *object, zend_long *count) {
 }
 
 static int
-php_gobject_object_cast_object(zval *readobj, zval *retval, int type)
+php_gobject_object_cast_object(zend_object *readobj, zval *retval, int type)
 {
-    g_print("php_gobject_object_cast_object\n");
+    g_print("Error: php_gobject_object_cast_object(%d, %d)\n", type, IS_STRING);
     ZVAL_NULL(retval);
 
     return FAILURE;
@@ -141,6 +151,9 @@ php_gobject_object_cast_object(zval *readobj, zval *retval, int type)
 static HashTable*
 php_gobject_object_get_properties(zval *object){
     php_gobject_object  *self =  ZVAL_GET_PHP_GOBJECT_OBJECT(object);
+    if (self==NULL) {
+        return NULL;
+    }
     HashTable *props = self->properties;
     if (props==NULL) {
         ALLOC_HASHTABLE(self->properties);
@@ -168,9 +181,9 @@ php_gobject_object_get_properties(zval *object){
 }
 
 static HashTable*
-php_gobject_object_get_debug_info(zval *object, int *is_temp) /* {{{ */
+php_gobject_object_get_debug_info(zend_object *object, int *is_temp) /* {{{ */
 {
-    php_gobject_object  *obj =  ZVAL_GET_PHP_GOBJECT_OBJECT(object);
+    php_gobject_object  *obj =  ZOBJ_TO_PHP_GOBJECT_OBJECT(object);
     HashTable   *debug_info,
                 *std_props;
     zend_string *string_key = NULL;
@@ -228,44 +241,40 @@ php_gobject_object_unset_property(zval *object, zval *member, void **cache_slot)
 }
 
 /* {{{ php_gobject_object_write_property */
-static void
-php_gobject_object_write_property(zval *object, zval *member, zval *value, void **cache_slot)
+static zval*
+php_gobject_object_write_property(zend_object *zobj, zend_string *member, zval *value, void **cache_slot)
 {
-    php_gobject_object *obj = ZVAL_GET_PHP_GOBJECT_OBJECT(object);
-    zend_string *member_str = zval_get_string(member);
-    TRACE("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    php_gobject_object *obj = ZOBJ_TO_PHP_GOBJECT_OBJECT(zobj);
+    TRACE("%s(%s)\n", __FUNCTION__, member->val);
 
-    if (zend_string_equals_literal(member->value.str, "next")
-     || zend_string_equals_literal(member->value.str, "prev")
-     || zend_string_equals_literal(member->value.str, "data") ) {
-#if 0
-        if (ZVAL_IS_PHP_GOBJECT_OBJECT(value)) {
-            // do unset(object->next) and php_gobject_object_insert(object, value, 0);
-        } else {
-            zend_string *type = zend_zval_get_type(value);
-            zend_error(E_USER_WARNING, "Cannot assign %s to property GObject::$next of type GObject", type->val);
-        }
-#else
-        zend_error(E_USER_WARNING, "Readonly property GObject::$%s", member->value.str->val);
-#endif
-        return;
+    // static GtkObject
+
+    // check installed properties
+    GObjectClass *obj_class = G_OBJECT_GET_CLASS(obj->ptr);
+    GParamSpec *spec = g_object_class_find_property(obj_class, member->val);
+    if (spec) {
+        GValue gvalue = G_VALUE_INIT;
+        g_value_init(&gvalue, G_TYPE_INT);
+        g_value_set_int(&gvalue, Z_LVAL_P(value));
+        zend_object_handlers *std_hnd = zend_get_std_object_handlers();
+        zval *ptr = std_hnd->write_property(zobj, member, value, cache_slot);
+        g_object_set_property(obj->ptr, member->val, &gvalue);
+        return ptr;
     }
-    zend_object_handlers *std_hnd = zend_get_std_object_handlers();
-    std_hnd->write_property(object, member, value, cache_slot);
 
-    zend_string_release(member_str);
+    zend_object_handlers *std_hnd = zend_get_std_object_handlers();
+    return std_hnd->write_property(zobj, member, value, cache_slot);
 }
 /* }}} */
 
 static zval zval_ret;
 /* {{{ gtk_read_property */
 static zval*
-php_gobject_object_read_property(zval *object, zval *member, int type, void **cache_slot, zval *rv)
+php_gobject_object_read_property(zend_object *object, zend_string *member, int type, void **cache_slot, zval *rv)
 {
-    php_gobject_object *obj = ZVAL_GET_PHP_GOBJECT_OBJECT(object);
-    zend_string *member_str = zval_get_string(member);
+    php_gobject_object *obj = ZOBJ_TO_PHP_GOBJECT_OBJECT(object);
     zval *retval;
-    TRACE("%s(%s)\n", __FUNCTION__, member->value.str->val);
+    TRACE("%s(%s)\n", __FUNCTION__, member->val);
 
     /*
     if (zend_string_equals_literal(member_str, "next")) {
@@ -293,7 +302,6 @@ php_gobject_object_read_property(zval *object, zval *member, int type, void **ca
     zend_object_handlers *std_hnd = zend_get_std_object_handlers();
     retval = std_hnd->read_property(object, member, type, cache_slot, rv);
 
-    zend_string_release(member_str);
     return retval;
 }
 /* }}} */
@@ -304,8 +312,9 @@ php_gobject_object_free_object(zend_object *object)
 {
     php_gobject_object *intern = ZOBJ_TO_PHP_GOBJECT_OBJECT(object);
     TRACE("php_gobject_object_free_object(\"%s\") / %d\n", intern->data.value.str->val, object->gc.refcount);
+    //php_printf("php_gobject_object_free_object %p(%p) - %d\n", intern->ptr, intern, object->gc.refcount);
 
-#if 0
+#if 1
     // TODO: connect destroy to set ->ptr to NULL
     if (intern->ptr) {
         g_clear_object(&intern->ptr);
@@ -326,7 +335,7 @@ php_gobject_object_free_object(zend_object *object)
 static void
 php_gobject_object_dtor_object(zend_object *obj) {
     php_gobject_object *intern = ZOBJ_TO_PHP_GOBJECT_OBJECT(obj);
-    TRACE("php_gobject_object_dtor_object(\"%s\") / %d\n", intern->data.value.str->val, obj->gc.refcount);
+    //php_printf("php_gobject_object_dtor_object- %d\n", obj->gc.refcount);
 
     /*
     if (!ZVAL_IS_NULL(&intern->data)) {
@@ -350,33 +359,24 @@ php_gobject_object_dtor_object(zend_object *obj) {
     */
 }
 
-
 /* {{{ php_gobject_object_create_object */
 static zend_object*
 php_gobject_object_create_object(zend_class_entry *class_type)
 {
-    php_gobject_object *intern = ecalloc(1, sizeof(php_gobject_object) + zend_object_properties_size(class_type));
-
+    php_gobject_object *intern = zend_object_alloc(sizeof(php_gobject_object), class_type);
     zend_object_std_init(&intern->std, class_type);
     object_properties_init(&intern->std, class_type);
 
-
-    intern->ptr = g_object_new(G_TYPE_OBJECT, NULL); //NULL;// new GObject ?
-    intern->properties = NULL;
-
     intern->std.handlers = &php_gobject_object_handlers;
+    intern->properties = NULL;
+    intern->ptr = NULL;
 
-    TRACE("php_gobject_object_create_object(%p) / %d\n", &intern->std, intern->std.gc.refcount);
+    intern->ptr = php_gobject_object_extends(intern);// after handlers
+
     return &intern->std;
 }
 /* }}} php_gobject_object_create_object */
 
-/*
-static void php_gobject_object_dtor_prop_handler(zval *zv)
-{
-    free(Z_PTR_P(zv));
-}
-*/
 
 static zend_object_handlers*
 php_gobject_object_get_handlers()
@@ -412,12 +412,12 @@ php_gobject_object_get_handlers()
 
 
 /*----------------------------------------------------------------------+
-| PHP_MINIT                                                            |
-+----------------------------------------------------------------------*/
+ | PHP_MINIT                                                            |
+ +----------------------------------------------------------------------*/
 
-/*{{{ php_gobject_object_class_init */
+/*{{{ php_gobject_object_class_minit */
 zend_class_entry*
-php_gobject_object_class_init(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
+php_gobject_object_class_minit(zend_class_entry *container_ce, zend_class_entry *parent_ce) {
     php_gobject_object_get_handlers();
     PHP_GTK_INIT_CLASS_ENTRY((*container_ce), "GObject", php_gobject_object_methods);
     php_gobject_object_class_entry = zend_register_internal_class_ex(container_ce, parent_ce);
@@ -440,6 +440,7 @@ php_gobject_object_class_init(zend_class_entry *container_ce, zend_class_entry *
 zend_function*
 php_gobject_get_user_method(zend_object *zobject, char *name) {
 
+#if 0
     php_doc_block *doc_comment;
 
     zend_object *zobj = zobject;//&widget->parent_instance.std;
@@ -468,6 +469,7 @@ php_gobject_get_user_method(zend_object *zobject, char *name) {
         if (top==base)
             break;
     }
+#endif
 
     return NULL;
 }
@@ -478,6 +480,7 @@ php_gobject_get_user_method(zend_object *zobject, char *name) {
  +----------------------------------------------------------------------*/
 php_gobject_object*
 php_gobject_object_new(GObject *object) {
+    //printf("\t\t php_gobject_object_new\n");
     zend_object *zobject = php_gobject_object_create_object(php_gobject_object_class_entry);
     php_gobject_object *gobject = ZOBJ_TO_PHP_GOBJECT_OBJECT(zobject);
     gobject->ptr = object;
@@ -510,7 +513,6 @@ PHP_METHOD(g_object, __construct)
 
     zend_object *zobj = Z_OBJ_P(getThis());
     php_gobject_object *self = ZOBJ_TO_PHP_GOBJECT_OBJECT(zobj);
-
 }
 /* }}} */
 
@@ -540,7 +542,7 @@ typedef struct _SignalEntry {
 } SignalEntry;
 
 static SignalEntry php_gobject_object_signals[] = {
-    {"notify",                      CONNECT_SIGNAL},
+    //{"notify",                      CONNECT_SIGNAL},
     {"signal",                      CONNECT_SIGNAL},
     {"object-signal",               CONNECT_OBJECT_SIGNAL},
     {"swapped-signal",              CONNECT_SWAPPED_SIGNAL},
@@ -553,7 +555,7 @@ static SignalEntry php_gobject_object_signals[] = {
 };
 
 
-static ConnectSignal php_gobject_object_connect_signal_lookup(char *modifier, size_t detail_len) {
+static ConnectSignal php_gobject_object_connect_signal_lookup(char *modifier, size_t modifier_len) {
     SignalEntry *entry;
     int i;
 
@@ -563,38 +565,58 @@ static ConnectSignal php_gobject_object_connect_signal_lookup(char *modifier, si
 
     for(i = 0; NULL!=php_gobject_object_signals[i].modifier; i++) {
         entry = &php_gobject_object_signals[i];
-        if (g_str_equal(entry->modifier, modifier)) {
+        if (0==strncmp(entry->modifier, modifier, modifier_len)) {
             return entry->signal;
         }
     }
-    g_print("ConnectSignal not found for detail: '%s'\n", modifier);
+    g_print("Error: ConnectSignal not found for detail: '%s'\n", modifier);
 
     return CONNECT_UNKNOW;
 }
-static int normalize_signal_detail(char *signal_detail, char **modifier, char **signal) {
-    gchar *pos = g_strrstr(signal_detail, "::");
-    if (NULL!=pos) {
-        //g_utf8_strncpy(signal, signal_detail, pos-signal_detail);
-        //g_utf8_strncpy(detail, pos+2, -1);
-        *modifier = g_strndup(signal_detail, pos-signal_detail);
-        *signal = g_strdup(pos+2);
-    } else {
-        *modifier = NULL;
-        //g_utf8_strncpy(detail, signal_detail, -1);
-        *signal = g_strdup(signal_detail);
+static char *normalize_signal_detail(char *signal_detail, char **modifier, char **signal, char **detail) {
+    if (NULL==signal_detail || NULL==signal_detail[0]) {
+        *modifier=NULL;
+        *signal=NULL;
+        *detail=NULL;
+        g_print("Error string null or empty\n");
+        return 0;
     }
-    for (pos=*modifier ; *pos; pos++) if('_'==*pos) *pos = '-'; else *pos = tolower(*pos);
-    for (pos=*signal ; *pos; pos++) if('_'==*pos) *pos = '-'; else  *pos = tolower(*pos);
+    char *ret = g_strdup(signal_detail);
 
-    return 0;
+    char *pos[] = {ret, 0, 0};
+    char *ptr;
+    char *str=ret;
+    for(int i=1; i<3; i++) {
+        ptr = strstr(str, "::");
+        if (NULL==ptr) break;
+        str = pos[i] = ptr+2;
+        ptr[0] = '\0';
+    }
+    char *modifier_len = pos[1]>pos[0] ? pos[1]-pos[0]-2 : 0;
+
+    if ( modifier_len && CONNECT_UNKNOW==php_gobject_object_connect_signal_lookup(pos[0], modifier_len)) {
+        *modifier = 0;
+        *signal = pos[0];
+        *detail = pos[2];
+    } else {
+        *modifier = pos[0];
+        *signal = pos[1];
+        *detail = pos[2];
+    }
+
+
+    //for (pos=*modifier ; *pos; pos++) if('_'==*pos) *pos = '-'; else *pos = tolower(*pos);
+    //for (pos=*detail ; *pos; pos++) if('_'==*pos) *pos = '-'; else  *pos = tolower(*pos);
+
+    return ret;
 }
 
 /* {{{ proto GObject g_object_connect(GObject list, mixed data) */
 PHP_FUNCTION(g_object_connect)
 {
     int argc;
-    char *detail;
-    size_t detail_len;
+    char *signal_detail;
+    size_t signal_detail_len;
     zval *zobject = NULL;
     zval *args = NULL;
     zval *zcallable;
@@ -602,7 +624,7 @@ PHP_FUNCTION(g_object_connect)
 
     ZEND_PARSE_PARAMETERS_START(4, -1)
         Z_PARAM_ZVAL(zobject);
-        Z_PARAM_STRING(detail, detail_len);
+        Z_PARAM_STRING(signal_detail, signal_detail_len);
         Z_PARAM_ZVAL(zcallable);
         Z_PARAM_ZVAL(zuser_data);
         Z_PARAM_VARIADIC('+', args, argc);
@@ -610,21 +632,23 @@ PHP_FUNCTION(g_object_connect)
 
     int i;
     int num_event = (argc-1)/3;
-    int arg_missing = (argc-1)%3;
+    int arg_missing = (argc-1)%3;// check: call with multiple args
     if (0 != arg_missing) {
         php_printf("Error. We just asume the correct group param\n");
         //num_event = (argc-1-arg_missing)/3;
     }
 
     php_gobject_object *gobject = ZVAL_GET_PHP_GOBJECT_OBJECT(zobject);
-    char *modifier;
-    char *signal;
+
+    char *modifier=NULL;
+    char *signal=NULL;
+    char *detail=NULL;
+
     ConnectSignal flags;
 
-    normalize_signal_detail(detail, &modifier, &signal);
-    flags = php_gobject_object_connect_signal_lookup(modifier, -1);
 
-
+    char *tmp = normalize_signal_detail(signal_detail, &modifier, &signal, &detail);
+    flags = php_gobject_object_connect_signal_lookup(modifier, strlen(modifier));
     if(flags&CONNECT_OBJECT_MASK) {
         /*
         zval *zdestroy_data = NULL;
@@ -634,27 +658,26 @@ PHP_FUNCTION(g_object_connect)
         zend_string_release(detailed_signal);
         */
     } else {
-        g_print("%s = [%s,%s]\n", detail, modifier, signal);
+        //g_print("%s = [%s,%s,%s]\n", signal_detail, modifier, signal, detail);
         zval *zdestroy_data = NULL;
         zend_string *detailed_signal = zend_string_init(signal, strlen(signal), 0);
         zend_long connect_flags = flags>>1;
-        zend_long ret = php_gobject_signal_connect_data(zobject, detailed_signal, zcallable, zuser_data, zdestroy_data, connect_flags);
+        zend_long handle = php_gobject_signal_connect_data(zobject, detailed_signal, zcallable, zuser_data, zdestroy_data, connect_flags);
         zend_string_release(detailed_signal);
     }
-    g_free(modifier);
-    g_free(signal);
+    g_free(tmp);
 
     for(i=0; i<num_event; i++) {
         zval *zval_detail = &args[i*3];
-        detail = zval_detail->value.str->val;
-        detail_len = zval_detail->value.str->len;
+        signal_detail = zval_detail->value.str->val;
+        signal_detail_len = zval_detail->value.str->len;
         assert(zval_get_type(zval_detail)==IS_STRING);
 
         ZVAL_COPY(zcallable, &args[i*3+1]);
         ZVAL_COPY(zuser_data, &args[i*3+2]);// free it in
 
-        normalize_signal_detail(detail, &modifier, &signal);
-        flags = php_gobject_object_connect_signal_lookup(modifier, -1);
+        char *tmp = normalize_signal_detail(signal_detail, &modifier, &signal, &detail);
+        flags = php_gobject_object_connect_signal_lookup(modifier, strlen(modifier));
 
         if(flags&CONNECT_OBJECT_MASK) {
             /*
@@ -667,14 +690,13 @@ PHP_FUNCTION(g_object_connect)
         } else {
             zval *zdestroy_data = NULL;
             //zend_string *detailed_signal = zend_string_init(signal, strlen(signal), 0);
-            zend_string *detailed_signal = zend_string_init("notify", sizeof("notify")-1, 0);
+            zend_string *detailed_signal = zend_string_init(signal, strlen(signal), 0);
             zend_long connect_flags = flags>>1;
-            g_print("%s = [%s,%s]\n", detail, modifier, signal);
+            //g_print("%s = [%s,%s]\n", signal, modifier, detail);
             zend_long ret = php_gobject_signal_connect_data(zobject, detailed_signal, zcallable, zuser_data, zdestroy_data, connect_flags);
             zend_string_release(detailed_signal);
         }
-        g_free(modifier);
-        g_free(signal);
+        g_free(tmp);
 
     }
 
@@ -687,7 +709,7 @@ PHP_FUNCTION(g_object_unref)
     zval *zobject = NULL;
 
     ZEND_PARSE_PARAMETERS_START(1, 1)
-        Z_PARAM_ZVAL_DEREF(zobject);
+        Z_PARAM_ZVAL_EX2(zobject, 0, 1, 0);
     ZEND_PARSE_PARAMETERS_END();
 
     php_gobject_object *object = ZVAL_GET_PHP_GOBJECT_OBJECT(zobject);
@@ -719,7 +741,39 @@ PHP_FUNCTION(g_object_ref)
     php_gobject_object *gobject = ZVAL_GET_PHP_GOBJECT_OBJECT(zobject);
 
     //GC_REFCOUNT(&gobject->std)++;
-    g_object_ref(gobject->ptr);
+    //g_object_ref(gobject->ptr);
+
+    //guint signal_id = 1;// php_gobject_object_ext_signals[0];
+    ///gpointer user_data= GINT_TO_POINTER(0x08);
+    //g_signal_emit (G_OBJECT(gobject->ptr), signal_id, 0, user_data);
+
+    //int ret;
+    //g_signal_emit_by_name(G_OBJECT(gobject->ptr), "notify::zoom", user_data, &ret);
+    //g_signal_emit_by_name(G_OBJECT(gobject->ptr), "changed", user_data, &ret);
+    int ret;
+    g_signal_emit_by_name(G_OBJECT(gobject->ptr), "changed", 14, &ret);
+
+    //printf("g_signal_emit_by_name() ret=%d\n", ret);
 
 }/* }}} */
 
+#include "value.h"
+/* {{{ proto g_object_unref(GObject object) */
+PHP_FUNCTION(g_object_set_property)
+{
+    zend_object *object = NULL;
+    zend_string *property_name = NULL;
+    zend_object *value = NULL;
+
+    ZEND_PARSE_PARAMETERS_START(3, 3)
+        Z_PARAM_OBJ(object);
+        Z_PARAM_STR(property_name);
+        Z_PARAM_OBJ(value);
+    ZEND_PARSE_PARAMETERS_END();
+
+    php_gobject_object *zobject = ZOBJ_TO_PHP_GOBJECT_OBJECT(object);
+    php_gobject_value *zvalue = ZOBJ_TO_PHP_GOBJECT_VALUE(value);
+
+    g_object_set_property(G_OBJECT(zobject->ptr), property_name->val, &zvalue->gvalue);
+
+}/* }}} */

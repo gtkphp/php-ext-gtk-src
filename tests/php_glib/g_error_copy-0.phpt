@@ -15,10 +15,10 @@ var_dump($copy);
 
 
 ?>
---EXPECT--
+--EXPECTF--
 object(GError)#1 (3) {
   ["domain"]=>
-  string(2) "My"
+  int(%d)
   ["code"]=>
   int(30)
   ["message"]=>
@@ -26,7 +26,7 @@ object(GError)#1 (3) {
 }
 object(GError)#2 (3) {
   ["domain"]=>
-  string(2) "My"
+  int(%d)
   ["code"]=>
   int(30)
   ["message"]=>
